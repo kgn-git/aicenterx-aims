@@ -1,0 +1,185 @@
+{
+  "film": "simulation/fraud-triage/Fraud Triage Model.html",
+  "source": "simulation/fraud-triage/Fraud Triage Model - Script and Protocols.md (Part 1, shot table)",
+  "limits": {
+    "grade": 8,
+    "wordsPerSecond": 4.5
+  },
+  "lines": [
+    {
+      "shot": "Open",
+      "element": "headline",
+      "text": "How a bank checks a card payment for fraud while you wait.",
+      "limit": 14,
+      "dur": 4.0
+    },
+    {
+      "shot": "1.1",
+      "element": "headline",
+      "text": "On a Saturday night, a woman buys a gift on her phone.",
+      "limit": 14,
+      "dur": 6.0
+    },
+    {
+      "shot": "1.1",
+      "element": "support",
+      "text": "No shop assistant can see her card.",
+      "limit": 14,
+      "dur": 6.0
+    },
+    {
+      "shot": "1.2",
+      "element": "headline",
+      "text": "The bank's fraud team cannot check every card payment as it happens.",
+      "limit": 14,
+      "dur": 6.0
+    },
+    {
+      "shot": "1.2",
+      "element": "support",
+      "text": "Fraud is found only after the money has gone.",
+      "limit": 14,
+      "dur": 6.0
+    },
+    {
+      "shot": "2.1",
+      "element": "headline",
+      "text": "A model scores the payment in under a fifth of a second.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "2.1",
+      "element": "support",
+      "text": "It reads how she paid and her account's past.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "2.2",
+      "element": "headline",
+      "text": "Most payments pass. The ones in doubt wait for a person.",
+      "limit": 14,
+      "dur": 4.0
+    },
+    {
+      "shot": "2.2",
+      "element": "support",
+      "text": "The most worrying go first.",
+      "limit": 14,
+      "dur": 4.0
+    },
+    {
+      "shot": "2.3",
+      "element": "headline",
+      "text": "An analyst checks a payment from a stolen card and stops it.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "2.3",
+      "element": "support",
+      "text": "A person, not the model, makes the call.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "3.1",
+      "element": "headline",
+      "text": "Tonight's weekend shopping does not match what the model was last tuned on.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "3.1",
+      "element": "support",
+      "text": "Honest payments are held, and the queue grows.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "3.2",
+      "element": "headline",
+      "text": "At the busiest moment, the check takes too long.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "3.2",
+      "element": "support",
+      "text": "A month-end data job slows the store the model reads from.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "3.3",
+      "element": "safety question",
+      "text": "Can shoppers trust a fraud check that stops honest payments by mistake?",
+      "limit": 20,
+      "dur": 4.0
+    },
+    {
+      "shot": "3.3",
+      "element": "support",
+      "text": "She is still waiting.",
+      "limit": 14,
+      "dur": 4.0
+    },
+    {
+      "shot": "4.1",
+      "element": "headline",
+      "text": "No payment is blocked until a person has looked at it.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "4.1",
+      "element": "support",
+      "text": "Her payment is honest, so it goes through.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "4.2",
+      "element": "headline",
+      "text": "Each analyst's yes or no goes back to teach the model.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "4.2",
+      "element": "support",
+      "text": "Weekly checks track false alarms, missed fraud and the queue.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "4.3",
+      "element": "headline",
+      "text": "The board accepted some false alarms at this setting. It looks again each quarter.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "4.3",
+      "element": "support",
+      "text": "Weekend false alarms are not fixed yet.",
+      "limit": 14,
+      "dur": 5.0
+    },
+    {
+      "shot": "Close",
+      "element": "headline",
+      "text": "The goal is fraud stopped as you pay, with a person behind every block.",
+      "limit": 14,
+      "dur": 6.0
+    },
+    {
+      "shot": "Close",
+      "element": "support",
+      "text": "Every scene is taken from its AI Canvas and its records.",
+      "limit": 14,
+      "dur": 6.0
+    }
+  ]
+}

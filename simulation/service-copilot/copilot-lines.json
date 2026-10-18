@@ -1,0 +1,268 @@
+{
+  "source": "Customer Service Copilot - Script and Protocols.md",
+  "rules": {
+    "words": "whitespace tokens containing a letter or digit",
+    "fk": "0.39*words/sentences + 11.8*syllables/words - 15.59; syllables = [aeiouy]+ groups, min 1; sentences at . ! ?",
+    "limits": {
+      "words_per_line": 14,
+      "fk_max": 8.0,
+      "pace_max_wps": 5.0,
+      "film_budget": 300
+    }
+  },
+  "lines": [
+    {
+      "shot": "Open",
+      "element": "headline",
+      "text": "A copilot for the agents who answer customer calls.",
+      "words": 9,
+      "limit": 14,
+      "fk": 7.6
+    },
+    {
+      "shot": "Open",
+      "element": "support",
+      "text": "It finds the policy, and the agent decides what to say.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9,
+      "pace": 5.0,
+      "dur": 4.0
+    },
+    {
+      "shot": "1.1",
+      "element": "headline",
+      "text": "A customer calls about a fee she did not expect.",
+      "words": 10,
+      "limit": 14,
+      "fk": 4.8
+    },
+    {
+      "shot": "1.1",
+      "element": "support",
+      "text": "The agent wants to give her the right answer.",
+      "words": 9,
+      "limit": 14,
+      "fk": 3.7,
+      "pace": 4.75,
+      "dur": 4.0
+    },
+    {
+      "shot": "1.2",
+      "element": "headline",
+      "text": "Most of the call goes on searching policy documents.",
+      "words": 9,
+      "limit": 14,
+      "fk": 6.3
+    },
+    {
+      "shot": "1.2",
+      "element": "support",
+      "text": "The customer waits on hold while the agent reads.",
+      "words": 9,
+      "limit": 14,
+      "fk": 5.0,
+      "pace": 4.5,
+      "dur": 4.0
+    },
+    {
+      "shot": "2.1",
+      "element": "headline",
+      "text": "It looks only in the policy the bank has published.",
+      "words": 10,
+      "limit": 14,
+      "fk": 6.0
+    },
+    {
+      "shot": "2.1",
+      "element": "support",
+      "text": "Each document carries a version and a date.",
+      "words": 8,
+      "limit": 14,
+      "fk": 6.7,
+      "pace": 4.0,
+      "dur": 4.5
+    },
+    {
+      "shot": "2.2",
+      "element": "headline",
+      "text": "It drafts an answer and shows the source beside it.",
+      "words": 10,
+      "limit": 14,
+      "fk": 4.8
+    },
+    {
+      "shot": "2.2",
+      "element": "support",
+      "text": "Each sentence must point to a passage that backs it up.",
+      "words": 11,
+      "limit": 14,
+      "fk": 4.8,
+      "pace": 4.67,
+      "dur": 4.5
+    },
+    {
+      "shot": "2.3",
+      "element": "headline",
+      "text": "The agent checks the source and decides what to say.",
+      "words": 10,
+      "limit": 14,
+      "fk": 4.8
+    },
+    {
+      "shot": "2.3",
+      "element": "support",
+      "text": "The customer's words are cleared when the call ends.",
+      "words": 9,
+      "limit": 14,
+      "fk": 5.0,
+      "pace": 4.75,
+      "dur": 4.0
+    },
+    {
+      "shot": "3.1",
+      "element": "headline",
+      "text": "An old fee list was left in the search library.",
+      "words": 10,
+      "limit": 14,
+      "fk": 2.5
+    },
+    {
+      "shot": "3.1",
+      "element": "support",
+      "text": "The answer looked well sourced, so a customer heard the wrong fee.",
+      "words": 12,
+      "limit": 14,
+      "fk": 5.8,
+      "pace": 4.4,
+      "dur": 5.0
+    },
+    {
+      "shot": "3.2",
+      "element": "headline",
+      "text": "A customer pasted in text that tried to trick the copilot.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9
+    },
+    {
+      "shot": "3.2",
+      "element": "support",
+      "text": "One channel had no filter, and the copilot let slip its own rules.",
+      "words": 13,
+      "limit": 14,
+      "fk": 6.7,
+      "pace": 4.8,
+      "dur": 5.0
+    },
+    {
+      "shot": "3.3",
+      "element": "headline",
+      "text": "The shared search showed file names from other parts of the bank.",
+      "words": 12,
+      "limit": 14,
+      "fk": 5.8
+    },
+    {
+      "shot": "3.3",
+      "element": "support",
+      "text": "Nothing kept each team's files apart from the others.",
+      "words": 9,
+      "limit": 14,
+      "fk": 5.0,
+      "pace": 4.2,
+      "dur": 5.0
+    },
+    {
+      "shot": "4.1",
+      "element": "headline",
+      "text": "Each night the library is rebuilt from current policy.",
+      "words": 9,
+      "limit": 14,
+      "fk": 7.6
+    },
+    {
+      "shot": "4.1",
+      "element": "support",
+      "text": "Each new version is checked with test questions.",
+      "words": 8,
+      "limit": 14,
+      "fk": 3.8,
+      "pace": 4.25,
+      "dur": 4.0
+    },
+    {
+      "shot": "4.2",
+      "element": "headline",
+      "text": "A filter for customer messages is still being tested.",
+      "words": 9,
+      "limit": 14,
+      "fk": 7.6
+    },
+    {
+      "shot": "4.2",
+      "element": "support",
+      "text": "The leak between teams is still open as well.",
+      "words": 9,
+      "limit": 14,
+      "fk": 2.3,
+      "pace": 4.5,
+      "dur": 4.0
+    },
+    {
+      "shot": "4.3",
+      "element": "headline",
+      "text": "A sample of answers is checked against its sources.",
+      "words": 9,
+      "limit": 14,
+      "fk": 6.3
+    },
+    {
+      "shot": "4.3",
+      "element": "support",
+      "text": "Answers their source does not back up are sorted by cause.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9,
+      "pace": 5.0,
+      "dur": 4.0
+    },
+    {
+      "shot": "4.4",
+      "element": "headline",
+      "text": "The board's sign-off covers the pilot only, not a wider rollout.",
+      "words": 11,
+      "limit": 14,
+      "fk": 6.9
+    },
+    {
+      "shot": "4.4",
+      "element": "support",
+      "text": "Before it grows, the risks must be checked again.",
+      "words": 9,
+      "limit": 14,
+      "fk": 5.0,
+      "pace": 5.0,
+      "dur": 4.0
+    },
+    {
+      "shot": "Close",
+      "element": "headline",
+      "text": "The agent decides, and each answer shows its source.",
+      "words": 9,
+      "limit": 14,
+      "fk": 6.3
+    },
+    {
+      "shot": "Close",
+      "element": "support",
+      "text": "The aim is shorter calls and the same answer every time.",
+      "words": 11,
+      "limit": 14,
+      "fk": 6.9,
+      "pace": 5.0,
+      "dur": 4.0
+    }
+  ],
+  "total_words": 277
+}

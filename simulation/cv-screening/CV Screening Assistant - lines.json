@@ -1,0 +1,241 @@
+{
+  "film": "CV Screening Assistant",
+  "script": "CV Screening Assistant - Script and Protocols.md",
+  "method": "words: whitespace tokens with a letter or digit; FK grade 0.39*w/s + 11.8*syl/w - 15.59, vowel-group syllables",
+  "lines": [
+    {
+      "shot": "0",
+      "kind": "headline",
+      "text": "CV Screening Assistant, as it is proposed.",
+      "words": 7,
+      "limit": 14,
+      "fk": 7.4,
+      "client": false
+    },
+    {
+      "shot": "0",
+      "kind": "support",
+      "text": "Every applicant here is made up. The tool is on hold.",
+      "words": 11,
+      "limit": 14,
+      "fk": 4.8,
+      "client": false
+    },
+    {
+      "shot": "1.1",
+      "kind": "headline",
+      "text": "One job advert brought in far more CVs than anyone can read.",
+      "words": 12,
+      "limit": 14,
+      "fk": 5.8,
+      "client": false
+    },
+    {
+      "shot": "1.1",
+      "kind": "support",
+      "text": "Good people are missed when no one gets to their CV.",
+      "words": 11,
+      "limit": 14,
+      "fk": 4.8,
+      "client": false
+    },
+    {
+      "shot": "1.2",
+      "kind": "headline",
+      "text": "CVs near the bottom of the pile may never be opened.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9,
+      "client": false
+    },
+    {
+      "shot": "1.2",
+      "kind": "support",
+      "text": "The recruiter has to choose who gets read first.",
+      "words": 9,
+      "limit": 14,
+      "fk": 3.7,
+      "client": false
+    },
+    {
+      "shot": "2.1",
+      "kind": "headline",
+      "text": "The assistant checks how well each CV fits the job.",
+      "words": 10,
+      "limit": 14,
+      "fk": 2.5,
+      "client": false
+    },
+    {
+      "shot": "2.1",
+      "kind": "support",
+      "text": "It reads the CV text and the fields the applicant filled in.",
+      "words": 12,
+      "limit": 14,
+      "fk": 3.8,
+      "client": false
+    },
+    {
+      "shot": "2.2",
+      "kind": "headline",
+      "text": "It puts the closest matches first for the recruiter to check.",
+      "words": 11,
+      "limit": 14,
+      "fk": 4.8,
+      "client": false
+    },
+    {
+      "shot": "2.2",
+      "kind": "support",
+      "text": "It ranks, but it never decides. The recruiter makes the shortlist.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9,
+      "client": false
+    },
+    {
+      "shot": "2.3",
+      "kind": "headline",
+      "text": "As planned, every CV would be scored, and none would be missed.",
+      "words": 12,
+      "limit": 14,
+      "fk": 6.8,
+      "client": false
+    },
+    {
+      "shot": "2.3",
+      "kind": "support",
+      "text": "This is a plan. It has not been used on real people.",
+      "words": 12,
+      "limit": 14,
+      "fk": 0.5,
+      "client": false
+    },
+    {
+      "shot": "3.1",
+      "kind": "headline",
+      "text": "Could a ranking tool treat two equal people differently?",
+      "words": 9,
+      "limit": 20,
+      "fk": 7.6,
+      "client": false
+    },
+    {
+      "shot": "3.1",
+      "kind": "support",
+      "text": "To find out, testers would give it pairs of made-up CVs.",
+      "words": 11,
+      "limit": 14,
+      "fk": 4.8,
+      "client": false
+    },
+    {
+      "shot": "3.2",
+      "kind": "headline",
+      "text": "These two CVs differ only by a career break, and their ranks split.",
+      "words": 13,
+      "limit": 14,
+      "fk": 4.9,
+      "client": false
+    },
+    {
+      "shot": "3.2",
+      "kind": "support",
+      "text": "This fault was planted. It shows what a bias audit must catch.",
+      "words": 12,
+      "limit": 14,
+      "fk": 0.5,
+      "client": false
+    },
+    {
+      "shot": "3.3",
+      "kind": "headline",
+      "text": "If a rejected applicant asks why, no one can give a reason.",
+      "words": 12,
+      "limit": 14,
+      "fk": 7.8,
+      "client": false
+    },
+    {
+      "shot": "3.3",
+      "kind": "support",
+      "text": "As planned, the tool has no way yet to explain an outcome.",
+      "words": 12,
+      "limit": 14,
+      "fk": 4.8,
+      "client": false
+    },
+    {
+      "shot": "4.1",
+      "kind": "headline",
+      "text": "The board has held the tool at the gate.",
+      "words": 9,
+      "limit": 14,
+      "fk": 1.0,
+      "client": false
+    },
+    {
+      "shot": "4.1",
+      "kind": "support",
+      "text": "It stays shut until a rights review and a bias audit are done.",
+      "words": 13,
+      "limit": 14,
+      "fk": 5.8,
+      "client": false
+    },
+    {
+      "shot": "4.2",
+      "kind": "headline",
+      "text": "The impact review is drafted, but no one has signed it.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9,
+      "client": false
+    },
+    {
+      "shot": "4.2",
+      "kind": "support",
+      "text": "Sign-off waits for an independent bias audit.",
+      "words": 7,
+      "limit": 14,
+      "fk": 7.4,
+      "client": false
+    },
+    {
+      "shot": "4.3",
+      "kind": "headline",
+      "text": "Nothing is trained while the gate holds.",
+      "words": 7,
+      "limit": 14,
+      "fk": 5.7,
+      "client": false
+    },
+    {
+      "shot": "4.3",
+      "kind": "support",
+      "text": "Later, recruiters' choices would teach it, once an audit clears each version.",
+      "words": 12,
+      "limit": 14,
+      "fk": 7.8,
+      "client": false
+    },
+    {
+      "shot": "C",
+      "kind": "headline",
+      "text": "The gate opens only when both checks are done and signed off.",
+      "words": 12,
+      "limit": 14,
+      "fk": 6.8,
+      "client": false
+    },
+    {
+      "shot": "C",
+      "kind": "support",
+      "text": "Until then, the tool is not used on anyone.",
+      "words": 9,
+      "limit": 14,
+      "fk": 5.0,
+      "client": false
+    }
+  ]
+}

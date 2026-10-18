@@ -1,0 +1,163 @@
+{
+  "film": "Retail Credit Risk Scoring.html",
+  "script": "Retail Credit Risk Scoring - Script and Protocols.md",
+  "totalWords": 297,
+  "lines": [
+    {
+      "shot": 1,
+      "setting": "A loan in minutes",
+      "head": "A loan can be decided in minutes, with checks around it.",
+      "sup": "We follow one loan from a phone to the board room.",
+      "headWords": 11,
+      "supWords": 11,
+      "gradeHead": 5.9,
+      "gradeSup": 3.7,
+      "wordsPerSecond": 5.5,
+      "source": ""
+    },
+    {
+      "shot": 2,
+      "setting": "At home, in the banking app",
+      "head": "Nadia needs a small loan to replace her broken-down car.",
+      "sup": "She applies in her banking app after a late shift.",
+      "headWords": 10,
+      "supWords": 10,
+      "gradeHead": 6.0,
+      "gradeSup": 4.8,
+      "wordsPerSecond": 5.0,
+      "source": "AI Canvas: Business Problem"
+    },
+    {
+      "shot": 3,
+      "setting": "The old way: by hand",
+      "head": "Checking loans by hand takes days.",
+      "sup": "Some applicants give up, and two staff can judge one file in two ways.",
+      "headWords": 6,
+      "supWords": 14,
+      "gradeHead": 2.5,
+      "gradeSup": 7.6,
+      "wordsPerSecond": 5.0,
+      "source": "AI Canvas: Business Problem"
+    },
+    {
+      "shot": 4,
+      "setting": "Inside the scoring system",
+      "head": "The model reads her credit file and how she uses her account.",
+      "sup": "It never uses data on health, religion or race.",
+      "headWords": 12,
+      "supWords": 9,
+      "gradeHead": 5.8,
+      "gradeSup": 7.6,
+      "wordsPerSecond": 5.25,
+      "source": "AI Canvas: Data Strategy, Objective Function"
+    },
+    {
+      "shot": 5,
+      "setting": "Inside the scoring system",
+      "head": "It estimates how likely she is to fall 90 days behind on her loan.",
+      "sup": "If she can afford less, her risk score can never go down.",
+      "headWords": 14,
+      "supWords": 12,
+      "gradeHead": 6.7,
+      "gradeSup": 3.8,
+      "wordsPerSecond": 5.2,
+      "source": "AI Canvas: Objective Function, Modeling Approach"
+    },
+    {
+      "shot": 6,
+      "setting": "The underwriting desk",
+      "head": "Then an underwriter checks the score and the three main reasons for it.",
+      "sup": "That evening, Nadia's app tells her the answer is no.",
+      "headWords": 13,
+      "supWords": 10,
+      "gradeHead": 5.8,
+      "gradeSup": 4.8,
+      "wordsPerSecond": 4.6,
+      "source": "AI Canvas: Customer Value"
+    },
+    {
+      "shot": 7,
+      "setting": "The contact centre",
+      "head": "Next morning Nadia calls to ask why, but the agent sees no reasons.",
+      "sup": "The reasons stayed in the scoring system and never reached the agent's screen.",
+      "headWords": 13,
+      "supWords": 13,
+      "gradeHead": 4.9,
+      "gradeSup": 6.7,
+      "wordsPerSecond": 5.2,
+      "source": "Incident log: a decline with no reasons"
+    },
+    {
+      "shot": 8,
+      "setting": "The model risk desk",
+      "head": "After the June rate change, approvals drift by four points.",
+      "sup": "Between quarterly retrains, a shift like this can go unseen.",
+      "headWords": 10,
+      "supWords": 10,
+      "gradeHead": 7.2,
+      "gradeSup": 7.2,
+      "wordsPerSecond": 5.0,
+      "source": "Incident log and risk register: model drift"
+    },
+    {
+      "shot": 9,
+      "setting": "The fair-lending test",
+      "head": "A fairness test flags one group of applicants for a closer look.",
+      "sup": "Its approval rate is below four-fifths of the highest group's rate.",
+      "headWords": 12,
+      "supWords": 11,
+      "gradeHead": 5.8,
+      "gradeSup": 8.0,
+      "wordsPerSecond": 4.6,
+      "source": "Risk register and fair-lending test"
+    },
+    {
+      "shot": 10,
+      "setting": "The contact centre",
+      "head": "The agent's screen must show the reasons, so they can be read back.",
+      "sup": "Nadia can ask an underwriter to look at her case again.",
+      "headWords": 13,
+      "supWords": 11,
+      "gradeHead": 3.1,
+      "gradeSup": 6.9,
+      "wordsPerSecond": 4.8,
+      "source": "Controls: reasons on screen, human review"
+    },
+    {
+      "shot": 11,
+      "setting": "The model risk desk",
+      "head": "A weekly check is planned to catch drift and unfair results between retrains.",
+      "sup": "A new model runs in the shadow before it can replace the old one.",
+      "headWords": 13,
+      "supWords": 14,
+      "gradeHead": 6.7,
+      "gradeSup": 7.6,
+      "wordsPerSecond": 5.4,
+      "source": "Planned control; AI Canvas: Model Training"
+    },
+    {
+      "shot": 12,
+      "setting": "The governance board",
+      "head": "The bank re-weights that group and tests again before the scale decision.",
+      "sup": "Progress is checked every 30 days, with the fairness test on file.",
+      "headWords": 12,
+      "supWords": 12,
+      "gradeHead": 7.8,
+      "gradeSup": 6.8,
+      "wordsPerSecond": 4.8,
+      "source": "Board decision, with evidence on file"
+    },
+    {
+      "shot": 13,
+      "setting": "What comes next",
+      "head": "Answers should come fast, with reasons people can read and challenge.",
+      "sup": "Next gate: the board decides whether the pilot can scale.",
+      "headWords": 11,
+      "supWords": 10,
+      "gradeHead": 6.9,
+      "gradeSup": 7.2,
+      "wordsPerSecond": 5.25,
+      "source": ""
+    }
+  ]
+}
