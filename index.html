@@ -3894,7 +3894,8 @@ var NAV = [
     {label:"AI models",route:"#/register/model",count:function(){return MODELS.length;}},
     {label:"System cards",route:"#/register/systemcard",count:function(){return ONTOLOGY.systemcard.all().length;}},
     {label:"Shared assets",route:"#/register/asset",count:function(){return ASSETS.length;}},
-    {label:"Data sources",route:"#/register/datasource",count:function(){return DATASOURCES.length;}}]},
+    {label:"Data sources",route:"#/register/datasource",count:function(){return DATASOURCES.length;}},
+    {label:"AI benchmarks",href:"Periodic%20Table%20of%20AI%20Benchmarks.html"}]},
   {label:"Organization",accent:"util",items:[
     {label:"People",route:"#/people",count:function(){return Object.keys(PEOPLE).length;}},
     {label:"Board Room",route:"#/boardroom"},
@@ -3909,6 +3910,8 @@ function renderNav(){
     if(!items.length) return "";
     return '<div class="nav-group" data-accent="'+g.accent+'"><p class="nav-group-label">'+esc(g.label)+'</p><ul class="nav-list">'+
       items.map(function(it){ var c=it.count?it.count():null;
+        if(it.href) return '<li><a class="nav-link" href="'+esc(it.href)+'" target="_blank" rel="noopener">'+esc(it.label)+
+          '<span class="nav-count" aria-label="opens in a new tab">\u2197</span></a></li>';
         var attr = it.form ? 'data-form="'+esc(it.form)+'"' : 'data-nav="'+esc(it.route)+'"';
         return '<li><a class="nav-link" '+attr+' role="button" tabindex="0">'+esc(it.label)+
           (c!=null?'<span class="nav-count">'+c+'</span>':"")+'</a></li>'; }).join("")+'</ul></div>';

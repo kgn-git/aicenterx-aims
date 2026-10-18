@@ -43,6 +43,18 @@ sub('<span class="hdr-brand-mark">AI Center X</span>',
 sub("function pageHome(){", (SCRATCH / "why.js").read_text(encoding="utf-8") + "function pageHome(){")
 sub('{label:"Overview",accent:"gov",items:[\n    {label:"Home",route:"#/home"},',
     '{label:"Overview",accent:"gov",items:[\n    {label:"Why AI Center X",route:"#/why"},\n    {label:"Home",route:"#/home"},')
+# Technology: the benchmarks table is a standalone page next to index.html, opened in a new tab
+sub('''    {label:"Data sources",route:"#/register/datasource",count:function(){return DATASOURCES.length;}}]},''',
+    '''    {label:"Data sources",route:"#/register/datasource",count:function(){return DATASOURCES.length;}},
+    {label:"AI benchmarks",href:"Periodic%20Table%20of%20AI%20Benchmarks.html"}]},''')
+sub('''        var attr = it.form ? 'data-form="'+esc(it.form)+'"' : 'data-nav="'+esc(it.route)+'"';
+        return '<li><a class="nav-link" '+attr+' role="button" tabindex="0">'+esc(it.label)+
+          (c!=null?'<span class="nav-count">'+c+'</span>':"")+'</a></li>'; }).join("")''',
+    '''        if(it.href) return '<li><a class="nav-link" href="'+esc(it.href)+'" target="_blank" rel="noopener">'+esc(it.label)+
+          '<span class="nav-count" aria-label="opens in a new tab">\\u2197</span></a></li>';
+        var attr = it.form ? 'data-form="'+esc(it.form)+'"' : 'data-nav="'+esc(it.route)+'"';
+        return '<li><a class="nav-link" '+attr+' role="button" tabindex="0">'+esc(it.label)+
+          (c!=null?'<span class="nav-count">'+c+'</span>':"")+'</a></li>'; }).join("")''')
 sub('''  var raw=(location.hash||"#/home").replace(/^#\\//,"");
   var bits=raw.split("#"), path=bits[0], section=bits[1];
   var parts=path.split("/");''',
