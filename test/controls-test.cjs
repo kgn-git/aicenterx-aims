@@ -4,7 +4,7 @@
 // Prints a JSON report; exit code 1 if any check fails. Screenshots of the navbar and paused states go to outDir.
 const { chromium } = require('playwright');
 const path = require('path'); const fs = require('fs');
-const htmlPath = process.argv[2] || path.join(__dirname, '..', 'Village Film C - Three Questions.html');
+const htmlPath = process.argv[2] || path.join(__dirname, '..', 'simulation', 'Village Film C - Three Questions.html');
 const outDir = process.argv[3] || path.join(__dirname, 'shots-C', 'controls');
 fs.mkdirSync(outDir, { recursive: true });
 const near = (a, b, tol) => Math.abs(a - b) <= tol;
