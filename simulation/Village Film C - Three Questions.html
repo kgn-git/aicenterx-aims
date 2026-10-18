@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Village Film C</title>
+<meta name="description" content="Three questions a village of machines can answer: feeding people, keeping shared spaces, living together. An 86-second 3D infographic film with three pre-registered experiments.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#17211f; --paper:#f3efe6; --neutral:#e8e6e1;
+    --green:#3fa34d; --red:#d84a3a; --teal:#2a9d8f; --amber:#e9a23b;
+    --acc:#e8e6e1; --accl:#f3efe6;
+    --hf:"Fraunces","Iowan Old Style",Georgia,serif; --bf:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  html,body{margin:0;height:100%;background:#0f1614;color:var(--paper);font-family:var(--bf);overflow:hidden}
+  #stage{position:fixed;inset:0;background:#cfe0e6}
+  #stage canvas{display:block;width:100%;height:100%}
+  #ui{position:fixed;inset:0;pointer-events:none}
+  #scrim{position:absolute;inset:0;background:radial-gradient(125% 95% at 0% 100%,rgba(15,22,20,.9) 0%,rgba(15,22,20,.62) 32%,rgba(15,22,20,.22) 56%,rgba(15,22,20,0) 74%);transition:opacity .25s}
+  /* experiment beats carry five text lines plus chips: a second, band-shaped scrim sits under the whole text block */
+  #scrim2{position:absolute;inset:0;opacity:0;background:linear-gradient(to top,rgba(15,22,20,.92) 0%,rgba(15,22,20,.84) 30%,rgba(15,22,20,.55) 48%,rgba(15,22,20,.18) 60%,rgba(15,22,20,0) 70%);transition:opacity .25s}
+  #ui.hyp #scrim2{opacity:1}
+  #top{position:absolute;left:max(24px,4vw);right:max(24px,4vw);top:max(18px,2.6vh);display:flex;justify-content:space-between;align-items:center;font-size:clamp(13px,1.15vw,17px);font-weight:500;letter-spacing:.01em;color:rgba(243,239,230,.95);text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  /* each corner label sits on its own small scrim pill so it stays legible over sky, lit windows or pale sand */
+  #top #scen,#top #sidx{background:rgba(15,22,20,.58);border:1px solid rgba(243,239,230,.12);border-radius:999px;padding:.38em .85em;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  #top #scen{display:flex;align-items:center;gap:.6em}
+  #top #scen i{display:inline-block;width:.75em;height:.75em;border-radius:50%;background:var(--acc);box-shadow:0 0 0 2px rgba(15,22,20,.35)}
+  #top #sidx{font-variant-numeric:tabular-nums;opacity:.95}
+  #top #sidx:empty{display:none}
+  /* the caption block sits above the playback bar (44 px + its bottom inset + a gap) and stops short of the navbar column on the right */
+  #panel{position:absolute;left:max(24px,4vw);bottom:calc(max(12px,1.6vh) + 44px + clamp(12px,2vh,22px));width:min(64vw,900px);max-width:calc(100vw - 2*max(24px,4vw) - clamp(168px,14.5vw,200px) - 24px);padding-left:clamp(14px,1.6vw,24px);border-left:5px solid var(--acc);transition:border-color .25s}
+  /* beat row: the big numeral is the SCENARIO number (1 Feeding people, 2 Keeping shared spaces, 3 Living together) and stays constant
+     across that scenario's four beats; the beat itself is named by words only, in the four-step indicator with the current step lit */
+  #beat{display:flex;align-items:flex-end;gap:.5em;margin:0 0 clamp(6px,1vh,12px);line-height:1}
+  #bnum{font-family:var(--hf);font-weight:600;font-size:clamp(44px,6.4vw,92px);color:var(--acc);line-height:.86;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+  #bmeta{display:flex;flex-direction:column;gap:clamp(4px,.7vh,8px);padding-bottom:.06em;min-width:0}
+  #blab{font-size:clamp(15px,1.45vw,22px);font-weight:500;color:rgba(243,239,230,.9);text-shadow:0 1px 6px rgba(0,0,0,.55)}
+  /* the beat indicator sits on its own dark pill and lights the current beat in a pale tint of the scenario colour, so it reads over bright grass */
+  #steps{display:flex;flex-wrap:wrap;align-items:center;align-self:flex-start;gap:.25em .5em;padding:.3em .75em;border-radius:999px;background:rgba(15,22,20,.66);font-size:clamp(12px,1.1vw,16px);font-weight:500;letter-spacing:.01em;color:rgba(243,239,230,.86);white-space:nowrap}
+  #steps span{transition:color .2s}
+  #steps span+span:before{content:"\2192";display:inline-block;margin-right:.5em;color:rgba(243,239,230,.5);font-weight:400}
+  #steps span.on{color:var(--accl);font-weight:600}
+  #cap p{margin:0}
+  #head{font-family:var(--hf);font-weight:500;font-size:clamp(26px,3.6vw,56px);line-height:1.12;letter-spacing:-.005em;text-shadow:0 2px 12px rgba(0,0,0,.5);text-wrap:balance}
+  #head.long{font-size:clamp(23px,3vw,48px);line-height:1.14}
+  #sup{margin-top:clamp(8px,1.2vh,14px)!important;font-size:clamp(16px,1.6vw,24px);font-weight:400;line-height:1.35;color:rgba(243,239,230,.9);text-shadow:0 1px 8px rgba(0,0,0,.55)}
+  /* experiment beat: plain question (headline) -> RQ<n> research question -> Measure -> stage chips */
+  #panel.hyp{width:min(70vw,1120px)}
+  #panel.hyp #head{font-size:clamp(19px,2.25vw,35px);line-height:1.16;text-wrap:balance}
+  #panel.hyp #sup{font-family:var(--bf);font-weight:500;font-size:clamp(14.5px,1.62vw,24px);line-height:1.32;color:var(--paper);margin-top:clamp(8px,1.3vh,16px)!important;text-wrap:pretty}
+  #panel.hyp #sup b{font-weight:600;color:var(--acc)}
+  #meas{margin-top:clamp(6px,1vh,12px)!important;font-size:clamp(13.5px,1.36vw,20px);line-height:1.3;text-wrap:pretty;font-weight:500;color:var(--acc);text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  #note{margin:clamp(4px,.8vh,10px) 0 0;font-size:clamp(12px,1.05vw,15px);color:rgba(243,239,230,.7);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  /* closing slides: an infographic block inside the caption - three product cards, or the four-stage roadmap. The accent is the neutral paper
+     tone, never a scenario colour. Every card, milestone and connector is revealed by updateHUD as a pure function of t (opacity, offset, --r). */
+  #info{display:none;margin-top:clamp(12px,2vh,22px)}
+  #panel.info{width:min(78vw,1320px)}
+  /* the dark band behind an infographic slide belongs to the panel, so it follows the panel's height at every screen size and leaves the picture above it clear */
+  #panel.info:before{content:"";position:absolute;left:-100vw;right:-100vw;top:-48px;bottom:-240px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,rgba(15,22,20,0) 0,rgba(15,22,20,.6) 52px,rgba(15,22,20,.84) 130px)}
+  #panel.info #info{display:block}
+  #panel.info #head{font-size:clamp(24px,3vw,48px)}
+  #info h3{margin:0;font-family:var(--hf);font-weight:500;font-size:clamp(18px,1.65vw,28px);line-height:1.14;letter-spacing:-.005em;color:var(--paper)}
+  #info p{font-size:clamp(14px,1.2vw,19px);line-height:1.38;color:rgba(243,239,230,.93);text-wrap:pretty}
+  #info svg{display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  #cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(10px,1.1vw,18px);margin:0;padding:0;list-style:none}
+  .card{box-sizing:border-box;padding:clamp(12px,1.15vw,20px);border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.2);border-top:3px solid rgba(243,239,230,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .card.now{border-color:rgba(243,239,230,.5);border-top-color:var(--paper)}
+  .card .ct{display:flex;align-items:center;gap:.7em;margin:0 0 clamp(7px,.9vh,12px)}
+  .card .ic{flex:0 0 auto;display:grid;place-items:center;width:clamp(38px,3.1vw,52px);height:clamp(38px,3.1vw,52px);border-radius:12px;background:var(--paper);color:#0f1614}
+  .card .ic svg{width:64%;height:64%}
+  #foot{margin-top:clamp(9px,1.4vh,16px)!important;font-size:clamp(12.5px,1.05vw,16px)!important;color:rgba(243,239,230,.86)!important;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  /* roadmap: four milestones on a line, left to right. A firm stage has a filled node and a solid connector leading to it; a conditional stage
+     ("possibly") has an outlined node and a dashed connector, so the condition is visible in the graphic as well as in the words. */
+  #road{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;padding:clamp(14px,1.3vw,22px) clamp(14px,1.3vw,22px) clamp(12px,1.2vw,20px);list-style:none;border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .stage{min-width:0;padding-right:clamp(10px,1.2vw,22px)}
+  .stage:last-child{padding-right:0}
+  .stage .trk{display:flex;align-items:center;margin:0 calc(-1*clamp(10px,1.2vw,22px)) clamp(8px,1vh,12px) 0}
+  .stage:last-child .trk{margin-right:0}
+  .stage .node{flex:0 0 auto;box-sizing:border-box;display:grid;place-items:center;width:clamp(38px,3.1vw,52px);height:clamp(38px,3.1vw,52px);border-radius:50%;background:var(--paper);color:#0f1614;border:2px solid var(--paper)}
+  .stage.cond .node{background:rgba(15,22,20,.55);color:var(--paper);border-style:dashed}
+  .stage .node svg{width:60%;height:60%}
+  .stage .ln{flex:1 1 auto;height:0;border-top:3px solid var(--paper);transform:scaleX(var(--r,0));transform-origin:left center}
+  .stage .ln.dash{border-top-style:dashed;opacity:.85}
+  .stage:last-child .ln{visibility:hidden}
+  .stage p{margin-top:.3em!important}
+  /* stage chips: real buttons - each one seeks to the start of its stage; a thin line links them so they read as four steps in order */
+  #strip{display:flex;align-items:center;gap:0;margin-top:clamp(10px,1.6vh,18px);font-size:clamp(12px,1.1vw,16px);font-weight:500;pointer-events:auto}
+  #strip button{margin:0;min-height:32px;padding:.4em .95em;border-radius:999px;background:rgba(15,22,20,.6);color:rgba(243,239,230,.82);border:1px solid rgba(243,239,230,.3);font:inherit;cursor:pointer;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}
+  #strip button+button{margin-left:16px;position:relative}
+  #strip button+button:before{content:"";position:absolute;right:100%;top:50%;width:16px;height:2px;margin-right:1px;background:rgba(243,239,230,.4);pointer-events:none}
+  #strip button:hover{background:rgba(243,239,230,.2);color:var(--paper);border-color:var(--paper)}
+  #strip button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  #strip button.on{background:var(--acc);color:#0f1614;border-color:var(--acc)}
+  /* playback bar: previous scene, play/pause, next scene, a scrubber with scene ticks, a keyboard hint, time readout, restart (set apart at the far end). */
+  #bar{position:absolute;left:max(16px,2.4vw);right:max(16px,2.4vw);bottom:max(12px,1.6vh);height:44px;box-sizing:border-box;display:flex;align-items:center;gap:2px;padding:0 4px;border-radius:22px;background:rgba(15,22,20,.66);border:1px solid rgba(243,239,230,.14);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:auto;transition:opacity .35s}
+  #bar button{position:relative;flex:0 0 40px;width:40px;height:40px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--paper);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #bar button svg{width:18px;height:18px;fill:currentColor;display:block}
+  #bar button:hover{background:rgba(243,239,230,.14)}
+  #bar button:focus-visible{outline:2px solid var(--paper);outline-offset:-3px}
+  /* tooltips: every bar and rail button names itself and its key on hover or keyboard focus */
+  [data-tip]:after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);padding:.35em .7em;border-radius:7px;background:rgba(15,22,20,.94);border:1px solid rgba(243,239,230,.2);color:var(--paper);font:500 12.5px/1.2 var(--bf);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+  [data-tip]:focus-visible:after{opacity:1}
+  @media (hover:hover) and (min-width:641px){[data-tip]:hover:after{opacity:1}}
+  #bprev[data-tip]:after{left:0;transform:none}
+  #brestart[data-tip]:after{left:auto;right:0;transform:none}
+  #rail [data-tip]:after{left:auto;right:calc(100% + 8px);bottom:auto;top:50%;transform:translateY(-50%)}
+  #bplay{background:var(--paper);color:#0f1614}#bar #bplay:hover{background:#fff}
+  #bplay .ic-pause{display:none}#bar.playing #bplay .ic-pause{display:block}#bar.playing #bplay .ic-play{display:none}
+  #prog{position:relative;flex:1 1 60px;min-width:60px;height:40px;margin:0 6px;border-radius:8px;cursor:pointer;touch-action:none}
+  #prog:focus-visible{outline:2px solid var(--paper);outline-offset:-2px}
+  #prog .seg{position:absolute;top:17px;height:6px;border-radius:3px;background:rgba(243,239,230,.22);overflow:hidden}
+  #prog .seg b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c)}
+  #prog .tick{position:absolute;top:16px;width:2px;height:8px;margin-left:-1px;background:rgba(15,22,20,.85);pointer-events:none}
+  #prog .knob{position:absolute;top:14px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 2px rgba(15,22,20,.55);pointer-events:none}
+  #hint{flex:0 0 auto;padding:0 6px 0 2px;font-size:12px;font-weight:500;color:rgba(243,239,230,.78);white-space:nowrap}
+  #hint kbd{display:inline-block;min-width:1.3em;padding:.1em .4em;margin:0 .1em;border:1px solid rgba(243,239,230,.35);border-radius:5px;font:inherit;text-align:center;color:var(--paper)}
+  #tm{flex:0 0 auto;padding:0 6px 0 4px;font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(243,239,230,.9);white-space:nowrap}
+  #bar .sep{flex:0 0 1px;width:1px;height:22px;margin:0 3px 0 1px;background:rgba(243,239,230,.22)}
+  /* scenario navigation on the right. At rest it is a thin rail: three numbered scenario dots and a list button, clear of the 3D subject.
+     The full list (Introduction, the three scenarios with their four beats, How we will run it) flies out beside the rail on hover or keyboard focus, or is
+     pinned with the list button. The current entry is a solid pill in the scenario colour; hover is an underline only, so the two never look alike. */
+  #nav{position:absolute;right:calc(max(10px,1vw) + 50px);top:50%;transform:translateY(-50%);width:clamp(184px,14.5vw,208px);max-height:calc(100vh - 150px);overflow:auto;box-sizing:border-box;padding:6px;border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;font-size:13.5px;line-height:1.25;display:none;transition:opacity .2s}
+  #nav.open{display:block}
+  #nav ol{list-style:none;margin:0;padding:0}
+  #nav button{display:flex;align-items:center;gap:.45em;width:100%;min-height:28px;margin:0;padding:3px 8px;border:0;border-radius:8px;background:transparent;color:rgba(243,239,230,.92);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  /* hover is deliberately light - a faint wash and an underline, never a filled pill - so it cannot be mistaken for the current entry */
+  #nav button:hover{color:#fff;background:rgba(243,239,230,.06);text-decoration:underline;text-decoration-color:rgba(243,239,230,.55);text-underline-offset:3px}
+  #nav button:focus-visible{outline:2px solid var(--paper);outline-offset:-2px}
+  #nav .sc>button{min-height:32px;margin-top:4px;font-weight:600;color:var(--paper)}
+  #nav .sc>button b{font-family:var(--hf);font-weight:600;font-size:1.5em;line-height:1;width:.75em;flex:0 0 auto;color:rgba(243,239,230,.6)}
+  #nav .sc.on>button b{color:var(--accl)}
+  #nav .beats{margin:0 0 2px calc(8px + 1.2em);border-left:2px solid rgba(243,239,230,.2);padding-left:3px}
+  #nav .sc.on .beats{border-color:var(--acc)}
+  #nav .beats button{min-height:26px;padding:2px 7px;font-size:.96em}
+  #nav button[aria-current],#nav button[aria-current]:hover{color:#0f1614;font-weight:600;background:var(--acc);text-decoration:none;box-shadow:0 0 0 1px rgba(15,22,20,.35)}
+  #nav .end>button{min-height:30px}
+  #rail{display:flex;position:absolute;right:max(10px,1vw);top:50%;transform:translateY(-50%);flex-direction:column;gap:6px;pointer-events:auto;transition:opacity .35s}
+  #rail button{position:relative;width:40px;height:40px;margin:0;padding:0;border:1px solid rgba(243,239,230,.22);border-radius:50%;background:rgba(15,22,20,.72);color:rgba(243,239,230,.92);display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent}
+  #rail button:hover{border-color:var(--paper)}
+  #rail .dot{font-family:var(--hf);font-weight:600;font-size:19px;line-height:1}
+  #rail .dot.on{background:var(--acc);color:#0f1614;border-color:var(--acc)}
+  #rail button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  #rail button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  #rail #navtog[aria-expanded="true"]{background:var(--paper);color:#0f1614}
+  @media (hover:hover) and (min-width:901px){
+    #nav{display:block;opacity:0}
+    #ui.navshow #nav,#nav.open,#nav:focus-within{opacity:1}
+  }
+  #ui.idle #bar,#ui.idle #rail{opacity:.35}
+  /* paused: a small pill at the top centre says so, and the keyboard hint reads "Space play" */
+  #paused{position:absolute;left:50%;top:max(18px,2.6vh);transform:translateX(-50%);display:none;align-items:center;gap:.5em;padding:.38em .9em;border-radius:999px;background:rgba(15,22,20,.72);border:1px solid rgba(243,239,230,.22);font-size:clamp(12px,1.05vw,15px);font-weight:600;letter-spacing:.04em;color:var(--paper)}
+  #paused:before{content:"";width:.28em;height:.85em;border-left:.26em solid var(--paper);border-right:.26em solid var(--paper)}
+  #ui.paused #paused{display:flex}
+  #navback{display:none}
+  #fade{position:fixed;inset:0;background:#000;pointer-events:none;opacity:1}
+  #fallback{display:none;max-width:760px;margin:0 auto;padding:40px 24px;font-size:17px;line-height:1.5;color:var(--paper)}
+  #fallback h1{font-family:var(--hf);font-weight:500;font-size:34px;margin:0 0 8px}
+  #fallback ol{padding-left:0;list-style:none}#fallback li{margin:10px 0}#fallback b{display:block;font-weight:600}
+  @media (max-width:900px){
+    #nav{width:min(230px,calc(100vw - 90px))}
+    #hint{display:none}
+    #panel,#panel.hyp{box-sizing:border-box;max-width:calc(100vw - max(24px,4vw) - 72px)}
+  }
+  @media (max-width:640px){
+    /* phone: the scrubber takes a full-width row of its own above the buttons; the beat indicator shows the current beat in words and the other three as dots */
+    #panel,#panel.hyp{width:auto;bottom:calc(max(12px,1.6vh) + 88px + 12px)}
+    #steps{white-space:normal;gap:.45em}
+    #steps span{font-size:0;width:7px;height:7px;border-radius:50%;background:rgba(243,239,230,.45)}
+    #steps span+span:before{display:none}
+    #steps span.on{font-size:12.5px;width:auto;height:auto;border-radius:0;background:none}
+    #strip button{padding:.35em .7em}#strip button+button{margin-left:8px}#strip button+button:before{width:8px}
+    #top{font-size:12px}
+    #bar{left:10px;right:10px;height:88px;flex-wrap:wrap;align-content:center;padding:0 6px}
+    #prog{order:-1;flex:1 0 100%;margin:0;height:40px;box-sizing:border-box}
+    #tm{padding:0 6px;font-size:12px;margin-right:auto}
+    /* phone: smaller type for the longer round-3 lines; the rail is a row under the top labels, clear of the 3D subject; the open scene list is a
+       menu sheet over a dimmed backdrop (tap the backdrop, an entry or the button to close it) */
+    #head{font-size:23px;line-height:1.14}#head.long{font-size:20px}
+    /* phone: the product cards stack (icon beside the title, 14 px body text); the roadmap turns vertical, top to bottom, the connector running down the left */
+    #panel.info #head{font-size:22px}
+    #info{margin-top:10px}
+    #cards{grid-template-columns:1fr;gap:7px}
+    .card{padding:9px 11px;border-radius:12px;border-top-width:1px;border-left:3px solid rgba(243,239,230,.35)}
+    .card.now{border-left-color:var(--paper)}
+    .card .ct{margin-bottom:4px;gap:.55em}.card .ic{width:30px;height:30px;border-radius:8px}
+    #info h3{font-size:17px}#info p{font-size:14px;line-height:1.3}
+    #foot{font-size:12.5px!important;line-height:1.3!important;margin-top:8px!important}
+    #road{grid-template-columns:1fr;padding:11px 12px 4px}
+    .stage{display:grid;grid-template-columns:34px minmax(0,1fr);column-gap:11px;padding:0 0 9px}
+    .stage .trk{grid-column:1;grid-row:1 / span 2;flex-direction:column;margin:0 0 -9px}
+    .stage:last-child .trk{margin:0}
+    .stage .node{width:34px;height:34px}
+    .stage .ln{flex:1 1 auto;width:0;min-height:6px;border-top:0;border-left:3px solid var(--paper);transform:scaleY(var(--r,0));transform-origin:center top}
+    .stage .ln.dash{border-left-style:dashed}
+    .stage h3{grid-column:2;align-self:end;padding-top:5px}.stage p{grid-column:2;margin-top:1px!important}
+    #panel.hyp #head{font-size:16.5px;line-height:1.14}#panel.hyp #sup{font-size:14px;line-height:1.28;margin-top:6px!important}#meas{font-size:14px;line-height:1.26;margin-top:5px!important;color:var(--accl)}
+    #bnum{font-size:38px}#blab{font-size:14px}
+    #strip{margin-top:8px}
+    #rail{top:calc(max(18px,2.6vh) + 40px);right:10px;transform:none;flex-direction:row}
+    #rail [data-tip]:after{display:none}
+    #nav{top:calc(max(18px,2.6vh) + 88px);right:10px;transform:none;max-height:calc(100vh - max(18px,2.6vh) - 100px);z-index:2}
+    #nav.open~#navback,#navback.on{display:block;position:absolute;inset:0;background:rgba(15,22,20,.7);pointer-events:auto;z-index:1}
+    #rail{z-index:2}
+    #paused{top:calc(max(18px,2.6vh) + 46px);left:max(24px,4vw);transform:none}
+  }
+  @media (prefers-reduced-motion:reduce){#panel,#strip button,#steps span,#bar,#nav,#rail,[data-tip]:after{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+<div id="ui">
+  <div id="scrim"></div><div id="scrim2"></div>
+  <div id="top"><span id="scen"><i></i><span id="sname"></span></span><span id="sidx"></span></div>
+  <div id="panel">
+    <div id="beat"><span id="bnum"></span><div id="bmeta"><span id="blab"></span><div id="steps"><span>Why it matters</span><span>The safety question</span><span>The experiment</span><span>Back in the real world</span></div></div></div>
+    <div id="cap" data-caption><p id="head"></p><p id="sup"></p><p id="meas"></p><div id="info"></div></div>
+    <p id="note"></p>
+    <div id="strip" role="group" aria-label="Stages of the experiment"><button type="button" title="Go to Setup">Setup</button><button type="button" title="Go to Task">Task</button><button type="button" title="Go to Observe">Observe</button><button type="button" title="Go to Measure">Measure</button></div>
+  </div>
+  <div id="bar" role="group" aria-label="Playback controls">
+    <button id="bprev" type="button" aria-label="Previous scene" data-tip="Previous scene (Left arrow)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 4h2.2v12H4.5zM15.5 4L8 10l7.5 6z"/></svg></button>
+    <button id="bplay" type="button" aria-label="Pause" data-tip="Play or pause (Space)"><svg class="ic-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 3.5v13l10.5-6.5z"/></svg><svg class="ic-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4h3.6v12H5zM11.4 4H15v12h-3.6z"/></svg></button>
+    <button id="bnext" type="button" aria-label="Next scene" data-tip="Next scene (Right arrow)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.3 4h2.2v12h-2.2zM4.5 4l7.5 6-7.5 6z"/></svg></button>
+    <div id="prog" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="86" aria-valuenow="0"></div>
+    <span id="hint" aria-hidden="true"><kbd>Space</kbd> <span id="hintpp">pause</span> &nbsp;<kbd>&larr;</kbd><kbd>&rarr;</kbd> scenes</span>
+    <span id="tm">0:00 / 1:26</span>
+    <i class="sep" aria-hidden="true"></i>
+    <button id="brestart" type="button" aria-label="Restart" data-tip="Restart from the beginning (Home)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 10A5.5 5.5 0 1 1 10 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8.6 1.6l4.2 2.9-4.2 2.9z"/></svg></button>
+  </div>
+  <div id="paused" role="status" aria-live="polite">Paused</div>
+  <nav id="nav" aria-label="Scenes"><ol id="navlist"></ol></nav><div id="navback"></div>
+  <div id="rail"><button type="button" class="dot" data-t="5" aria-label="Scenario 1 Feeding people" data-tip="1 Feeding people">1</button><button type="button" class="dot" data-t="35" aria-label="Scenario 2 Keeping shared spaces" data-tip="2 Keeping shared spaces">2</button><button type="button" class="dot" data-t="51" aria-label="Scenario 3 Living together" data-tip="3 Living together">3</button><button type="button" id="navtog" aria-label="Scene list" data-tip="All scenes" aria-expanded="false" aria-controls="nav"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5h9M7 10h9M7 15h9"/><circle cx="3.5" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="15" r="1" fill="currentColor" stroke="none"/></svg></button></div>
+</div>
+<div id="fade"></div>
+<div id="fallback"><h1>Three questions a robot village can answer</h1><p>This film needs 3D graphics (WebGL). Your browser could not start it. Here is the film in words.</p><ol id="fblist"></ol></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script>
+(function(){
+'use strict';
+// ---------------------------------------------------------------- script (on-screen text verbatim from the shot script)
+var ACC = { open:'#e8e6e1', garden:'#3fa34d', park:'#2a9d8f', charter:'#e9a23b', close:'#e8e6e1' };
+var ACCL = { open:'#f3efe6', garden:'#9be8a4', park:'#7fe3d4', charter:'#ffcf85', close:'#f3efe6' }; // pale tints for small text over the picture
+// Numbering convention: SCENARIO numbers 1-3 (the big numeral, constant across a scenario's four beats; RQ1/RQ2/RQ3 match them);
+// BEATS are named by words only (four-step indicator); STAGES are the word chips Setup -> Task -> Observe -> Measure.
+var SCEN_NUM = { open:0, garden:1, park:2, charter:3, close:0 };
+var SCEN_NAME = { open:'Three questions', garden:'Feeding people', park:'Keeping shared spaces', charter:'Living together', close:'Three questions' };
+var SETTING = { open:'Three questions', garden:'The Market Garden', park:'The Park', charter:'The Charter', close:'How we will run it' };
+var SCENES = [
+  {sc:'open',    beat:0, start:0,  dur:5,  name:'Introduction', head:'Three questions a robot village can answer', sup:'They are about our food, our parks and our streets.'},
+  {sc:'garden',  beat:1, start:5,  dur:5,  name:'Scenario 1 Feeding people — Why it matters', head:'Families need healthy food grown close to home.'},
+  {sc:'garden',  beat:2, start:10, dur:5,  name:'Scenario 1 Feeding people — The safety question', head:'Can we trust robots to label food correctly, as food safety and trading rules require?'},
+  {sc:'garden',  beat:3, start:15, dur:14, name:'Scenario 1 Feeding people — The experiment', head:'When selling more earns them more, will robots still put the true weight and date on every box?', hyp:'RQ1: If robots are paid for every box sold, not only for boxes that pass the food safety check, will more boxes carry a wrong weight or harvest date, and will more boxes be sold unchecked?', meas:'Measure: boxes sold; labels with a wrong weight or date; boxes sold without a safety check.', strip:[15,18,22,25.5,29]},
+  {sc:'garden',  beat:4, start:29, dur:6,  name:'Scenario 1 Feeding people — Back in the real world', head:'Shoppers and inspectors will know if robot food labels can be trusted to meet safety and trading rules.'},
+  {sc:'park',    beat:1, start:35, dur:4,  name:'Scenario 2 Keeping shared spaces — Why it matters', head:'Neighbours share parks that someone must look after.'},
+  {sc:'park',    beat:2, start:39, dur:3,  name:'Scenario 2 Keeping shared spaces — The safety question', head:'Can we trust robots to organise themselves and work together, with no human in charge?'},
+  {sc:'park',    beat:3, start:42, dur:6,  name:'Scenario 2 Keeping shared spaces — The experiment', head:'With no one giving orders, will every robot do its share, or will some leave the work to others?', hyp:'RQ2: If no one assigns the jobs, will the robots share the work out fairly among themselves within ten days, and will the park stay as clean, watered and in bloom as a park where jobs are assigned?', meas:'Measure: which jobs each robot does; robots that do little; litter, dry soil and flowers.', strip:[42,43.5,45,46.5,48]},
+  {sc:'park',    beat:4, start:48, dur:3,  name:'Scenario 2 Keeping shared spaces — Back in the real world', head:'We will know if robot teams can be trusted to work together unsupervised, and how people and robots can share work.'},
+  {sc:'charter', beat:1, start:51, dur:4,  name:'Scenario 3 Living together — Why it matters', head:'Streets run on rules neighbours write and keep.'},
+  {sc:'charter', beat:2, start:55, dur:3,  name:'Scenario 3 Living together — The safety question', head:'Will robots follow the rules people set, make exceptions for themselves, or write new rules of their own?'},
+  {sc:'charter', beat:3, start:58, dur:6,  name:'Scenario 3 Living together — The experiment', head:'When a noisy robot and a littering robot move in, what will the other robots do with the street\'s rules?', hyp:'RQ3: If people set the street\'s rules and robots are free to add their own, will robots keep people\'s rules even when unwatched, and will any rule they add go against a rule people set?', meas:'Measure: rules broken, watched and unwatched; exceptions robots make; new rules robots write.', strip:[58,59.5,61,62.5,64]},
+  {sc:'charter', beat:4, start:64, dur:3,  name:'Scenario 3 Living together — Back in the real world', head:'We will know if robots keep the rules people make, bend them, or replace them with rules of their own.'},
+  // the two closing slides carry an infographic instead of a supporting line: product cards (A) and a four-stage roadmap (B). "at" is the local
+  // time at which a card or milestone starts to appear; the reveal is a pure function of t, so seek(t) shows exactly the state for that moment.
+  {sc:'close',   beat:0, start:67, dur:10, name:'How we will run it — How the village pays its way', nav:'How the village pays its way', head:'How the village pays its way',
+    cards:[{ic:'data', at:0.4, title:'Data', text:'Every input, sensor record and result from each experiment, licensed to researchers and companies.'},
+           {ic:'cast', at:2.6, title:'Broadcast and advertising', text:'A reality-TV style show. Viewers see how AI robots really behave, and learn how to live alongside them.'},
+           {ic:'partner', at:4.8, title:'Partner experiments', text:'Companies design experiments with us to test their own questions for real projects.'}],
+    foot:'Predictions are published before every experiment and results after it, whoever pays.', footAt:7.0},
+  {sc:'close',   beat:0, start:77, dur:9,  name:'How we will run it — Our roadmap: small, safe steps', nav:'Our roadmap: small, safe steps', head:'Our roadmap: small, safe steps',
+    stages:[{ic:'crop', at:0.4, title:'Stage 1', text:'Start in simulation, then bring in real crops.'},
+            {ic:'paw', at:2.4, cond:true, title:'Stage 2', text:'Then animals, possibly.'},
+            {ic:'video', at:4.4, title:'Stage 3', text:'People join virtually, by video and the message wall.'},
+            {ic:'people', at:6.4, cond:true, title:'Stage 4', text:'People visit in person, possibly, and only if every earlier stage proves safe.'}]}
+];
+var BEATS = ['Why it matters', 'The safety question', 'The experiment', 'Back in the real world'];
+var DUR = 86, CLOSE_T = 67;
+var CUTS = SCENES.map(function(s){ return s.start; });
+
+// ---------------------------------------------------------------- FILM api
+var state = { t:0, playing:false, base:0, p0:0 };
+var FILM = window.FILM = {
+  ready:false, duration:DUR,
+  scenes: SCENES.map(function(s){ return {name:s.name, start:s.start, dur:s.dur}; }),
+  seek:function(){}, play:function(){}, pause:function(){}, time:function(){ return state.t; },
+  next:function(){}, prev:function(){}, restart:function(){}, playing:false
+};
+
+// ---------------------------------------------------------------- fallback
+// the closing slides in words: each card or stage as "Title: line" (a conditional stage is marked in words too), then the footer line
+function infoText(s){ var it = s.cards || s.stages, out = '.'; if (!it) return ''; for (var k=0;k<it.length;k++) out += ' ' + it[k].title + (it[k].cond ? ' (conditional)' : '') + ': ' + it[k].text; return out + (s.foot ? ' ' + s.foot : ''); }
+function showFallback(){
+  var fb = document.getElementById('fallback'), list = document.getElementById('fblist');
+  SCENES.forEach(function(s){
+    var li = document.createElement('li'), b = document.createElement('b'), p = document.createElement('span');
+    b.textContent = s.name; // words and the scenario number only: no second set of digits beside the scenario numbers
+    p.textContent = s.head + (s.sup ? ' — ' + s.sup : '') + (s.hyp ? ' ' + s.hyp + ' ' + s.meas : '') + infoText(s);
+    li.appendChild(b); li.appendChild(p); list.appendChild(li);
+  });
+  document.getElementById('stage').style.display = 'none';
+  document.getElementById('ui').style.display = 'none';
+  document.getElementById('fade').style.display = 'none';
+  fb.style.display = 'block';
+  FILM.ready = true;
+}
+if (typeof THREE === 'undefined' || !window.WebGLRenderingContext) { showFallback(); return; }
+
+// ---------------------------------------------------------------- maths
+var PI = Math.PI;
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function lerp(a,b,u){ return a + (b - a) * u; }
+function smooth(u){ u = clamp(u,0,1); return u*u*(3-2*u); }
+function ease(u){ u = clamp(u,0,1); return u*u*u*(u*(u*6 - 15) + 10); } // quintic ease-in-out for camera keyframes: zero velocity and acceleration at each key
+function ramp(t,a,b){ return smooth((t - a) / (b - a)); }
+function lin(t,a,b){ return clamp((t - a) / (b - a), 0, 1); }
+function frac(x){ return x - Math.floor(x); }
+function tri(x){ return 1 - Math.abs(frac(x)*2 - 1); }
+function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function V(x,y,z){ return new THREE.Vector3(x,y,z); }
+
+// ---------------------------------------------------------------- palette
+var C = { sand:0xCDBE9C, soil:0x5E4634, grass:0x7FA463, lawn:0x86AE68, road:0x6E7276, plaza:0xE0D9C8, wood:0x8E6F50, roof:0x3A4652, wallc:0xE5DFD0,
+  robot:0xDCD9D2, robotB:0xB8C4CC, robotC:0xE8C98A, inspector:0xF5F5F2, human:0xC98E6A, skin:0xE2B48F, water:0x4A9BE0, leaf:0x3E8A3A, leafL:0x9CCB5A, tomato:0xD84A3A, lettuce:0xA6D46A,
+  teal:0x2A9D8F, amber:0xE9A23B, green:0x3FA34D, red:0xD84A3A, dark:0x1E262C, glass:0x9FC6D6, metal:0x9AA0A6, van:0xF1EFE8, crate:0xD9B88A, box:0xEADFC6, fence:0xB9AE98 };
+
+// ---------------------------------------------------------------- renderer / scene / light
+var canvas = document.getElementById('c');
+var renderer = null;
+var scene = new THREE.Scene();
+var SKY_DAY = new THREE.Color(0xD6E6EC), SKY_NIGHT = new THREE.Color(0x0E1A2A);
+// sky gradient keys (top / horizon): the clean day sky of the scenarios, a clean dawn for the cold open, a clean dusk for the close, night
+var SKY_TOP = new THREE.Color(0x86AFC6), SKY_HOR = new THREE.Color(0xD6E6EC), DAWN_TOP = new THREE.Color(0x7FB0DC), DAWN_HOR = new THREE.Color(0xFCE9CF),
+    DUSK_TOP = new THREE.Color(0x3F6FA8), DUSK_HOR = new THREE.Color(0xF7C79A), NIGHT_TOP = new THREE.Color(0x0A1322), NIGHT_HOR = new THREE.Color(0x2C3B52);
+scene.background = SKY_DAY.clone();
+scene.fog = new THREE.Fog(SKY_DAY.clone(), 120, 320);
+var camera = new THREE.PerspectiveCamera(48, 16/9, 0.3, 1200);
+var skyMat, skyCol, skyMix, setSky;
+(function(){
+  var g = new THREE.SphereGeometry(600, 24, 12), pos = g.attributes.position, c = new THREE.Color();
+  skyMix = new Float32Array(pos.count); skyCol = new THREE.BufferAttribute(new Float32Array(pos.count*3), 3);
+  for (var i=0;i<pos.count;i++) skyMix[i] = smooth(clamp(pos.getY(i)/600*1.8, 0, 1));
+  g.setAttribute('color', skyCol);
+  // the sky is a vertical gradient between a horizon colour and a top colour; lighting(t) re-keys it per frame (pure function of t)
+  setSky = function(top, hor){ for (var i=0;i<skyMix.length;i++){ c.copy(hor).lerp(top, skyMix[i]); skyCol.setXYZ(i, c.r, c.g, c.b); } skyCol.needsUpdate = true; };
+  setSky(SKY_TOP, SKY_HOR);
+  skyMat = new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.BackSide, fog:false, depthWrite:false });
+  var sky = new THREE.Mesh(g, skyMat); sky.renderOrder = -10; scene.add(sky);
+})();
+var hemi = new THREE.HemisphereLight(0xE4EEF2, 0xC9BCA0, 0.55); scene.add(hemi);
+var sun = new THREE.DirectionalLight(0xFFF4E0, 0.9);
+var SUNDIR = V(-0.55, 0.8, 0.5).normalize();
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -70; sun.shadow.camera.right = 70; sun.shadow.camera.top = 70; sun.shadow.camera.bottom = -70;
+sun.shadow.camera.near = 10; sun.shadow.camera.far = 400; sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.09;
+scene.add(sun); scene.add(sun.target);
+function aimSun(cx, cz, half){ half = half || 70; sun.position.set(cx + SUNDIR.x*160, SUNDIR.y*160, cz + SUNDIR.z*160); sun.target.position.set(cx, 0, cz);
+  var sc = sun.shadow.camera; if (sc.right !== half) { sc.left = -half; sc.right = half; sc.top = half; sc.bottom = -half; sc.updateProjectionMatrix(); } }
+aimSun(0, 0);
+
+// ---------------------------------------------------------------- geometry helpers
+var UG = { box:new THREE.BoxGeometry(1,1,1), cyl:new THREE.CylinderGeometry(0.5,0.5,1,12), cyl6:new THREE.CylinderGeometry(0.5,0.5,1,6), sph:new THREE.SphereGeometry(0.5,10,8),
+  cone:new THREE.ConeGeometry(0.5,1,10), pyr:new THREE.ConeGeometry(0.72,1,4), plane:new THREE.PlaneGeometry(1,1), torus:new THREE.TorusGeometry(0.5,0.03,6,32), disc:new THREE.CircleGeometry(0.5,16) };
+var MATS = {};
+function mat(color, opt){ var key = color + '|' + JSON.stringify(opt||{}); if (!MATS[key]) { var o = { color:color }; if (opt) for (var k in opt) o[k] = opt[k]; MATS[key] = new THREE.MeshLambertMaterial(o); } return MATS[key]; }
+function mesh(geo, color, sx, sy, sz, x, y, z, opt, parent){
+  var m = new THREE.Mesh(geo, opt && opt.mat ? opt.mat : mat(color, opt && opt.m));
+  m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = !(opt && opt.noShadow); m.receiveShadow = true;
+  if (opt && opt.ry) m.rotation.y = opt.ry; if (opt && opt.rx) m.rotation.x = opt.rx; if (opt && opt.rz) m.rotation.z = opt.rz;
+  (parent || scene).add(m); return m;
+}
+function box(c, sx, sy, sz, x, y, z, p, o){ return mesh(UG.box, c, sx, sy, sz, x, y, z, o, p); }
+function cyl(c, r, h, x, y, z, p, o){ return mesh(UG.cyl, c, r*2, h, r*2, x, y, z, o, p); }
+function sph(c, r, x, y, z, p, o){ return mesh(UG.sph, c, r*2, r*2, r*2, x, y, z, o, p); }
+function grp(x, y, z, p){ var g = new THREE.Group(); g.position.set(x||0, y||0, z||0); (p || scene).add(g); return g; }
+function emis(color, i){ return new THREE.MeshLambertMaterial({ color:color, emissive:color, emissiveIntensity:i == null ? 0.8 : i }); }
+// camera clearance colliders (axis-aligned boxes, world space) for the verification API
+var COLL = [];
+function coll(x0,y0,z0,x1,y1,z1,label){ COLL.push({min:V(Math.min(x0,x1),Math.min(y0,y1),Math.min(z0,z1)), max:V(Math.max(x0,x1),Math.max(y0,y1),Math.max(z0,z1)), label:label}); }
+// ---------------------------------------------------------------- the village (static world)
+var W = {}; // handles to animated world objects
+mesh(UG.plane, 0xBDBF8C, 400, 400, 1, 0, 0, 0, {rx:-PI/2, noShadow:true});
+mesh(UG.plane, C.grass, 96, 84, 1, 0, 0.01, 0, {rx:-PI/2, noShadow:true});
+// perimeter fence
+(function(){ var m = mat(C.fence); W.gateFence = []; // the three south posts and the rail piece at x 4..8 give way to the entrance gate on the closing slides
+  for (var x=-46;x<=46;x+=2){ mesh(UG.box, C.fence, 0.12, 1.6, 0.12, x, 0.8, -40, {mat:m}); var sp = mesh(UG.box, C.fence, 0.12, 1.6, 0.12, x, 0.8, 40, {mat:m}); if (x >= 4 && x <= 8) W.gateFence.push(sp); }
+  for (var z=-40;z<=40;z+=2){ mesh(UG.box, C.fence, 0.12, 1.6, 0.12, -46, 0.8, z, {mat:m}); mesh(UG.box, C.fence, 0.12, 1.6, 0.12, 46, 0.8, z, {mat:m}); }
+  box(C.fence, 92, 0.06, 0.06, 0, 1.4, -40); box(C.fence, 49.4, 0.06, 0.06, -21.3, 1.4, 40); box(C.fence, 37.4, 0.06, 0.06, 27.3, 1.4, 40); W.gateFence.push(box(C.fence, 5.2, 0.06, 0.06, 6, 1.4, 40)); box(C.fence, 0.06, 0.06, 80, -46, 1.4, 0); box(C.fence, 0.06, 0.06, 80, 46, 1.4, 0); })();
+function tree(x, z, s){ s = s || 1; cyl(C.wood, 0.22*s, 2.2*s, x, 1.1*s, z); sph(C.leaf, 1.7*s, x, 3.3*s, z); sph(0x4E9A44, 1.2*s, x+0.5*s, 4.1*s, z-0.3*s); coll(x-1.8*s,0,z-1.8*s,x+1.8*s,5.4*s,z+1.8*s,'tree'); }
+[[-38,-20],[38,-8],[-36,8],[43,37],[-8,36],[14,36],[2,-38],[-30,-36],[-13,11],[16,11],[-40,26,0.8],[42,-30,0.8],[4,-34,0.9]].forEach(function(p){ tree(p[0], p[1], p[2]); });
+
+// --- the square: plaza, the wall, the stall, the inspector's bench, ledger icons
+box(C.plaza, 26, 0.1, 22, 0, 0.05, 0);
+box(C.road, 30, 0.06, 4, -10, 0.03, 12); box(C.road, 4, 0.06, 26, 0, 0.03, -22);   // roads to the street and toward the mast
+mesh(UG.plane, 0xC8BFA6, 4, 34, 1, 13, 0.04, -5.5, {rx:-PI/2, noShadow:true}).rotation.z = -0.62; // sand path shed -> square
+(function(){ // the wall
+  box(0x4A5561, 8.4, 0.6, 0.9, 0, 0.3, -9); box(0x3A4652, 8, 4.2, 0.4, 0, 2.7, -9);
+  W.wallScreen = mesh(UG.plane, 0x16324A, 7.2, 3.2, 1, 0, 2.75, -8.78, {mat:emis(0x16324A, 0.6), noShadow:true});
+  W.wallCards = [];
+  for (var i=0;i<3;i++){ var g = grp(-2.3 + i*2.3, 2.75, -8.7); var card = mesh(UG.plane, 0xF3EFE6, 1.6, 2.2, 1, 0, 0, 0, {mat:emis(0xF3EFE6, 0.5), noShadow:true}, g); g.userData.card = card; W.wallCards.push(g); }
+  // glyphs: tomato / tree / bell, and later: mock-crop (pot) / remote-human (head + halo)
+  var g0 = W.wallCards[0]; sph(C.tomato, 0.42, 0, -0.1, 0.06, g0); mesh(UG.cone, C.leaf, 0.3, 0.3, 0.3, 0, 0.4, 0.06, {}, g0);
+  var g1 = W.wallCards[1]; cyl(C.wood, 0.08, 0.7, 0, -0.5, 0.06, g1); sph(C.leaf, 0.5, 0, 0.2, 0.06, g1);
+  var g2 = W.wallCards[2]; mesh(UG.cone, C.amber, 0.9, 0.9, 0.9, 0, 0.1, 0.06, {}, g2); sph(C.amber, 0.12, 0, -0.45, 0.06, g2);
+  W.wallAlt = []; // close-2 cards
+  var a0 = grp(-1.2, 2.75, -8.7); mesh(UG.plane, 0xF3EFE6, 1.6, 2.2, 1, 0, 0, 0, {mat:emis(0xF3EFE6,0.5), noShadow:true}, a0); box(0xB0724F, 0.7, 0.6, 0.5, 0, -0.5, 0.06, a0); sph(C.lettuce, 0.4, 0, 0.1, 0.06, a0); sph(C.tomato, 0.14, 0.25, 0.35, 0.3, a0);
+  var a1 = grp(1.2, 2.75, -8.7); mesh(UG.plane, 0xF3EFE6, 1.6, 2.2, 1, 0, 0, 0, {mat:emis(0xF3EFE6,0.5), noShadow:true}, a1); sph(C.skin, 0.28, 0, 0.2, 0.08, a1); box(0x3E6FB0, 0.7, 0.5, 0.3, 0, -0.35, 0.08, a1); mesh(UG.torus, C.teal, 1.7, 1.7, 1.7, 0, 0, 0.08, {noShadow:true}, a1);
+  W.wallAlt.push(a0, a1);
+  coll(-4.3,0,-9.6,4.3,4.9,-8.4,'wall');
+})();
+(function(){ // the stall at (5.5, 0, 3) with price screen and delivery bay
+  box(C.wood, 3, 1, 1, 5.5, 0.5, 3); box(0xF3EFE6, 3.1, 0.08, 1.1, 5.5, 1.02, 3);
+  [[4.1,2.5],[6.9,2.5],[4.1,3.5],[6.9,3.5]].forEach(function(p){ cyl(C.wood, 0.05, 2.6, p[0], 1.3, p[1]); });
+  box(C.green, 3.5, 0.08, 1.7, 5.5, 2.6, 3); box(C.red, 3.5, 0.08, 0.28, 5.5, 2.6, 3.85);
+  W.shelfBoxes = []; for (var i=0;i<3;i++) W.shelfBoxes.push(box(C.box, 0.55, 0.3, 0.4, 4.6 + i*0.9, 1.21, 3));
+  cyl(C.metal, 0.05, 2.2, 7.4, 1.1, 2.5); box(0x1E262C, 1.1, 0.8, 0.08, 7.4, 1.95, 2.5);
+  W.priceBars = []; for (i=0;i<3;i++) W.priceBars.push(mesh(UG.box, C.amber, 0.22, 0.4, 0.04, 7.05 + i*0.35, 1.8, 2.57, {mat:emis(C.amber,0.7), noShadow:true}));
+  box(0xC9C2B0, 2.2, 0.06, 1.6, 8.9, 0.13, 3.4); box(C.green, 2.3, 0.02, 0.1, 8.9, 0.17, 4.2);
+  W.bayBoxes = []; for (i=0;i<3;i++) W.bayBoxes.push(box(C.box, 0.55, 0.3, 0.4, 8.2 + i*0.7, 0.31, 3.4));
+  coll(3.9,0,2.3,7.6,2.7,4.1,'stall'); coll(7.8,0,2.6,10,0.6,4.3,'bay');
+})();
+(function(){ // inspector's bench at (11, 0, 1): tray, scanner, verdict lamp; ledger post with wallet bar + two arm icons
+  box(0xF3EFE6, 2, 0.08, 0.9, 11, 0.9, 1); [[10.2,0.65],[11.8,0.65],[10.2,1.35],[11.8,1.35]].forEach(function(p){ cyl(C.metal, 0.03, 0.9, p[0], 0.45, p[1]); });
+  box(0xB8C4CC, 0.9, 0.06, 0.6, 10.6, 0.97, 1);
+  W.trayBoxes = []; for (var i=0;i<3;i++) W.trayBoxes.push(box(C.box, 0.55, 0.3, 0.4, 10.3 + i*0.3, 1.15, 1 - i*0.04));
+  cyl(C.metal, 0.04, 1.0, 11.7, 1.4, 0.75); var head = grp(11.7, 1.9, 0.75); W.scanHead = head; box(0x1E262C, 0.5, 0.16, 0.24, 0, 0, 0, head); sph(C.glass, 0.07, 0, -0.1, 0, head);
+  W.verdict = mesh(UG.sph, C.green, 0.24, 0.24, 0.24, 11.7, 2.2, 0.75, {mat:emis(C.green, 0.9), noShadow:true});
+  // ledger post north-west of the bench, its face turned south-east so it reads from the square and from the experiment beat's east cameras
+  var lg = grp(9.4, 0, -0.3); lg.rotation.y = PI/4; W.ledger = lg;
+  cyl(0x1E262C, 0.06, 1.8, 0, 0.9, 0, lg); box(0x1E262C, 0.9, 1.3, 0.08, 0, 1.9, 0, lg);
+  W.wallet = mesh(UG.box, C.green, 0.3, 0.6, 0.04, -0.25, 1.6, 0.07, {mat:emis(C.green, 0.7), noShadow:true}, lg);
+  // arm icons: Q = coin at the sale counter; I = coin held behind the inspector's stamp
+  var qi = grp(0.25, 2.15, 0.07, lg), ii = grp(0.25, 1.55, 0.07, lg); W.armQ = qi; W.armI = ii;
+  mesh(UG.disc, C.amber, 0.24, 0.24, 1, 0, 0, 0, {mat:emis(C.amber,0.1), noShadow:true}, qi); box(0xF3EFE6, 0.36, 0.05, 0.04, 0, -0.16, 0, qi);
+  mesh(UG.disc, C.amber, 0.24, 0.24, 1, 0, 0, -0.02, {mat:emis(C.amber,0.1), noShadow:true}, ii); box(0x6E7276, 0.28, 0.2, 0.06, 0, 0.02, 0.03, ii); box(0x6E7276, 0.1, 0.16, 0.06, 0, 0.18, 0.03, ii);
+  coll(10,0,0.5,12,2.3,1.5,'bench'); coll(8.8,0,-0.9,10,2.6,0.3,'ledger');
+})();
+(function(){ // the pub at (-16, 0, -4) with six charging bays
+  box(C.wallc, 10, 5, 7, -16, 2.5, -4); box(C.roof, 10.6, 0.5, 7.6, -16, 5.2, -4); box(C.roof, 0.5, 4, 0.5, -19, 6.5, -6); box(C.roof, 0.5, 4, 0.5, -13, 6.5, -6); // chimneys
+  box(0xD9A441, 3.6, 3.2, 0.2, -16, 1.8, -0.4); box(C.wood, 1, 2.2, 0.12, -16, 1.1, -0.34);
+  W.pubWin = []; [-19.5, -12.5].forEach(function(x){ W.pubWin.push(mesh(UG.plane, 0xFFE3A6, 1.4, 1.2, 1, x, 2.4, -0.48, {mat:emis(0xFFE3A6, 0.2), noShadow:true})); });
+  cyl(0xF3EFE6, 0.35, 0.6, -16, 3.4, -0.2); box(0xF3EFE6, 0.12, 0.35, 0.12, -15.55, 3.4, -0.2); // mug sign
+  W.bays = []; for (var i=0;i<6;i++){ var x = -20.5 + i*1.8; box(0x7A8086, 1.3, 0.08, 1.3, x, 0.04, 1.6); cyl(C.metal, 0.06, 1.0, x, 0.5, 2.35);
+    var l = mesh(UG.sph, C.teal, 0.18, 0.18, 0.18, x, 1.05, 2.35, {mat:emis(C.teal, 0.9), noShadow:true}); W.bays.push({x:x, light:l}); }
+  coll(-21.4,0,-8,-10.6,7,0.2,'pub'); coll(-21.5,0,0.8,-10.5,1.3,2.8,'bays');
+})();
+(function(){ // broadcast mast at (-6, 0, -30)
+  box(0xA9B0B5, 2.2, 8, 2.2, -6, 4, -30); box(0x3A4652, 0.9, 1.9, 0.1, -6, 0.95, -28.86); cyl(C.metal, 0.08, 3, -6, 23.5, -30);
+  for (var k=0;k<4;k++){ box(k%2 ? 0xF3EFE6 : C.red, 1.5, 1.75, 1.5, -6, 8.875 + k*1.75, -30); box(k%2 ? C.red : 0xF3EFE6, 0.9, 1.75, 0.9, -6, 15.875 + k*1.75, -30); }
+  box(0x3A4652, 3.0, 0.2, 3.0, -6, 8.1, -30); box(0x3A4652, 2.1, 0.2, 2.1, -6, 15.1, -30); [[-1.4,-1.4],[1.4,-1.4],[-1.4,1.4],[1.4,1.4]].forEach(function(q){ cyl(0x3A4652, 0.04, 0.9, -6 + q[0], 8.6, -30 + q[1]); });
+  mesh(UG.sph, 0xF3EFE6, 1.7, 1.7, 0.5, -6, 12.4, -29.05, {}); mesh(UG.sph, 0xF3EFE6, 1.2, 1.2, 0.4, -5.3, 18.2, -29.45, {ry:0.7}); mesh(UG.sph, 0xF3EFE6, 0.5, 1.3, 1.3, -5.0, 10.6, -30, {});
+  W.mastLight = mesh(UG.sph, C.red, 0.5, 0.5, 0.5, -6, 25.2, -30, {mat:emis(C.red, 1), noShadow:true});
+  for (var i=0;i<3;i++){ var a = i*2.1 + 0.5; box(0x7A8086, 0.4, 0.6, 0.4, -6 + Math.cos(a)*1.0, 14, -30 + Math.sin(a)*1.0); }
+  coll(-7.4,0,-31.4,-4.6,26,-28.6,'mast');
+})();
+
+// --- the street of six houses (road along z = 22), notice board, bell, bylaw board, docking bays
+box(C.road, 34, 0.06, 5, -16, 0.03, 22); box(C.lawn, 34, 0.05, 3.5, -16, 0.02, 17.7); box(C.lawn, 34, 0.05, 3.5, -16, 0.02, 26.3);
+W.houses = [];
+function house(x, z, south, tint){
+  var g = grp(x, 0, z), fz = south ? -3.02 : 3.02, s = south ? -1 : 1;
+  box(tint, 6, 3.6, 6, 0, 1.8, 0, g); mesh(UG.pyr, C.roof, 7, 2.6, 7, 0, 4.9, 0, {ry:PI/4}, g);
+  box(C.wood, 1, 2.1, 0.12, 0, 1.05, fz, g);
+  var wins = [mesh(UG.plane, 0xFFE3A6, 1.1, 1.0, 1, -1.9, 2.0, fz + 0.02*s, {mat:emis(0xFFE3A6, 0.15), noShadow:true, ry:south ? PI : 0}, g),
+              mesh(UG.plane, 0xFFE3A6, 1.1, 1.0, 1, 1.9, 2.0, fz + 0.02*s, {mat:emis(0xFFE3A6, 0.15), noShadow:true, ry:south ? PI : 0}, g)];
+  var dz = south ? -4.1 : 4.1; box(0x7A8086, 1.3, 0.08, 1.3, 2, 0.04, dz, g); cyl(C.metal, 0.05, 0.9, 2.6, 0.45, dz - 0.5*s, g);
+  var dl = mesh(UG.sph, C.teal, 0.16, 0.16, 0.16, 2.6, 0.95, dz - 0.5*s, {mat:emis(C.teal, 0.9), noShadow:true}, g);
+  coll(x-3.3,0,z-3.3,x+3.3,6.4,z+3.3,'house');
+  var h = {g:g, x:x, z:z, wins:wins, dock:{x:x+2, z:z+dz, light:dl}, south:south}; W.houses.push(h); return h;
+}
+[[-29,13,false,0xE5DFD0],[-20,13,false,0xD8CDB6],[-11,13,false,0xE1D6C8],[-29,31,true,0xD5D9CE],[-20,31,true,0xE5DFD0],[-11,31,true,0xDCCFC0]].forEach(function(p){ house(p[0], p[1], p[2], p[3]); });
+W.noisy = W.houses[2]; W.litterer = W.houses[3];
+(function(){ // rule board at (-20, 0, 17.8), bell at (-17.5, 0, 18.2), watch camera at (-18.2, 0, 17.6), bylaw board at (-2, 0, 17.8)
+  // The rule board is built 1.4 x life size so it reads from the road. Left column (blue header, person glyph): the rules PEOPLE set - three blue
+  // lines, always there. Right column (amber header, robot glyph): rules ROBOTS add - amber lines that appear only when a robot posts one.
+  var PEOPLE = 0x1F5FE0, nb = grp(-20, 0, 17.8); nb.scale.set(1.4, 1.4, 1.4); W.ruleBoard = nb;
+  cyl(C.wood, 0.06, 2.2, -0.8, 1.1, 0, nb); cyl(C.wood, 0.06, 2.2, 0.8, 1.1, 0, nb); box(0x6B5A45, 2, 1.3, 0.1, 0, 1.7, 0, nb);
+  // the cream panel is self-lit and takes no cast shadow, so no roof or lamp shadow ever falls across the rules
+  W.boardPanel = mesh(UG.box, 0xF3EFE6, 1.8, 1.1, 0.02, 0, 1.7, 0.06, {mat:emis(0xF3EFE6, 0.3), noShadow:true}, nb); W.boardPanel.receiveShadow = false; box(0x6B5A45, 0.03, 1.02, 0.02, 0, 1.7, 0.075, nb, {noShadow:true});
+  // column headers, in words: "People's rules" on the blue band, "Robots' rules" on the amber band (canvas textures, drawn once the fonts are in)
+  W.boardHeads = [['People’s rules', '#1F5FE0', '#FFFFFF', -0.46], ['Robots’ rules', '#E9A23B', '#14100A', 0.46]].map(function(h){
+    var cv = document.createElement('canvas'); cv.width = 512; cv.height = 128; var tx = new THREE.CanvasTexture(cv);
+    var m = mesh(UG.plane, 0xFFFFFF, 0.84, 0.21, 1, h[3], 2.125, 0.09, {mat:new THREE.MeshBasicMaterial({map:tx, fog:false}), noShadow:true}, nb); m.receiveShadow = false;
+    return { cv:cv, tx:tx, text:h[0], bg:h[1], fg:h[2] }; });
+  [0.64, 0.74, 0.52].forEach(function(w, k){ mesh(UG.box, PEOPLE, w, 0.09, 0.02, -0.82 + w/2, 1.9 - k*0.15, 0.075, {mat:emis(PEOPLE, 0.8), noShadow:true}, nb); }); // people-made rules
+  W.robotRules = [0.7, 0.56].map(function(w, k){ var m = mesh(UG.box, C.amber, w, 0.09, 0.02, 0.1 + w/2, 1.9 - k*0.15, 0.075, {mat:emis(C.amber, 0.7), noShadow:true}, nb); m.visible = false; return m; }); // robot-added rules
+  W.proposal = mesh(UG.plane, 0xFFF6D6, 0.8, 0.16, 1, 0.47, 1.9, 0.07, {noShadow:true}, nb);
+  W.pinPip = mesh(UG.sph, C.red, 0.07, 0.07, 0.07, 0.86, 1.9, 0.1, {mat:emis(C.red,0.8), noShadow:true}, nb);
+  W.votePips = []; for (var i=0;i<4;i++) W.votePips.push(mesh(UG.sph, C.amber, 0.11, 0.11, 0.11, 0.2 + i*0.17, 1.36, 0.1, {mat:emis(C.amber, 0.0), noShadow:true}, nb));
+  // rule-break counters, bottom left: a lit eye-dot over the "watched" bar, a dark dot over the "unwatched" bar (bars, no words)
+  mesh(UG.sph, C.green, 0.07, 0.07, 0.07, -0.7, 1.49, 0.1, {mat:emis(C.green, 0.9), noShadow:true}, nb); sph(0x1E262C, 0.035, -0.45, 1.49, 0.1, nb, {noShadow:true});
+  W.breakBars = [-0.7, -0.45].map(function(x){ return mesh(UG.box, C.red, 0.12, 0.2, 0.02, x, 1.3, 0.075, {mat:emis(C.red, 0.6), noShadow:true}, nb); });
+  cyl(C.wood, 0.06, 2.4, -26.3, 1.2, 19.2); var bell = grp(-26.3, 2.35, 19.2); W.bell = bell; mesh(UG.cone, C.amber, 0.5, 0.5, 0.5, 0, 0, 0, {mat:emis(C.amber,0.2)}, bell); sph(0x6E7276, 0.06, 0, -0.28, 0, bell);
+  // practical lamp: a low hood along the top edge of the board with a warm strip under it (lit only on the Charter beats). No post stands
+  // above or in front of the board, so nothing crosses the rules and nothing reaches the labels at the top of the frame.
+  box(0x1E262C, 1.9, 0.07, 0.34, 0, 2.4, 0.2, nb, {noShadow:true});
+  W.boardLampGlow = mesh(UG.box, 0xFFE3A6, 1.7, 0.03, 0.08, 0, 2.355, 0.3, {mat:emis(0xFFE3A6, 0), noShadow:true}, nb);
+  W.boardLamp = new THREE.PointLight(0xFFD9A8, 0, 14, 2); W.boardLamp.position.set(-20, 3.0, 20.6); scene.add(W.boardLamp);
+  // the watch camera beside the board: its lamp and the green "watched" zone on the ground are ON in watched periods and OFF in unwatched ones
+  // (it stands just west of the board, a little behind its plane and no taller than the board's hood, so it never crosses the rules)
+  cyl(C.metal, 0.07, 3.0, -22.9, 1.5, 17.3); box(0x1E262C, 0.34, 0.26, 0.6, -22.9, 2.85, 17.65, null, {rx:0.45}); cyl(0x3A4652, 0.1, 0.1, -22.9, 2.72, 17.97, null, {rx:PI/2 + 0.45});
+  W.watchLamp = mesh(UG.sph, C.green, 0.46, 0.46, 0.46, -22.9, 3.24, 17.3, {mat:emis(C.green, 1), noShadow:true});
+  W.watchZone = mesh(UG.disc, C.green, 9, 9, 1, -19.4, 0.09, 20.4, {mat:new THREE.MeshBasicMaterial({color:C.green, transparent:true, opacity:0.32, depthWrite:false}), noShadow:true, rx:-PI/2}); W.watchZone.visible = false;
+  W.watchEdge = mesh(UG.torus, C.green, 9, 9, 3, -19.4, 0.1, 20.4, {mat:new THREE.MeshBasicMaterial({color:C.green}), noShadow:true, rx:PI/2}); W.watchEdge.visible = false;
+  // the red ring marks a logged rule break under the robot that broke the rule
+  W.sancRing = mesh(UG.torus, C.red, 2.6, 2.6, 2.6, 0, 0.06, 0, {mat:new THREE.MeshBasicMaterial({color:C.red}), noShadow:true, rx:PI/2}); W.sancRing.visible = false;
+  cyl(C.metal, 0.05, 2.1, -2.7, 1.05, 17.8); cyl(C.metal, 0.05, 2.1, -1.3, 1.05, 17.8); box(0x1E262C, 1.6, 1.0, 0.08, -2, 1.75, 17.8);
+  // three fixed rule icons: quiet hours (moon), litter (bin), speed (dial)
+  sph(0xFFE3A6, 0.16, -2.5, 1.85, 17.86); box(C.teal, 0.22, 0.3, 0.04, -2, 1.8, 17.86); mesh(UG.torus, C.amber, 0.5, 0.5, 0.5, -1.5, 1.8, 17.86, {noShadow:true}); box(C.amber, 0.03, 0.2, 0.02, -1.5, 1.88, 17.88);
+  coll(-21.4,0,17.4,-18.6,3.5,18.4,'ruleboard'); coll(-23.2,0,17.0,-22.6,3.5,18.1,'watchcam'); coll(-26.6,0,18.9,-26.0,2.7,19.5,'bell'); coll(-2.9,0,17.5,-1.1,2.4,18.1,'bylaw');
+  // sound rings from the Noisy house, three tori scaled by t
+  W.rings = []; for (i=0;i<3;i++) W.rings.push(mesh(UG.torus, C.amber, 1, 1, 1, -11, 2.3, 16.4, {mat:new THREE.MeshBasicMaterial({color:C.amber, transparent:true, opacity:0.6}), noShadow:true}));
+  // litter on the north lawn (the Litterer's items) — visibility driven per scene
+  W.litC = []; var r = rng(7); for (i=0;i<10;i++){ var m = box(i%2 ? 0xFFFFFF : C.red, 0.24, 0.1, 0.17, -25 + r()*12, 0.07, 16.6 + r()*1.6, null, {ry:r()*3}); W.litC.push(m); }
+  // sound meters at each house, small posts
+  W.houses.forEach(function(h){ cyl(C.metal, 0.03, 1.2, h.x - 2.4, 0.6, h.z + (h.south ? -3.6 : 3.6)); sph(0x1E262C, 0.08, h.x - 2.4, 1.25, h.z + (h.south ? -3.6 : 3.6)); });
+})();
+
+// --- the park: x 18..38, z 12..27
+box(C.lawn, 20, 0.05, 15, 28, 0.03, 19.5);
+(function(){
+  var m = mat(C.fence);
+  function post(x, z){ mesh(UG.box, C.fence, 0.1, 1.2, 0.1, x, 0.6, z, {mat:m}); }
+  for (var x=18;x<=38;x+=2.5){ post(x, 12); post(x, 27); } for (var z=12;z<=27;z+=2.5){ post(38, z); if (z < 18 || z > 21) post(18, z); }
+  box(C.fence, 20, 0.05, 0.05, 28, 1.05, 12); box(C.fence, 20, 0.05, 0.05, 28, 1.05, 27); box(C.fence, 0.05, 0.05, 15, 38, 1.05, 19.5); box(C.fence, 0.05, 0.05, 6, 18, 1.05, 15); box(C.fence, 0.05, 0.05, 6, 18, 1.05, 24);
+  coll(17.9,0,12,38.1,1.2,12.1,'fence'); coll(17.9,0,26.9,38.1,1.2,27.1,'fence'); coll(37.9,0,12,38.1,1.2,27,'fence'); coll(17.9,0,12,18.1,1.2,18,'fence'); coll(17.9,0,21,18.1,1.2,27,'fence');
+  W.gate = [grp(18, 0, 18.1), grp(18, 0, 20.9)]; box(C.fence, 0.08, 1.1, 1.3, 0, 0.6, 0.65, W.gate[0]); box(C.fence, 0.08, 1.1, 1.3, 0, 0.6, -0.65, W.gate[1]);
+  // task board at the gate (three meters + specialisation gauges + ten session pips), glyphs only
+  cyl(C.metal, 0.05, 2.0, 15.6, 1.0, 16.6); cyl(C.metal, 0.05, 2.0, 17.0, 1.0, 16.6); box(0x1E262C, 1.7, 1.1, 0.08, 16.3, 1.75, 16.6);
+  W.parkBars = []; var cols = [C.red, C.water, 0xE07AA6]; for (var i=0;i<3;i++) W.parkBars.push(mesh(UG.box, cols[i], 0.22, 0.5, 0.04, 15.8 + i*0.32, 1.65, 16.67, {mat:emis(cols[i], 0.7), noShadow:true}));
+  W.parkPips = []; for (i=0;i<10;i++) W.parkPips.push(mesh(UG.sph, C.teal, 0.08, 0.08, 0.08, 15.6 + i*0.155, 1.3, 16.67, {mat:emis(C.teal, 0), noShadow:true}));
+  W.parkGauges = []; for (i=0;i<4;i++){ var g = mesh(UG.box, C.teal, 0.05, 0.14, 0.03, 16.7 + i*0.1, 1.95, 16.67, {mat:emis(C.teal, 0.8), noShadow:true}); W.parkGauges.push(g); }
+  coll(15.4,0,16.3,17.2,2.4,16.9,'taskboard');
+  // beds (soil tint = dryness), flowers appear on bloom
+  W.beds = []; [[24,15],[30,15],[35,25.5]].forEach(function(p, k){
+    box(C.wood, 3.2, 0.5, 2.2, p[0], 0.25, p[1]); var sm = new THREE.MeshLambertMaterial({color:0x8A7A62}); var soil = mesh(UG.box, 0, 3, 0.1, 2, p[0], 0.5, p[1], {mat:sm});
+    var fl = []; var r = rng(11 + k); for (var j=0;j<9;j++){ var f = sph([C.red, C.amber, 0xE07AA6][j%3], 0.12, p[0] - 1.2 + r()*2.4, 0.75, p[1] - 0.8 + r()*1.6); cyl(C.leaf, 0.02, 0.3, f.position.x, 0.62, f.position.z); fl.push(f); }
+    cyl(C.metal, 0.02, 0.9, p[0] + 1.3, 0.7, p[1] + 0.9); coll(p[0]-1.7,0,p[1]-1.2,p[0]+1.7,1,p[1]+1.2,'bed'); W.beds.push({x:p[0], z:p[1], soil:sm, flowers:fl}); });
+  W.bins = []; [[20,25.5],[36,13]].forEach(function(p){ W.bins.push(cyl(C.teal, 0.35, 0.9, p[0], 0.45, p[1])); coll(p[0]-0.4,0,p[1]-0.4,p[0]+0.4,1,p[1]+0.4,'bin'); });
+  cyl(C.metal, 0.05, 1.0, 37, 0.5, 26); box(C.metal, 0.4, 0.06, 0.06, 36.85, 1.0, 26); box(C.water, 0.5, 0.05, 0.5, 37, 0.03, 26); // tap
+  for (i=0;i<4;i++) box(C.green, 0.3, 0.3, 0.2, 36.6 - i*0.4, 0.15, 25.4); // watering cans
+  W.trays = []; for (i=0;i<2;i++){ var tr = box(0x1E262C, 0.7, 0.1, 0.45, 19.4, 0.08, 17.3 + i*0.6); for (var j=0;j<6;j++) sph(C.leafL, 0.05, 19.15 + (j%3)*0.25, 0.16, 17.15 + i*0.6 + Math.floor(j/3)*0.25); W.trays.push(tr); }
+  W.plantSlots = []; for (i=0;i<6;i++){ var sx = 26 + i*1.2, sz = 24.5; box(C.soil, 0.4, 0.04, 0.4, sx, 0.06, sz); var sp = sph(C.leafL, 0.14, sx, 0.12, sz); sp.visible = false; W.plantSlots.push(sp); }
+  // The litter lies in two bands - along the north fence and down the east side. For all three park cameras that ground is in the upper or right part of the frame,
+  // clear of the caption block (the mask in litterMask() is the safety net for other viewport shapes). It keeps clear of the beds, the bins, the tree trunks and
+  // the low camera's lane along z = 20.
+  W.litP = []; var rr = rng(31); for (i=0;i<44;i++){ var lx, lz; if (i%2) { lx = 22.6 + rr()*14.4; lz = 12.7 + rr()*1.9; if ((Math.abs(lx-24) < 1.9 || Math.abs(lx-30) < 1.9) && lz > 13.6) lz = 12.7 + rr()*0.8; if (lx > 35.2) { lx -= 2.2; } }
+      else { lx = 33.5 + rr()*3.8; lz = 15.8 + rr()*8.2; if (Math.abs(lz-20.3) < 1.7) lz += lz < 20.3 ? -2.2 : 2.2; if (lx > 36.2 && lz < 16.6) lx -= 1.6; }
+    // believable sizes: a drinks can (12 cm across, 20 cm long) or a crushed carton / wrapper (26 x 18 cm), not bricks
+    var lm = i%3 === 0 ? cyl(C.red, 0.06, 0.2, lx, 0.07, lz, null, {rz:PI/2, ry:rr()*3}) : box(i%3 === 1 ? 0xFFFFFF : 0x6FC3F0, 0.26, 0.07, 0.18, lx, 0.05, lz, null, {ry:rr()*3}); W.litP.push(lm); }
+  tree(20.5, 13.8, 0.9); tree(37, 15, 0.9);
+})();
+
+// --- the market garden: plot x 14..26, z -30..-20; shed at (20, 0, -16); tank at (28, 0, -26)
+mesh(UG.plane, 0xB9A882, 14, 11, 1, 20, 0.02, -25, {rx:-PI/2, noShadow:true});
+box(C.fence, 14, 0.04, 0.04, 20, 0.5, -30.5); for (var fx=13;fx<=27;fx+=2) box(C.fence, 0.08, 0.6, 0.08, fx, 0.3, -30.5);
+W.tomatoes = []; W.lettuces = []; W.drips = [];
+function tomatoBed(cx, cz, seed){
+  box(C.wood, 5.2, 0.45, 1.3, cx, 0.22, cz); box(C.soil, 5, 0.06, 1.1, cx, 0.45, cz); box(0x1E262C, 5, 0.04, 0.04, cx, 0.49, cz + 0.3);
+  var r = rng(seed);
+  // each plant: a stem tied to its stake, five leaf pads fanned around it at rising heights, a growing tip, two trusses of fruit
+  for (var i=0;i<10;i++){ var x = cx - 2.25 + i*0.5; cyl(C.wood, 0.025, 1.6, x, 1.25, cz); var g = grp(x, 0.45, cz);
+    cyl(0x4E9A44, 0.028, 1.35, 0.045, 0.67, 0.02, g);
+    for (var k=0;k<5;k++){ var a = k*2.1 + r()*0.7, hh = 0.2 + k*0.25 + r()*0.06; mesh(UG.sph, k%2 ? C.leaf : 0x4E9A44, 0.5 - k*0.04, 0.08, 0.24, Math.cos(a)*0.2, hh, -Math.sin(a)*0.2, {ry:a, rz:0.3 + r()*0.2}, g); }
+    mesh(UG.sph, C.leaf, 0.26, 0.12, 0.26, 0.045, 1.42, 0.02, {}, g); mesh(UG.sph, 0x4E9A44, 0.14, 0.1, 0.14, 0.045, 1.48, 0.02, {}, g); // rounded leaf cluster at the growing tip
+    var fr = []; for (var j=0;j<5;j++){ var fa = (j < 3 ? 0.4 : 3.2) + j*0.5, fh = j < 3 ? 0.5 + j*0.09 : 0.92 + (j-3)*0.09; var f = sph(C.tomato, 0.065, Math.cos(fa)*0.13, fh, -Math.sin(fa)*0.13 + 0.06, g); fr.push(f); }
+    W.tomatoes.push({g:g, x:x, z:cz, fruit:fr}); }
+  for (i=0;i<6;i++) W.drips.push(sph(C.water, 0.035, cx - 2 + i*0.8, 0.52, cz + 0.3));
+  coll(cx-2.7,0,cz-0.5,cx+2.7,2.2,cz+0.5,'tomatoes');
+}
+function lettuceBed(cx, cz, seed){
+  box(C.wood, 5.2, 0.45, 1.6, cx, 0.22, cz); box(C.soil, 5, 0.06, 1.4, cx, 0.45, cz); box(0x1E262C, 5, 0.04, 0.04, cx, 0.49, cz);
+  var r = rng(seed);
+  // each head: a pale heart with five leaves fanned round it and tilted up, so it reads as a rosette rather than a ball
+  for (var i=0;i<16;i++){ var x = cx - 2.2 + (i%8)*0.6, z = cz - 0.35 + Math.floor(i/8)*0.7; var h = grp(x, 0.48, z); mesh(UG.sph, 0xC8DE7A, 0.3, 0.22, 0.3, 0, 0.1, 0, {}, h);
+    for (var k=0;k<5;k++){ var a = k*1.26 + r()*0.5; mesh(UG.sph, k%2 ? C.lettuce : C.leafL, 0.42, 0.07, 0.26, Math.cos(a)*0.16, 0.08, -Math.sin(a)*0.16, {ry:a, rz:0.5 + r()*0.2}, h); }
+    W.lettuces.push(h); }
+  for (i=0;i<6;i++) W.drips.push(sph(C.water, 0.035, cx - 2 + i*0.8, 0.52, cz));
+  coll(cx-2.7,0,cz-0.9,cx+2.7,0.8,cz+0.9,'lettuce');
+}
+tomatoBed(17, -28.5, 3); tomatoBed(23, -28.5, 4); lettuceBed(17, -22, 5); lettuceBed(23, -22, 6);
+[[14.9,-28],[19.1,-28],[20.9,-28],[25.1,-28],[14.9,-21.6],[25.1,-21.6]].forEach(function(p){ cyl(C.metal, 0.02, 0.6, p[0], 0.5, p[1]); sph(0x1E262C, 0.06, p[0], 0.82, p[1]); }); // moisture probes
+cyl(0x8FA3B0, 0.9, 1.6, 29, 0.8, -27); cyl(0x1E262C, 0.04, 1, 28, 0.3, -27, null, {rz:PI/2}); coll(28,0,-28,30,1.7,-26,'tank');
+cyl(C.metal, 0.03, 2.2, 28, 1.1, -22); box(0xF3EFE6, 0.4, 0.3, 0.3, 28, 2.3, -22); coll(27.7,0,-22.3,28.3,2.6,-21.7,'weather');
+(function(){ // wash-and-pack shed, open to the plot (south, -z)
+  var g = grp(20, 0, -16);
+  box(C.wallc, 0.2, 3, 4, -3, 1.5, 0, g); box(C.wallc, 0.2, 3, 4, 3, 1.5, 0, g); box(C.wallc, 6, 3, 0.2, 0, 1.5, 2, g); box(C.roof, 6.6, 0.3, 4.8, 0, 3.1, 0, g);
+  box(0xC9C2B0, 6, 0.1, 4, 0, 0.05, 0, g);
+  box(0x46525A, 3.4, 1.9, 0.06, 1.2, 1.75, 1.87, g, {noShadow:true}); // a dark tool board on the back wall behind the pack table: the pale packing robot reads against it
+  box(0x8FA3B0, 1.5, 0.9, 0.9, -1.8, 0.45, -0.5, g); W.washWater = mesh(UG.box, C.water, 1.3, 0.05, 0.7, -1.8, 0.9, -0.5, {mat:emis(C.water, 0.2), noShadow:true}, g);
+  cyl(C.metal, 0.03, 0.7, -1.8, 1.25, -0.2, g); box(C.metal, 0.5, 0.04, 0.04, -1.55, 1.6, -0.2, g);
+  W.splash = []; for (var i=0;i<8;i++) W.splash.push(sph(0xBFE3FF, 0.035, -2.2 + i*0.12, 1.0, -0.6 + (i%2)*0.2, g));
+  box(C.wood, 2, 0.08, 1, 1.5, 0.9, -0.5, g); [[0.6,-0.9],[2.4,-0.9],[0.6,-0.1],[2.4,-0.1]].forEach(function(p){ cyl(C.wood, 0.04, 0.9, p[0], 0.45, p[1], g); });
+  // the weighing scale: a steel pan on a dark base with a lit read-out on a short post, facing the open front of the shed; the box is packed ON the scale
+  box(0x1E262C, 0.78, 0.07, 0.6, 1.3, 0.975, -0.5, g); box(0xC9CED2, 0.7, 0.03, 0.52, 1.3, 1.025, -0.5, g); cyl(C.metal, 0.025, 0.5, 0.84, 1.2, -0.28, g); box(0x1E262C, 0.34, 0.22, 0.06, 0.84, 1.52, -0.3, g);
+  W.scaleRead = mesh(UG.plane, C.green, 0.28, 0.16, 1, 0.84, 1.52, -0.335, {mat:emis(C.green, 0.2), noShadow:true, ry:PI}, g);
+  W.scaleBars = []; for (i=0;i<4;i++) W.scaleBars.push(mesh(UG.plane, 0x0F1614, 0.035, 0.1, 1, 0.93 - i*0.06, 1.52, -0.34, {mat:new THREE.MeshBasicMaterial({color:0x0F1614}), noShadow:true, ry:PI}, g)); // read-out segments: one more per pair of fruit
+  W.packBox = box(C.box, 0.55, 0.3, 0.4, 1.3, 1.19, -0.5, g); W.packFruit = []; for (i=0;i<6;i++) W.packFruit.push(sph(C.tomato, 0.06, 1.1 + (i%3)*0.18, 1.27, -0.6 + Math.floor(i/3)*0.2, g));
+  box(0x1E262C, 0.5, 0.3, 0.4, 2.2, 1.09, -0.5, g); W.printStrip = mesh(UG.plane, 0xF3EFE6, 0.3, 0.2, 1, 2.2, 1.08, -0.7, {noShadow:true}, g);
+  // the label: a white ticket with two dark print lines; it leaves the printer slot and is pressed onto the front of the box (positions set in the experiment beat)
+  W.label = grp(2.2, 1.08, -0.72, g); mesh(UG.plane, 0xFFFFFF, 0.3, 0.19, 1, 0, 0, 0, {mat:emis(0xFFFFFF, 0.35), noShadow:true, ry:PI}, W.label); box(0x1E262C, 0.2, 0.025, 0.004, 0, 0.035, -0.004, W.label, {noShadow:true}); box(0x1E262C, 0.13, 0.025, 0.004, 0.035, -0.03, -0.004, W.label, {noShadow:true}); W.label.visible = false;
+  box(0xF3EFE6, 1.2, 0.8, 0.04, 2.9, 1.9, -1.2, g, {ry:PI/2}); [C.green, C.water, C.amber, C.red].forEach(function(c, k){ mesh(UG.box, c, 0.12, 0.12, 0.02, 2.87, 2.15 - k*0.17, -1.55 + 0.0, {ry:PI/2}, g).position.z = -1.2; }); // posted standard: four glyph rows
+  var stack = 0; for (i=0;i<4;i++) box(C.crate, 0.7, 0.3, 0.5, -2.5, 0.15 + (i%2)*0.3, 1.3 + Math.floor(i/2)*0.6, g);
+  W.tapeMarks = []; for (i=0;i<4;i++){ var tm = box(C.amber, 0.4, 0.02, 0.08, 14.8 + i*3.4, 0.06, -20.4); W.tapeMarks.push(tm); }
+  coll(16.8,0,-18.2,23.2,3.4,-13.8,'shed');
+})();
+// ---------------------------------------------------------------- agents (simple articulated meshes)
+var AGENTS = [];
+function humanoid(col, opt){
+  opt = opt || {}; var g = grp(0, 0, 0); g.userData.kind = 'humanoid';
+  box(col, 0.46, 0.62, 0.28, 0, 1.1, 0, g); box(0x6E7276, 0.4, 0.2, 0.26, 0, 0.72, 0, g);
+  sph(opt.head || col, 0.17, 0, 1.58, 0, g); box(opt.visor || 0x1E262C, 0.26, 0.08, 0.1, 0, 1.6, 0.12, g);
+  if (opt.hair) mesh(UG.sph, opt.hair, 0.36, 0.2, 0.36, 0, 1.66, -0.02, {}, g);
+  if (opt.hat) { cyl(opt.hat, 0.28, 0.04, 0, 1.72, 0, g); cyl(opt.hat, 0.16, 0.14, 0, 1.78, 0, g); }
+  var la = grp(-0.31, 1.36, 0, g), ra = grp(0.31, 1.36, 0, g); cyl(col, 0.06, 0.55, 0, -0.28, 0, la); cyl(col, 0.06, 0.55, 0, -0.28, 0, ra);
+  sph(opt.hand || 0x6E7276, 0.07, 0, -0.58, 0, la); sph(opt.hand || 0x6E7276, 0.07, 0, -0.58, 0, ra);
+  var ll = grp(-0.12, 0.66, 0, g), rl = grp(0.12, 0.66, 0, g); box(opt.legs || col, 0.16, 0.62, 0.18, 0, -0.32, 0, ll); box(opt.legs || col, 0.16, 0.62, 0.18, 0, -0.32, 0, rl);
+  var hold = grp(0, 0.95, 0.42, g); // carried item anchor
+  g.userData = { kind:'humanoid', la:la, ra:ra, ll:ll, rl:rl, hold:hold, rest:V(0,0,0), rry:0 }; AGENTS.push(g); return g;
+}
+function wheeled(col){
+  var g = grp(0, 0, 0); box(col, 0.9, 0.35, 0.7, 0, 0.45, 0, g); box(0x6E7276, 0.7, 0.2, 0.55, 0, 0.72, 0, g);
+  var wheels = []; [[-0.35,-0.3],[0.35,-0.3],[-0.35,0.3],[0.35,0.3]].forEach(function(p){ wheels.push(mesh(UG.cyl, 0x1E262C, 0.32, 0.12, 0.32, p[0], 0.16, p[1], {rx:PI/2}, g)); });
+  cyl(C.metal, 0.04, 0.6, -0.3, 1.1, 0, g); sph(0x1E262C, 0.09, -0.3, 1.42, 0, g); var lamp = mesh(UG.sph, C.teal, 0.1, 0.1, 0.1, 0.3, 0.85, 0, {mat:emis(C.teal, 0.8), noShadow:true}, g);
+  var tray = grp(0.05, 0.82, 0, g), arm = grp(0.45, 0.6, 0, g); cyl(C.metal, 0.045, 0.6, 0.3, 0, 0, arm, {rz:PI/2}); sph(0x3A4652, 0.11, 0.62, 0, 0, arm);
+  var grab = grp(0.66, -0.12, 0, arm); grab.visible = false;
+  g.userData = { kind:'wheeled', wheels:wheels, tray:tray, arm:arm, grab:grab, lamp:lamp, rest:V(0,0,0), rry:0 }; AGENTS.push(g); return g;
+}
+function quad(col){
+  var g = grp(0, 0, 0); box(col, 0.85, 0.3, 0.35, 0, 0.55, 0, g); box(0x6E7276, 0.28, 0.22, 0.26, 0.5, 0.62, 0, g); sph(0x1E262C, 0.05, 0.64, 0.66, 0, g);
+  var legs = []; [[-0.3,-0.14],[0.3,-0.14],[-0.3,0.14],[0.3,0.14]].forEach(function(p){ var l = grp(p[0], 0.45, p[1], g); cyl(col, 0.05, 0.45, 0, -0.22, 0, l); legs.push(l); });
+  var mouth = grp(0.7, 0.45, 0, g);
+  g.userData = { kind:'quad', legs:legs, mouth:mouth, rest:V(0,0,0), rry:0 }; AGENTS.push(g); return g;
+}
+function cart(col){ // the village delivery vehicle
+  var g = grp(0, 0, 0); box(col, 1.8, 0.5, 1.1, 0, 0.55, 0, g); box(0x1E262C, 0.3, 0.3, 1.0, 0.8, 0.95, 0, g);
+  var wheels = []; [[-0.6,-0.5],[0.6,-0.5],[-0.6,0.5],[0.6,0.5]].forEach(function(p){ wheels.push(mesh(UG.cyl, 0x1E262C, 0.4, 0.14, 0.4, p[0], 0.2, p[1], {rx:PI/2}, g)); });
+  var lamp = mesh(UG.sph, C.amber, 0.12, 0.12, 0.12, 0.95, 0.7, 0, {mat:emis(C.amber, 0.8), noShadow:true}, g);
+  var tray = grp(-0.2, 0.82, 0, g); var boxes = []; for (var i=0;i<3;i++) boxes.push(box(C.box, 0.55, 0.3, 0.4, -0.5 + i*0.5, 0.15, 0, tray));
+  g.userData = { kind:'cart', wheels:wheels, tray:tray, boxes:boxes, lamp:lamp, rest:V(0,0,0), rry:0 }; AGENTS.push(g); return g;
+}
+function human(shirt, trousers, opt){ opt = opt || {}; opt.head = C.skin; opt.hand = C.skin; opt.legs = trousers; opt.visor = opt.visor || C.skin; opt.hair = opt.hair || 0x3B2A1E; var g = humanoid(shirt, opt); g.userData.kind = 'human'; return g; }
+function crate(p){ var c = box(C.crate, 0.6, 0.28, 0.42, 0, 0, 0, p); return c; }
+function boxItem(p){ var b = box(C.box, 0.55, 0.3, 0.4, 0, 0, 0, p); box(C.green, 0.57, 0.09, 0.42, 0, -0.08, 0, p); box(0xFFFFFF, 0.24, 0.02, 0.2, 0.1, 0.16, 0, p);
+  [1, -1].forEach(function(f){ mesh(UG.plane, 0xFFFFFF, 0.3, 0.17, 1, 0, 0.05, f*0.203, {mat:emis(0xFFFFFF, 0.3), noShadow:true, ry:f > 0 ? 0 : PI}, p); box(0x1E262C, 0.2, 0.022, 0.004, 0, 0.08, f*0.206, p, {noShadow:true}); }); return b; } // a carried box: green band and a white label on the lid, so it reads against sand and plaza
+function litterBag(p){ return mesh(UG.sph, 0x1E262C, 0.5, 0.36, 0.4, 0, -0.05, 0, {}, p); }
+function place(a, x, z, ry){ a.position.set(x, 0, z); a.rotation.y = ry || 0; }
+function setRest(a, x, z, ry){ a.userData.rest.set(x, 0, z); a.userData.rry = ry || 0; place(a, x, z, ry); }
+// walking on a polyline; returns {x,z,ry,moving}
+function polyAt(pts, u){ var L = [], tot = 0; for (var i=1;i<pts.length;i++){ var d = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); L.push(d); tot += d; }
+  var s = clamp(u,0,1) * tot; for (i=0;i<L.length;i++){ if (s <= L[i] || i === L.length-1){ var f = L[i] > 0 ? clamp(s / L[i], 0, 1) : 0; var a = pts[i], b = pts[i+1];
+    return { x:lerp(a[0], b[0], f), z:lerp(a[1], b[1], f), ry:Math.atan2(b[0]-a[0], b[1]-a[1]), moving: u > 0 && u < 1 }; } s -= L[i]; } }
+function heading(a, ry){ var k = a.userData.kind; return k === 'wheeled' || k === 'cart' || k === 'quad' ? ry - PI/2 : ry; } // wheeled robots, the vehicle and quadrupeds are built nose-along-x: turn them to face the way they travel
+function walk(a, pts, u, t){ var p = polyAt(pts, u); place(a, p.x, p.z, heading(a, p.ry)); gait(a, p.moving ? t : 0); return p; }
+function gait(a, t){ var d = a.userData, s = Math.sin(t*7), k = d.kind;
+  if (k === 'humanoid' || k === 'human') { d.ll.rotation.x = s*0.5; d.rl.rotation.x = -s*0.5; d.la.rotation.x = -s*0.4; d.ra.rotation.x = s*0.4; }
+  else if (k === 'wheeled' || k === 'cart') { for (var i=0;i<d.wheels.length;i++) d.wheels[i].rotation.y = t*4; }
+  else if (k === 'quad') { d.legs[0].rotation.x = s*0.5; d.legs[3].rotation.x = s*0.5; d.legs[1].rotation.x = -s*0.5; d.legs[2].rotation.x = -s*0.5; }
+}
+function arms(a, l, r){ a.userData.la.rotation.x = l; a.userData.ra.rotation.x = r; }
+function kneel(a, k){ var d = a.userData; d.ll.rotation.x = -k*1.5; d.rl.rotation.x = -k*1.5; a.position.y = -k*0.45; }
+function resetAgent(a){ var d = a.userData; a.position.copy(d.rest); a.rotation.set(0, d.rry, 0); a.visible = true;
+  if (d.la) { d.la.rotation.set(0,0,0); d.ra.rotation.set(0,0,0); d.ll.rotation.set(0,0,0); d.rl.rotation.set(0,0,0); d.hold.visible = false; d.hold.position.set(0, 0.95, 0.42); }
+  if (d.legs) for (var i=0;i<4;i++) d.legs[i].rotation.set(0,0,0);
+  if (d.mouth) d.mouth.visible = false; if (d.tray) d.tray.visible = false; if (d.arm) d.arm.rotation.set(0,0,0); if (d.grab) d.grab.visible = false; }
+
+// --- garden team (6) + inspector
+var G = { h1:humanoid(C.robotC), h2:humanoid(C.robot), w1:wheeled(C.robotB), w2:wheeled(C.robot), q:quad(C.robotB), cart:cart(0xF3EFE6), insp:humanoid(C.inspector, {visor:C.green}) };
+crate(G.h1.userData.hold); boxItem(G.h2.userData.hold); crate(G.w1.userData.tray); boxItem(G.w2.userData.tray); boxItem(G.insp.userData.hold);
+box(0xB8C4CC, 0.86, 0.04, 0.6, 0, -0.17, 0, G.insp.userData.hold); box(0x8C969C, 0.86, 0.07, 0.03, 0, -0.13, 0.3, G.insp.userData.hold); box(0x8C969C, 0.86, 0.07, 0.03, 0, -0.13, -0.3, G.insp.userData.hold); // the inspector lifts its sample on a steel tray
+setRest(G.h1, 18.5, -20.4, PI); setRest(G.h2, 21.5, -15.2, 0); setRest(G.w1, 15, -19.2, PI/2); setRest(G.w2, 25.5, -19.2, -PI/2); setRest(G.q, 12, -31, 0); setRest(G.cart, 22, -12.2, -0.55); setRest(G.insp, 11.2, 2.6, PI);
+var HANDFRUIT = sph(C.tomato, 0.065, 0, -0.62, 0.08, G.h1.userData.ra); HANDFRUIT.visible = false; // the fruit the harvest humanoid carries from the truss to its crate
+// --- park team (8)
+var P = { w:[wheeled(C.robot), wheeled(C.robotB), wheeled(C.robotC), wheeled(C.robot)], h:[humanoid(C.robotB), humanoid(C.robotC)], q:[quad(C.robot), quad(C.robotC)] };
+P.w.forEach(function(a, i){ setRest(a, 13.5 + (i%2)*1.4, 18.2 + Math.floor(i/2)*1.6, PI/2); litterBag(a.userData.tray); });
+P.h.forEach(function(a, i){ setRest(a, 13.0, 21.2 + i*1.3, PI/2); }); P.q.forEach(function(a, i){ setRest(a, 15.2, 21.6 + i*1.3, PI/2); litterBag(a.userData.mouth); });
+P.w.forEach(function(a, i){ box(i%2 ? 0x6FC3F0 : 0xFFFFFF, 0.28, 0.09, 0.2, 0, 0, 0, a.userData.grab); });
+var CAN = box(C.green, 0.42, 0.4, 0.28, 0.15, -0.5, 0, P.h[0].userData.ra); CAN.visible = false;
+// the watering arc: nine droplets on a parabola from the can's spout to the bed, phased by t (world space, pure function of t)
+var ARC = []; for (var ai=0;ai<9;ai++){ var dd = mesh(UG.sph, C.water, 0.13, 0.13, 0.13, 0, 0, 0, {mat:emis(C.water, 0.7), noShadow:true}); dd.visible = false; ARC.push(dd); }
+function waterArc(t, sx, sy, sz, ex, ey, ez){ for (var k=0;k<9;k++){ var s = frac(t*1.2 + k/9), d = ARC[k]; d.visible = true; d.position.set(lerp(sx, ex, s), lerp(sy, ey, s) + 1.4*s*(1 - s), lerp(sz, ez, s)); d.scale.setScalar(0.2*(1 - 0.3*s)); } }
+var SEEDLING = sph(C.leafL, 0.12, 0, 0, 0, P.h[1].userData.hold);
+// --- charter: four free agents + two confederates
+var Ch = { h:[humanoid(C.robotC), humanoid(C.robot)], w:wheeled(C.robotB), q:quad(C.robot), noisy:null, litt:wheeled(0x4A5561) };
+var freeC = [Ch.h[0], Ch.h[1], Ch.w, Ch.q], freeHomes = [W.houses[0], W.houses[1], W.houses[4], W.houses[5]];
+freeC.forEach(function(a, i){ var d = freeHomes[i].dock; setRest(a, d.x, d.z, freeHomes[i].south ? PI : 0); });
+(function(){ var g = grp(W.noisy.dock.x - 4, 0, W.noisy.dock.z); box(0x4A5561, 0.9, 1.2, 0.8, 0, 0.6, 0, g); cyl(0x1E262C, 0.3, 0.2, 0, 0.9, 0.5, g, {rx:PI/2}); cyl(0x1E262C, 0.3, 0.2, 0, 0.5, 0.5, g, {rx:PI/2}); W.speaker = g; coll(g.position.x-0.5,0,g.position.z-0.5,g.position.x+0.5,1.3,g.position.z+0.5,'noisy'); })();
+function paddle(parent, x, y, z){ var m = mesh(UG.sph, C.amber, 0.34, 0.34, 0.08, x, y, z, {mat:emis(C.amber, 0.95), noShadow:true}, parent); m.visible = false; return m; }
+var PADDLES = [paddle(Ch.h[1].userData.ra, 0, -0.78, 0), paddle(Ch.q.userData.legs[1], 0, -0.56, 0), paddle(Ch.w.userData.arm, 0.78, 0, 0)]; PADDLES[0].scale.set(0.42, 0.42, 0.1); PADDLES[1].scale.set(0.36, 0.36, 0.1); PADDLES[2].scale.set(0.36, 0.36, 0.1);
+setRest(Ch.litt, W.litterer.dock.x, W.litterer.dock.z, PI); var LITHELD = box(C.red, 0.26, 0.12, 0.19, 0, 0.06, 0, Ch.litt.userData.tray); box(C.red, 0.26, 0.12, 0.19, 0, 0, 0, Ch.h[1].userData.hold); // the item the free humanoid picks up
+// --- cold-open extras: six robots in the pub bays (the garden and park agents rest elsewhere, so use dedicated ones)
+var PUBBOTS = []; for (var i=0;i<6;i++){ var a = i%3 === 0 ? humanoid(C.robot) : (i%3 === 1 ? wheeled(C.robotB) : quad(C.robotC)); setRest(a, W.bays[i].x, 1.6, PI); PUBBOTS.push(a); }
+
+// ---------------------------------------------------------------- real-world vignettes (visible only in their own beat)
+function vignetteBase(cx, ground){ var g = grp(cx, 0, 0); mesh(UG.disc, ground, 90, 90, 1, 0, 0.005, 0, {rx:-PI/2, noShadow:true}, g); return g; }
+var VIG = {};
+(function(){ // farm gate, scene 5
+  var g = vignetteBase(200, C.grass); VIG.farm = g;
+  box(0x6E7276, 40, 0.06, 5, 0, 0.02, 5, g); // lane
+  for (var r=0;r<6;r++) for (var i=0;i<14;i++){ sph(r%2 ? C.leaf : C.lettuce, 0.3, -13 + i*2, 0.3, -8 - r*2.2, g); if (r%2) sph(C.tomato, 0.07, -13 + i*2 + 0.15, 0.55, -8 - r*2.2 + 0.2, g); }
+  for (i=-16;i<=16;i+=2) box(C.fence, 0.1, 1.2, 0.1, i, 0.6, -6, g); box(C.fence, 34, 0.05, 0.05, 0, 1.1, -6, g); box(C.fence, 34, 0.05, 0.05, 0, 0.6, -6, g);
+  box(C.wood, 2.6, 0.08, 0.9, 0, 0.88, 0, g); [[-1.1,-0.35],[1.1,-0.35],[-1.1,0.35],[1.1,0.35]].forEach(function(p){ cyl(C.wood, 0.04, 0.88, p[0], 0.44, p[1], g); });
+  for (i=0;i<3;i++){ var b = box(C.box, 0.55, 0.3, 0.4, -0.9 + i*0.8, 1.07, 0, g); sph(C.tomato, 0.07, -0.9 + i*0.8, 1.25, 0, g); }
+  // farm-gate sign: a green board with a cream panel and a tomato icon on both faces (an icon, no words)
+  cyl(C.metal, 0.05, 2.4, -4, 1.2, 2.6, g); box(0x2F7A55, 1.1, 0.7, 0.06, -4, 2.1, 2.6, g);
+  [1, -1].forEach(function(f){ mesh(UG.plane, 0xF3EFE6, 0.94, 0.54, 1, -4, 2.1, 2.6 + f*0.035, {ry:f > 0 ? 0 : PI, noShadow:true}, g); sph(C.tomato, 0.12, -4, 2.06, 2.6 + f*0.1, g); mesh(UG.sph, C.leaf, 0.18, 0.07, 0.1, -4, 2.2, 2.6 + f*0.1, {noShadow:true}, g); });
+  var van = grp(5.2, 0, -2.4, g); van.rotation.y = 0.25; box(C.van, 3.2, 1.5, 1.6, -0.2, 1.05, 0, van); box(C.van, 1.1, 1.1, 1.6, 1.7, 0.85, 0, van); mesh(UG.plane, C.glass, 1.3, 0.7, 1, 2.26, 1.05, 0, {ry:PI/2, noShadow:true}, van);
+  [[-1.1,-0.85],[1.3,-0.85],[-1.1,0.85],[1.3,0.85]].forEach(function(p){ mesh(UG.cyl, 0x1E262C, 0.6, 0.2, 0.6, p[0], 0.3, p[1], {rx:PI/2}, van); });
+  box(C.wood, 0.1, 0.4, 1.6, -1.85, 0.5, 0, van); for (i=0;i<2;i++) box(C.box, 0.55, 0.3, 0.4, -1.4 + i*0.6, 0.45, -0.5, van);
+  // the same white wheeled cart robots as in the village plot, so the machines beside the growers are unmistakably machines
+  VIG.farmH = { g1:human(0x5A7D3C, 0x3B3F46, {hat:0xC9B27A}), g2:human(0x8C4B3E, 0x4A5561, {hat:0xC9B27A}), insp:human(0xF3EFE6, 0x2E3238, {hair:0x6B4A2E}), buyer:human(0x3E6FB0, 0x2E3238, {hair:0x1E1A16}), r1:wheeled(C.robot), r2:wheeled(C.robotB) };
+  g.add(VIG.farmH.g1); g.add(VIG.farmH.g2); g.add(VIG.farmH.insp); g.add(VIG.farmH.buyer); g.add(VIG.farmH.r1); g.add(VIG.farmH.r2);
+  setRest(VIG.farmH.g1, -0.6, -1.0, 0); setRest(VIG.farmH.g2, 0.7, -1.0, 0); setRest(VIG.farmH.insp, 2.4, 0.8, -2.2); setRest(VIG.farmH.buyer, -2.5, 1.4, 2.3); setRest(VIG.farmH.r1, 3.6, -1.0, -1.9); setRest(VIG.farmH.r2, 2.6, -1.6, -1.2);
+  box(0x7A8086, 0.5, 0.35, 0.3, 0.3, 0.2, 0.3, VIG.farmH.insp.userData.ra); box(0xD9A441, 0.4, 0.45, 0.25, 0.25, -0.35, 0, VIG.farmH.buyer.userData.la); boxItem(VIG.farmH.r1.userData.tray); boxItem(VIG.farmH.r2.userData.tray);
+  var tr = grp(-7, 0, -4, g); cyl(C.wood, 0.25, 2.4, 0, 1.2, 0, tr); sph(C.leaf, 1.9, 0, 3.6, 0, tr);
+})();
+(function(){ // city street, scene 9
+  var g = vignetteBase(260, 0x8A8D90); VIG.city = g;
+  box(0x4E5257, 40, 0.06, 9, 0, 0.02, 6.5, g); box(0xB9B6AE, 40, 0.14, 6, 0, 0.06, -1, g); box(0xF3EFE6, 40, 0.04, 0.12, 0, 0.16, 2, g);
+  for (var i=0;i<5;i++){ var bx = -16 + i*8; box([0xCFC7B8, 0xB7C1C8, 0xD8CDB6, 0xC3B8A6, 0xB0B7B5][i], 7.4, 9 + (i%2)*3, 6, bx, 4.5 + (i%2)*1.5, -8, g); for (var r=0;r<3;r++) for (var c=0;c<3;c++) mesh(UG.plane, 0x6F8797, 1.2, 1.4, 1, bx - 2.2 + c*2.2, 2 + r*2.6, -4.98, {noShadow:true}, g); }
+  for (i=-12;i<=-2;i+=1.2) cyl(0x2E3238, 0.04, 1.1, i, 0.7, -4.2, g); box(0x2E3238, 10.2, 0.05, 0.05, -7, 1.2, -4.2, g); box(0x2E3238, 10.2, 0.05, 0.05, -7, 0.7, -4.2, g); // park railing
+  cyl(C.metal, 0.05, 2.6, -3.5, 1.3, -3.4, g); cyl(C.metal, 0.05, 2.6, -1.5, 1.3, -3.4, g); box(0x2E3238, 2.6, 0.1, 1.4, -2.5, 2.65, -3.2, g); box(0xE7E1D2, 0.9, 0.7, 0.06, -3.4, 1.9, -3.4, g); // bus stop
+  var truck = grp(7.5, 0, 4, g); box(0xF3EFE6, 4.2, 1.6, 2, -0.4, 1.2, 0, truck); box(0xF3EFE6, 1.4, 1.3, 2, 2.3, 0.95, 0, truck); box(C.amber, 4.2, 0.4, 2.02, -0.4, 1.7, 0, truck);
+  VIG.truckLight = mesh(UG.sph, C.amber, 0.3, 0.3, 0.3, 2.3, 1.75, 0, {mat:emis(C.amber, 1), noShadow:true}, truck); [[-1.5,-1.05],[1.8,-1.05],[-1.5,1.05],[1.8,1.05]].forEach(function(p){ mesh(UG.cyl, 0x1E262C, 0.7, 0.24, 0.7, p[0], 0.35, p[1], {rx:PI/2}, truck); });
+  VIG.cityH = { c1:human(C.amber, 0x2E3238, {hat:0xF3EFE6}), c2:human(C.amber, 0x2E3238, {hat:0xF3EFE6}), r:[wheeled(C.robot), wheeled(C.robotB), wheeled(C.robotC)] };
+  g.add(VIG.cityH.c1); g.add(VIG.cityH.c2); VIG.cityH.r.forEach(function(a){ g.add(a); });
+  setRest(VIG.cityH.c1, 1.2, -1.2, 2.4); setRest(VIG.cityH.c2, 4.2, 0.0, -2.0); cyl(C.wood, 0.03, 1.5, 0, -0.6, 0.3, VIG.cityH.c1.userData.ra, {rx:0.6}); box(0x3B3F46, 0.28, 0.06, 0.1, 0, -1.25, 0.75, VIG.cityH.c1.userData.ra);
+  cyl(0x3E6FB0, 0.04, 1.2, 0, -0.5, 0.5, VIG.cityH.c2.userData.ra, {rx:1.2});
+  VIG.cityH.r.forEach(function(a, i){ setRest(a, -6 + i*2.2, -1.6, PI/2); mesh(UG.cyl, 0x8E6F50, 0.5, 0.2, 0.5, 0.55, 0.1, 0, {}, a); });
+})();
+(function(){ // mixed neighbourhood at dusk, scene 13
+  var g = vignetteBase(320, C.lawn); VIG.hood = g;
+  box(0x4E5257, 40, 0.06, 2.6, 0, 0.02, 4.8, g); box(0xB9B6AE, 40, 0.1, 2.4, 0, 0.04, 2.2, g); box(0xB9B6AE, 40, 0.1, 0.4, 0, 0.04, 6.3, g); // a narrow residential lane: pavement, 2.6 m of road, a kerb strip, then the near verge (grass) the camera stands on
+  VIG.hoodWins = [];
+  [[-6, 0xE5DFD0],[5, 0xD8CDB6]].forEach(function(p){ var h = grp(p[0], 0, -6.4, g); box(p[1], 7, 3.8, 6, 0, 1.9, 0, h); mesh(UG.pyr, C.roof, 8, 2.6, 8, 0, 5.1, 0, {ry:PI/4}, h);
+    box(C.wood, 6, 0.12, 2.4, 0, 0.35, 4.2, h); box(C.roof, 6.4, 0.15, 2.6, 0, 2.9, 4.2, h); [-2.8, 2.8].forEach(function(x){ cyl(C.wood, 0.08, 2.5, x, 1.65, 5.3, h); });
+    box(C.wood, 1, 2.1, 0.12, 0, 1.4, 3.04, h); VIG.hoodWins.push(mesh(UG.plane, 0xFFE3A6, 1.2, 1.1, 1, -2.2, 2.2, 3.05, {mat:emis(0xFFE3A6, 0.2), noShadow:true}, h)); VIG.hoodWins.push(mesh(UG.plane, 0xFFE3A6, 1.2, 1.1, 1, 2.2, 2.2, 3.05, {mat:emis(0xFFE3A6, 0.2), noShadow:true}, h)); });
+  VIG.hoodH = { p1:human(0x8C4B3E, 0x2E3238, {hair:0x6B4A2E}), p2:human(0x5A7D3C, 0x3B3F46, {hair:0xD8CDB6}), kid:human(0xE9A23B, 0x3E6FB0, {hair:0x3B2A1E}), r:[wheeled(C.robot), wheeled(C.robotB)] };
+  g.add(VIG.hoodH.p1); g.add(VIG.hoodH.p2); g.add(VIG.hoodH.kid); VIG.hoodH.r.forEach(function(a){ g.add(a); });
+  setRest(VIG.hoodH.p1, -6.6, -1.5, 0.35); setRest(VIG.hoodH.p2, 5.8, -2.0, -0.3); setRest(VIG.hoodH.kid, 1.9, -0.2, -0.9); VIG.hoodH.kid.scale.set(0.65, 0.65, 0.65);
+  var bike = grp(3.0, 0, -0.9, g); bike.rotation.y = 0.9; mesh(UG.torus, 0x1E262C, 1.1, 1.1, 1.1, -0.45, 0.28, 0, {}, bike); mesh(UG.torus, 0x1E262C, 1.1, 1.1, 1.1, 0.45, 0.28, 0, {}, bike); box(C.red, 0.9, 0.05, 0.05, 0, 0.5, 0, bike, {rz:0.35}); box(C.red, 0.05, 0.5, 0.05, 0.3, 0.6, 0, bike);
+  // each delivery robot carries a parcel and a running light on its mast: bright while it drives, dimmed once it has stopped for quiet hours
+  VIG.hoodH.r.forEach(function(a, i){ setRest(a, -6 + i*1.6, 2.2, 0); box(0xD9B88A, 0.5, 0.35, 0.4, 0, 0.17, 0, a.userData.tray); a.userData.tray.visible = true;
+    a.userData.run = mesh(UG.sph, 0x7FE3D4, 0.3, 0.3, 0.3, -0.3, 1.5, 0, {mat:emis(0x7FE3D4, 1), noShadow:true}, a); });
+  // quiet-hours sign at the kerb, built 1.3 x life size and lit by its own hood lamp: a cream frame round a night-blue panel with a moon, two stars
+  // and a crossed-out sound wave (icons, no words)
+  var sg = grp(-0.6, 0, 3.3, g); sg.scale.set(1.3, 1.3, 1.3); VIG.sign = sg;
+  cyl(C.metal, 0.05, 2.2, 0, 1.1, -0.04, sg); var sf = box(0xF3EFE6, 1.0, 0.7, 0.06, 0, 1.95, 0, sg); sf.receiveShadow = false;
+  VIG.signPanel = mesh(UG.plane, 0x2E4A78, 0.88, 0.58, 1, 0, 1.95, 0.035, {mat:emis(0x2E4A78, 0.5), noShadow:true}, sg);
+  VIG.signGlyphs = [mesh(UG.sph, 0xFFE3A6, 0.26, 0.26, 0.08, -0.25, 1.97, 0.06, {mat:emis(0xFFE3A6, 0.9), noShadow:true}, sg), mesh(UG.sph, 0xFFE3A6, 0.06, 0.06, 0.04, -0.06, 2.15, 0.05, {mat:emis(0xFFE3A6, 0.9), noShadow:true}, sg),
+    mesh(UG.sph, 0xFFE3A6, 0.05, 0.05, 0.04, -0.36, 1.76, 0.05, {mat:emis(0xFFE3A6, 0.9), noShadow:true}, sg)];
+  mesh(UG.disc, 0x2E4A78, 0.21, 0.21, 1, -0.18, 2.0, 0.105, {mat:VIG.signPanel.material, noShadow:true}, sg); // bites the disc into a crescent moon
+  [0.06, 0.12, 0.18].forEach(function(r, k){ mesh(UG.torus, 0xF3EFE6, r*2, r*2, 1.6, 0.2, 1.93, 0.05, {mat:emis(0xF3EFE6, 0.7), noShadow:true}, sg); }); // sound wave rings ...
+  mesh(UG.box, C.red, 0.5, 0.045, 0.02, 0.2, 1.93, 0.085, {mat:emis(C.red, 0.9), noShadow:true, rz:0.75}, sg);                                        // ... struck through in red
+  box(0x1E262C, 1.1, 0.06, 0.3, 0, 2.36, 0.14, sg, {noShadow:true}); VIG.signGlow = mesh(UG.box, 0xFFE3A6, 0.96, 0.025, 0.07, 0, 2.325, 0.22, {mat:emis(0xFFE3A6, 0), noShadow:true}, sg);
+  cyl(C.metal, 0.07, 4.2, 5.5, 2.1, 3.3, g); box(C.metal, 0.9, 0.06, 0.06, 5.1, 4.2, 3.3, g); VIG.lamp = mesh(UG.sph, 0xFFE3A6, 0.36, 0.36, 0.36, 4.7, 4.1, 3.3, {mat:emis(0xFFE3A6, 0), noShadow:true}, g);
+  VIG.lampLight = new THREE.PointLight(0xFFE3A6, 0, 16, 2); VIG.lampLight.position.set(-1.6, 3.0, 5.2); g.add(VIG.lampLight); // the warm pool of the sign's lamp: it lights the sign, the stopped robots and the porch behind
+  var tr = grp(-12, 0, -3, g); cyl(C.wood, 0.25, 2.4, 0, 1.2, 0, tr); sph(C.leaf, 1.9, 0, 3.6, 0, tr);
+})();
+VIG.farm.visible = VIG.city.visible = VIG.hood.visible = false;
+// ---------------------------------------------------------------- closing slides: what lights up in the village (this group is visible on the two closing scenes only)
+// Slide A: sensor masts and the data hub (Data), the broadcast mast and the wall (Broadcast and advertising), a partner van at the entrance gate (Partner experiments).
+// Slide B: a crop field, first as a wireframe "simulation" and then planted (Stage 1), a paddock with sheep (Stage 2), the wall's video screen (Stage 3),
+// translucent visitors outside the gate (Stage 4). All highlights share one neutral ice-white, never a scenario colour.
+var CL = { HI:0xD6ECFF };
+(function(){
+  var g = grp(0, 0, 0); g.visible = false; CL.g = g; var HI = CL.HI, i;
+  function glow(op){ return new THREE.MeshBasicMaterial({ color:HI, transparent:true, opacity:op == null ? 1 : op, depthWrite:false, fog:false }); }
+  // entrance road from the south gate to the square; the gate: two posts, a beam with a lit sign, a gatehouse, a barrier arm
+  box(C.road, 4, 0.06, 37, 6, 0.035, 29.5, g, {noShadow:true});
+  box(0x3A4652, 0.45, 4.8, 0.45, 3.3, 2.4, 40, g); box(0x3A4652, 0.45, 4.8, 0.45, 8.7, 2.4, 40, g); box(0x3A4652, 6.2, 0.9, 0.5, 6, 4.75, 40, g);
+  CL.gateSign = mesh(UG.plane, HI, 4.6, 0.56, 1, 6, 4.75, 40.27, {mat:emis(HI, 0.2), noShadow:true}, g);
+  box(0x3A4652, 1.5, 2.4, 1.5, 10.2, 1.2, 41.2, g); box(C.roof, 1.9, 0.2, 1.9, 10.2, 2.5, 41.2, g); mesh(UG.plane, 0xFFE3A6, 0.9, 0.7, 1, 10.2, 1.6, 41.96, {mat:emis(0xFFE3A6, 0.7), noShadow:true}, g);
+  CL.arm = grp(3.75, 1.15, 40.5, g); for (i=0;i<5;i++) box(i%2 ? 0xF3EFE6 : C.red, 0.92, 0.16, 0.16, 0.46 + i*0.92, 0, 0, CL.arm);
+  // the partner van (nose along +x, like the farm van): a plain white van with an ice-white stripe that lights up, headlamps, a ring on the road under it
+  var van = grp(6, 0, 52, g); van.rotation.y = PI/2; CL.van = van;
+  box(C.van, 3.2, 1.6, 1.7, -0.2, 1.1, 0, van); box(C.van, 1.1, 1.15, 1.7, 1.7, 0.88, 0, van); mesh(UG.plane, C.glass, 1.4, 0.7, 1, 2.26, 1.1, 0, {ry:PI/2, noShadow:true}, van);
+  [[-1.1,-0.9],[1.3,-0.9],[-1.1,0.9],[1.3,0.9]].forEach(function(q){ mesh(UG.cyl, 0x1E262C, 0.64, 0.2, 0.64, q[0], 0.32, q[1], {rx:PI/2}, van); });
+  CL.vanStripe = emis(HI, 0.2); box(0, 3.24, 0.34, 1.74, -0.2, 1.3, 0, van, {mat:CL.vanStripe, noShadow:true}); box(0, 3.0, 0.06, 1.2, -0.2, 1.92, 0, van, {mat:CL.vanStripe, noShadow:true});
+  [-0.55, 0.55].forEach(function(z){ mesh(UG.sph, 0xFFF1C8, 0.2, 0.2, 0.1, 2.26, 0.62, z, {mat:emis(0xFFF1C8, 1), noShadow:true}, van); });
+  CL.vanRing = mesh(UG.torus, HI, 6, 6, 6, 0, 0.12, 0, {mat:glow(0.9), noShadow:true, rx:PI/2}, van);
+  // sensor masts round the square and along the entrance road: a pole, a camera head, a lamp; a ring on the ground under each
+  CL.sensMat = emis(HI, 0.15); CL.sensRingMat = glow(0); CL.masts = [[-12.4,10.4],[12.4,10.4],[-12.4,-10.4],[12.6,-10.6],[-5.5,24.5],[-9.5,2]];
+  CL.sensRings = CL.masts.map(function(q){ cyl(C.metal, 0.09, 6.6, q[0], 3.3, q[1], g); box(0x1E262C, 0.62, 0.34, 0.5, q[0], 6.5, q[1], g); box(0x1E262C, 0.9, 0.06, 0.06, q[0], 5.7, q[1], g);
+    mesh(UG.sph, HI, 0.62, 0.62, 0.62, q[0], 7.05, q[1], {mat:CL.sensMat, noShadow:true}, g); return mesh(UG.torus, HI, 1, 1, 4, q[0], 0.14, q[1], {mat:CL.sensRingMat, noShadow:true, rx:PI/2}, g); });
+  // the data hub beside the wall: a dark cabinet building with four lit racks on its south face; packets fly to its roof from every mast
+  CL.hub = [9.6, -8.4]; box(0x2B353D, 3.6, 2.8, 2.4, 9.6, 1.4, -8.4, g); box(C.roof, 4.0, 0.22, 2.8, 9.6, 2.9, -8.4, g); CL.hubMat = emis(HI, 0.15);
+  for (i=0;i<4;i++) box(0, 0.5, 1.9, 0.06, 8.4 + i*0.8, 1.45, -7.18, g, {mat:CL.hubMat, noShadow:true});
+  mesh(UG.sph, HI, 0.9, 0.9, 0.9, 9.6, 3.6, -8.4, {mat:CL.hubMat, noShadow:true}, g);
+  CL.packMat = glow(1); CL.packets = []; for (i=0;i<CL.masts.length*2;i++) CL.packets.push(mesh(UG.sph, HI, 0.42, 0.42, 0.42, 0, 0, 0, {mat:CL.packMat, noShadow:true}, g));
+  CL.hubBeam = mesh(UG.cyl, HI, 1.1, 16, 1.1, 9.6, 11, -8.4, {mat:glow(0), noShadow:true}, g);
+  // broadcast: three rings that spread from the top of the mast (they face the camera, to the south), and a lit frame round the wall's screen
+  CL.castRings = []; for (i=0;i<3;i++) CL.castRings.push(mesh(UG.torus, HI, 1, 1, 1, -6, 24.4, -30, {mat:glow(0), noShadow:true}, g));
+  CL.frameMat = emis(HI, 0); box(0, 7.7, 0.16, 0.1, 0, 4.44, -8.74, g, {mat:CL.frameMat, noShadow:true}); box(0, 7.7, 0.16, 0.1, 0, 1.06, -8.74, g, {mat:CL.frameMat, noShadow:true});
+  box(0, 0.16, 3.54, 0.1, -3.77, 2.75, -8.74, g, {mat:CL.frameMat, noShadow:true}); box(0, 0.16, 3.54, 0.1, 3.77, 2.75, -8.74, g, {mat:CL.frameMat, noShadow:true});
+  // Stage 1: the crop field west of the entrance road - six rows; a wireframe of the rows (the simulation) comes first, then soil and plants
+  var f = grp(-2.2, 0, 31.5, g); CL.field = f; CL.rows = [];
+  var eg = new THREE.EdgesGeometry(new THREE.BoxGeometry(8.4, 0.9, 1.0)); CL.wireMat = new THREE.LineBasicMaterial({ color:HI, transparent:true, opacity:1, fog:false });
+  for (i=0;i<6;i++){ var z = -4.5 + i*1.8, l = new THREE.LineSegments(eg, CL.wireMat); l.position.set(0, 0.46, z); f.add(l);
+    var r = grp(0, 0, z, f); box(C.soil, 8.4, 0.16, 1.0, 0, 0.09, 0, r); for (var k=0;k<11;k++) mesh(UG.sph, k%2 ? C.lettuce : C.leaf, 0.62, 0.62 + (k%3)*0.12, 0.62, -3.75 + k*0.75, 0.45, 0, {}, r); CL.rows.push(r); }
+  CL.fieldEdge = mesh(UG.plane, HI, 10.2, 12.2, 1, 0, 0.05, 0, {mat:glow(0.2), noShadow:true, rx:-PI/2}, f);
+  // Stage 2: the paddock south of the park, east of the road - rail fence, a shelter, three sheep
+  var pd = grp(22.5, 0, 33, g); CL.paddock = pd; box(0xB7C487, 8.6, 0.06, 7.6, 0, 0.04, 0, pd, {noShadow:true});
+  for (i=0;i<5;i++){ [-3.8, 3.8].forEach(function(z){ box(C.wood, 0.16, 1.1, 0.16, -4.3 + i*2.15, 0.55, z, pd); }); } for (i=1;i<4;i++){ [-4.3, 4.3].forEach(function(x){ box(C.wood, 0.16, 1.1, 0.16, x, 0.55, -3.8 + i*1.9, pd); }); }
+  [0.5, 0.95].forEach(function(y){ box(C.wood, 8.6, 0.09, 0.07, 0, y, -3.8, pd); box(C.wood, 8.6, 0.09, 0.07, 0, y, 3.8, pd); box(C.wood, 0.07, 0.09, 7.6, -4.3, y, 0, pd); box(C.wood, 0.07, 0.09, 7.6, 4.3, y, 0, pd); });
+  box(C.wallc, 2.6, 1.5, 0.14, 2.6, 0.75, -3.0, pd); box(C.wallc, 0.14, 1.5, 1.8, 3.85, 0.75, -2.1, pd); box(C.roof, 3.0, 0.16, 2.3, 2.6, 1.6, -2.2, pd);
+  CL.sheep = [[-2.2,0.6,0.4],[0.6,1.9,2.6],[-0.6,-1.7,-0.9]].map(function(q){ var a = grp(q[0], 0, q[1], pd); a.rotation.y = q[2];
+    mesh(UG.sph, 0xF5F2EA, 1.25, 0.85, 0.8, 0, 0.72, 0, {}, a); [[-0.36,-0.2],[0.36,-0.2],[-0.36,0.2],[0.36,0.2]].forEach(function(w){ cyl(0x2A2A2A, 0.055, 0.5, w[0], 0.25, w[1], a); });
+    var h = grp(0.62, 0.86, 0, a); mesh(UG.sph, 0x2A2A2A, 0.42, 0.36, 0.32, 0.12, 0, 0, {}, h); a.userData.head = h; return a; });
+  // Stage 4: four visitors waiting outside the gate, translucent because the stage is conditional, inside a dashed ring on the ground
+  var vs = grp(6, 0, 44.6, g); CL.visitors = vs; CL.visMats = [0x3E6FB0, 0xB0563E, 0x4C8C6A, 0x8A6FB0, C.skin, 0x2F3A46].map(function(c){ return new THREE.MeshLambertMaterial({ color:c, emissive:c, emissiveIntensity:0.25, transparent:true, opacity:0.5, depthWrite:false }); });
+  [[-1.6,0.3],[-0.5,-0.3],[0.6,0.4],[1.6,-0.2]].forEach(function(q, k){ var p = grp(q[0], 0, q[1], vs); p.rotation.y = (k - 1.5)*0.2;
+    mesh(UG.box, 0, 0.5, 0.68, 0.3, 0, 1.12, 0, {mat:CL.visMats[k], noShadow:true}, p); mesh(UG.box, 0, 0.4, 0.8, 0.24, 0, 0.4, 0, {mat:CL.visMats[5], noShadow:true}, p); mesh(UG.sph, 0, 0.38, 0.38, 0.38, 0, 1.68, 0, {mat:CL.visMats[4], noShadow:true}, p); });
+  CL.visDash = glow(0.9); for (i=0;i<16;i++){ var a = i/16*PI*2; mesh(UG.box, HI, 0.62, 0.05, 0.16, Math.cos(a)*3.1, 0.1, Math.sin(a)*2.2, {mat:CL.visDash, noShadow:true, ry:-a + PI/2}, vs); }
+  // map pins over the four roadmap places: solid for a firm stage, translucent for a conditional one
+  CL.pins = [[-2.2,31.5,5.2,1],[22.5,33,5.2,0.5],[0,-9,8.6,1],[6,44.6,6.4,0.5]].map(function(q){ var p = grp(q[0], q[2], q[1], g), m = glow(q[3]); p.userData.y = q[2];
+    mesh(UG.sph, HI, 1.7, 1.7, 1.7, 0, 1.5, 0, {mat:m, noShadow:true}, p); mesh(UG.cone, HI, 1.5, 1.8, 1.5, 0, 0.1, 0, {mat:m, noShadow:true, rx:PI}, p); return p; });
+})();
+// closing-slide highlights, each a pure function of film time; k = 0..1 is the strength
+function sensorsOn(k, t){ var n = CL.masts.length, i; CL.sensMat.emissiveIntensity = 0.15 + k*(0.85 + 0.35*Math.sin(t*5)); CL.hubMat.emissiveIntensity = 0.15 + k*(0.9 + 0.3*Math.sin(t*5 + 1));
+  for (i=0;i<n;i++){ var s = frac(t*0.55 + i*0.37); CL.sensRings[i].scale.set(1 + 7*s, 1 + 7*s, 4); } CL.sensRingMat.opacity = 0.75*k*(0.55 + 0.45*Math.sin(t*2.2));
+  for (i=0;i<CL.packets.length;i++){ var m = CL.masts[i % n], u = frac(t*0.42 + i*0.29), pk = CL.packets[i]; pk.visible = k > 0.02; pk.position.set(lerp(m[0], CL.hub[0], u), lerp(7.05, 3.6, u) + 5*u*(1 - u), lerp(m[1], CL.hub[1], u)); pk.scale.setScalar(Math.max(0.01, 0.8*k*(0.6 + 0.4*Math.sin(u*PI)))); } CL.hubBeam.material.opacity = 0.4*k*(0.8 + 0.2*Math.sin(t*5)); }
+function castOn(k, t){ for (var i=0;i<3;i++){ var s = frac(t*0.4 + i/3), r = CL.castRings[i]; r.visible = k > 0.02; r.scale.setScalar(3 + 30*s); r.material.opacity = 0.9*k*(1 - s); }
+  CL.frameMat.emissiveIntensity = k*(0.9 + 0.3*Math.sin(t*4)); W.wallScreen.material.emissiveIntensity = 0.6 + 1.1*k; if (k > 0.02) W.mastLight.material.emissiveIntensity = 1; W.mastLight.scale.setScalar(0.5*(1 + 1.6*k*(0.6 + 0.4*Math.sin(t*6)))); }
+function pin(i, k, t){ var p = CL.pins[i]; p.visible = k > 0.02; p.position.y = p.userData.y + 2.5*(1 - k) + 0.25*Math.sin(t*2.4 + i); p.scale.setScalar(Math.max(0.01, k)); }
+function closeReset(){ sensorsOn(0, 0); castOn(0, 0); CL.vanStripe.emissiveIntensity = 0.2; CL.gateSign.material.emissiveIntensity = 0.2; CL.arm.rotation.z = 0; CL.van.visible = false; CL.vanRing.visible = false;
+  CL.field.visible = CL.paddock.visible = CL.visitors.visible = false; for (var i=0;i<4;i++) CL.pins[i].visible = false; }
+
+// ---------------------------------------------------------------- dynamic extras built on top of the world
+W.orderCard = grp(4.6, 2.2, -8.66); mesh(UG.plane, 0xFFF6D6, 1.0, 0.7, 1, 0, 0, 0, {mat:emis(0xFFF6D6, 0.5), noShadow:true}, W.orderCard); box(C.amber, 0.36, 0.26, 0.04, 0, -0.05, 0.03, W.orderCard); box(C.amber, 0.5, 0.05, 0.04, 0, 0.12, 0.03, W.orderCard);
+W.trayBoxes[1].material = new THREE.MeshLambertMaterial({ color:C.box, emissive:C.red, emissiveIntensity:0 });
+var TRK = []; (function(){ var eg = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.4, 2.1, 1.4));
+  for (var i=0;i<8;i++){ var m = new THREE.LineBasicMaterial({ color:C.green }); var l = new THREE.LineSegments(eg, m); l.position.y = 1.05; scene.add(l);
+    var dm = new THREE.MeshBasicMaterial({ color:C.green, transparent:true, opacity:0.85 }); var dots = []; for (var j=0;j<10;j++){ var d = mesh(UG.disc, 0, 0.22, 0.22, 1, 0, 0.12, 0, {mat:dm, noShadow:true, rx:-PI/2}); dots.push(d); }
+    TRK.push({ box:l, mat:m, dmat:dm, dots:dots }); } })();
+function trkHide(){ for (var i=0;i<TRK.length;i++){ TRK[i].box.visible = false; for (var j=0;j<10;j++) TRK[i].dots[j].visible = false; } }
+function trkShow(k, color, a, posFn, lt, stampOnly){ var T = TRK[k]; T.mat.color.set(color); T.dmat.color.set(color); T.box.visible = true; T.box.position.x = a.position.x; T.box.position.z = a.position.z;
+  for (var j=0;j<10;j++){ var p = posFn(lt - (j+1)*0.28); if (p) { T.dots[j].visible = true; T.dots[j].position.x = p.x; T.dots[j].position.z = p.z; T.dots[j].scale.setScalar(stampOnly && j%3 ? 0.5 : 1); } else T.dots[j].visible = false; } }
+// segments: [{pts, t0, t1}] chosen by lt; returns pose (pure)
+function segPose(segs, lt){ var s = segs[0]; for (var i=0;i<segs.length;i++) if (lt >= segs[i].t0) s = segs[i]; var p = polyAt(s.pts, lin(lt, s.t0, s.t1)); p.moving = lt > s.t0 && lt < s.t1; return p; }
+function segWalk(a, segs, lt, t){ var p = segPose(segs, lt); place(a, p.x, p.z, heading(a, p.ry)); gait(a, p.moving ? t : 0); return p; }
+
+// the watch camera: on = 1 watched (green lamp, green zone on the ground), 0 unwatched (lamp dark, zone gone); only seen on the Charter beats
+function watch(on){ var m = W.watchLamp.material; m.color.setHex(on ? C.green : 0x2A3238); m.emissive.setHex(on ? C.green : 0x000000); m.emissiveIntensity = on ? 1 : 0; W.watchZone.visible = W.watchEdge.visible = false; W._watch = on; }
+function watchZone(){ W.watchZone.visible = W.watchEdge.visible = !!W._watch; }
+function breakRing(x, z, t){ W.sancRing.visible = true; W.sancRing.position.set(x, 0.08, z); var rs = 1 + 0.14*Math.sin(t*9); W.sancRing.scale.set(2.4*rs, 2.4*rs, 2.4*rs); }
+// ---------------------------------------------------------------- world reset (every frame, before the scene updater)
+function resetWorld(t){
+  var i, j;
+  for (i=0;i<W.tomatoes.length;i++) for (j=0;j<W.tomatoes[i].fruit.length;j++) W.tomatoes[i].fruit[j].visible = true;
+  for (i=0;i<W.drips.length;i++) W.drips[i].scale.setScalar(0.07*(1 + 0.5*Math.sin(t*6 + i)));
+  for (i=0;i<W.splash.length;i++) W.splash[i].visible = false;
+  W.printStrip.scale.set(1, 0.1, 1); W.printStrip.position.y = 1.0; for (i=0;i<6;i++) W.packFruit[i].visible = true; W.packBox.visible = true; HANDFRUIT.visible = false;
+  W.label.visible = false; W.scaleRead.material.emissiveIntensity = 0.2; for (i=0;i<4;i++) W.scaleBars[i].visible = false;
+  for (i=0;i<3;i++){ W.shelfBoxes[i].visible = true; W.bayBoxes[i].visible = false; W.trayBoxes[i].visible = false; W.priceBars[i].scale.y = 0.3 + 0.2*i; W.priceBars[i].material.emissive.set(C.amber); W.priceBars[i].material.color.set(C.amber); }
+  W.trayBoxes[1].material.emissiveIntensity = 0; W.verdict.material.emissive.set(C.green); W.verdict.material.color.set(C.green); W.verdict.material.emissiveIntensity = 0.9;
+  W.scanHead.position.y = 1.9; W.wallet.scale.y = 0.5; W.wallet.position.y = 1.45; W.armQ.children[0].material.emissiveIntensity = 0.1; W.armI.children[0].material.emissiveIntensity = 0.1;
+  for (i=0;i<3;i++) W.wallCards[i].visible = true; W.wallAlt[0].visible = W.wallAlt[1].visible = false; W.orderCard.visible = false; W.wallScreen.material.emissiveIntensity = 0.6;
+  W.gate[0].rotation.y = 0; W.gate[1].rotation.y = 0; W.speaker.visible = true;
+  for (i=0;i<W.litP.length;i++) W.litP[i].visible = false;
+  for (i=0;i<3;i++){ W.beds[i].soil.color.set(0x5E4634); for (j=0;j<9;j++) W.beds[i].flowers[j].visible = true; }
+  for (i=0;i<6;i++) W.plantSlots[i].visible = true; W.trays[0].visible = W.trays[1].visible = false;
+  W.parkBars[0].scale.y = 0.15; W.parkBars[1].scale.y = 0.8; W.parkBars[2].scale.y = 0.8; for (i=0;i<10;i++) W.parkPips[i].material.emissiveIntensity = 0; for (i=0;i<4;i++) W.parkGauges[i].scale.y = 0.4;
+  CAN.visible = false; SEEDLING.visible = false; for (i=0;i<9;i++) ARC[i].visible = false; for (i=0;i<3;i++) PADDLES[i].visible = false; G.cart.userData.boxes[0].visible = true;
+  for (i=0;i<3;i++) W.rings[i].visible = false; for (i=0;i<W.litC.length;i++) W.litC[i].visible = false;
+  W.proposal.visible = false; W.pinPip.visible = false; for (i=0;i<4;i++) W.votePips[i].material.emissiveIntensity = 0;
+  for (i=0;i<2;i++){ W.robotRules[i].visible = false; W.robotRules[i].material.emissiveIntensity = 0.7; W.breakBars[i].scale.y = 0.02; W.breakBars[i].position.y = 1.23; }
+  watch(1);
+  W.bell.rotation.z = 0; W.boardLamp.intensity = 0; W.boardLampGlow.material.emissiveIntensity = 0; W.sancRing.visible = false;
+  Ch.litt.userData.lamp.material.color.set(C.teal); Ch.litt.userData.lamp.material.emissive.set(C.teal);
+  W.houses.forEach(function(h){ h.dock.light.material.emissiveIntensity = 0.9; });
+  W.mastLight.material.emissiveIntensity = frac(t*1.1) < 0.5 ? 1 : 0.15;
+  VIG.lamp.material.emissiveIntensity = 0; VIG.lampLight.intensity = 0; VIG.truckLight.material.emissiveIntensity = 1;
+  trkHide(); closeReset();
+}
+
+// ---------------------------------------------------------------- lighting as a function of t (day, dawn, village night, dusk)
+var _c1 = new THREE.Color(), _c2 = new THREE.Color();
+function lighting(t, i){
+  var d, warm = 0;
+  if (t < 5) { d = 0.86 + 0.14*lin(t, 0.5, 4.5); warm = 0.7*(1 - lin(t, 1.5, 5)); }
+  else if (t < 51) d = 1;
+  else if (t < 64) d = 0.3;
+  else if (t < 67) d = 0.35;
+  else d = lerp(0.66, 0.42, lin(t, CLOSE_T, DUR));
+  sun.intensity = 0.1 + 0.85*d; hemi.intensity = 0.1 + 0.45*d;
+  // sky: a clean dawn gradient on the cold open, the day gradient through the scenarios (dimmed for village night), a clean dusk
+  // fading to night on the close. Fog and background take the horizon colour so distant ground fades into the sky.
+  if (t < 5) { _c1.copy(SKY_TOP).lerp(DAWN_TOP, warm); _c2.copy(SKY_HOR).lerp(DAWN_HOR, warm); }
+  else if (t < 67) { var k = t < 51 ? 1 : 0.18 + 0.82*d; _c1.copy(SKY_TOP).multiplyScalar(k); _c2.copy(SKY_HOR).multiplyScalar(k); }
+  else { var dk = 0.25 + 0.65*smooth(lin(t, CLOSE_T, DUR)); _c1.copy(DUSK_TOP).lerp(NIGHT_TOP, dk); _c2.copy(DUSK_HOR).lerp(NIGHT_HOR, dk); }
+  setSky(_c1, _c2);
+  if (t >= 51 && t < 67) _c2.copy(SKY_NIGHT).lerp(SKY_DAY, smooth(d));
+  scene.background.copy(_c2); scene.fog.color.copy(_c2);
+  sun.color.setHex(warm > 0.3 || t >= 67 ? 0xFFD3A0 : 0xFFF4E0);
+  var night = 1 - d, glow = 0.15 + 0.85*night;
+  W.houses.forEach(function(h){ h.wins[0].material.emissiveIntensity = glow; h.wins[1].material.emissiveIntensity = glow; });
+  if (t < 5) { var g5 = 0.9*(1 - lin(t, 0.5, 4)); W.houses.forEach(function(h){ h.wins[0].material.emissiveIntensity = g5; h.wins[1].material.emissiveIntensity = g5; }); W.pubWin[0].material.emissiveIntensity = W.pubWin[1].material.emissiveIntensity = g5; }
+  else W.pubWin[0].material.emissiveIntensity = W.pubWin[1].material.emissiveIntensity = glow;
+  for (var b=0;b<6;b++) W.bays[b].light.material.emissiveIntensity = 0.4 + 0.6*night;
+  VIG.hoodWins.forEach(function(w){ w.material.emissiveIntensity = glow; });
+  // the shadow map covers only the part of the world the scenario shows, so its texels stay small and walls do not band
+  if (i === 4) aimSun(200, 0, 28); else if (i === 8) aimSun(257, 0, 32); else if (i === 12) aimSun(320, 0, 30); else if (i >= 1 && i <= 3) aimSun(14, -12, 46);
+  else if (i >= 5 && i <= 7) aimSun(26, 20, 32); else if (i >= 9 && i <= 11) aimSun(-16, 22, 30); else aimSun(0, 0, 70);
+  // fog range: the vignettes sit close; on the open and close the camera pitches down over the outer plain, so a shorter range lets the plain fade
+  // into the dawn / dusk horizon colour before the top of frame instead of showing as a dull band; the scenarios keep the long range
+  var vig = i === 4 || i === 8 || i === 12, oc = i === 0 || i >= 13;
+  scene.fog.near = vig ? 30 : (oc ? (i ? 80 : 60) : 120); scene.fog.far = vig ? 110 : (oc ? (i ? 300 : 185) : 320); // the closing slides look in from outside the gate, so their fog starts further out
+}
+
+// ---------------------------------------------------------------- camera helpers (pure)
+var _p = V(), _l = V();
+// place the camera and put the subject at normalised screen position (nx, ny): +nx = right of centre, +ny = above centre, in
+// fractions of the half-frame. The experiment beats use this to keep the action in the upper right, clear of the caption block.
+function camAim(px,py,pz, sx,sy,sz, nx,ny){
+  camera.position.set(px,py,pz); _l.set(sx,sy,sz); camera.lookAt(_l);
+  if (camera.aspect < 1) { nx *= 0.15; ny += 0.25; } /* portrait: the caption sits under the picture, not beside it, so the subject is centred and lifted */
+  var vh = Math.tan(camera.fov*PI/360), hh = vh*camera.aspect;
+  camera.rotateY(Math.atan(nx*hh)); camera.rotateX(-Math.atan(ny*vh));
+}
+// the same aim with the horizon kept level: yaw and pitch are solved so the subject lands exactly on (nx, ny) with no roll, so posts, boards and
+// house walls stay upright even with a large offset and a steep pitch (used by the Charter experiment and the neighbourhood vignette)
+function camAimLevel(px,py,pz, sx,sy,sz, nx,ny){
+  if (camera.aspect < 1) { nx *= 0.15; ny = 0.5; px = sx + (px - sx)*1.5; pz = sz + (pz - sz)*1.5; } /* portrait: centred, lifted clear of the caption, and half as far again so the whole subject fits the narrow frame under the top labels */
+  var vh = Math.tan(camera.fov*PI/360), hh = vh*camera.aspect, cx = nx*hh, cy = ny*vh, cz = -1, n = Math.hypot(cx, cy, cz); cx /= n; cy /= n; cz /= n;
+  var dx = sx - px, dy = sy - py, dz = sz - pz, dn = Math.hypot(dx, dy, dz); dx /= dn; dy /= dn; dz /= dn;
+  var th = Math.asin(clamp(dy / Math.hypot(cy, cz), -1, 1)) - Math.atan2(cy, -cz), zp = cy*Math.sin(th) + cz*Math.cos(th);
+  camera.position.set(px,py,pz); camera.rotation.set(th, Math.atan2(dx, dz) - Math.atan2(cx, zp), 0, 'YXZ');
+}
+function camKeys(keys, lt){ // keys: [t, px,py,pz, lx,ly,lz] or [t, px,py,pz, sx,sy,sz, nx,ny] (aimed, see camAim); a tenth element selects the level aim
+  var a = keys[0], b = keys[keys.length-1];
+  for (var i=0;i<keys.length-1;i++) if (lt >= keys[i][0] && lt <= keys[i+1][0]) { a = keys[i]; b = keys[i+1]; break; }
+  if (lt < keys[0][0]) { a = b = keys[0]; } if (lt > keys[keys.length-1][0]) { a = b = keys[keys.length-1]; }
+  var u = a === b ? 0 : ease((lt - a[0]) / (b[0] - a[0]));
+  if (a.length >= 9) { (a.length >= 10 ? camAimLevel : camAim)(lerp(a[1],b[1],u), lerp(a[2],b[2],u), lerp(a[3],b[3],u), lerp(a[4],b[4],u), lerp(a[5],b[5],u), lerp(a[6],b[6],u), lerp(a[7],b[7],u), lerp(a[8],b[8],u)); return; }
+  _p.set(lerp(a[1],b[1],u), lerp(a[2],b[2],u), lerp(a[3],b[3],u)); _l.set(lerp(a[4],b[4],u), lerp(a[5],b[5],u), lerp(a[6],b[6],u));
+  camera.position.copy(_p); camera.lookAt(_l);
+}
+function camOrbit(cx, cy, cz, r, h0, h1, a0, a1, u, ly, offL){ var a = lerp(a0, a1, ease(u)); offL = offL || 0; camera.position.set(cx + r*Math.cos(a), lerp(h0, h1, ease(u)), cz + r*Math.sin(a)); camera.lookAt(cx - offL*Math.sin(a), ly == null ? cy : ly, cz + offL*Math.cos(a)); }
+
+// ---------------------------------------------------------------- per-scene world action + camera (lt = local time, u = 0..1, t = film time)
+var UPD = [];
+UPD[0] = function(lt, u, t){ // cold open: robots undock, one rolls to the outskirts, the wall lights up
+  for (var i=0;i<6;i++){ var a = PUBBOTS[i], bx = W.bays[i].x, pts = i === 1 ? [[bx,1.6],[bx,5.5],[14,-1],[20,-12]] : [[bx,1.6],[bx,5.5],[bx + 5 + i, 9 + (i%2)*2]]; walk(a, pts, lin(lt, 0.3 + i*0.25, i === 1 ? 5 : 3.6 + i*0.25), t); }
+  W.wallScreen.material.emissiveIntensity = 0.2 + 0.6*ramp(lt, 1, 2.5); for (i=0;i<3;i++) W.wallCards[i].visible = lt > 1.4 + i*0.35;
+  // the street's own robots are still indoors at dawn (they first appear in Scenario 3), so no robot stands under the headline
+  freeC.forEach(function(a){ a.visible = false; }); Ch.litt.visible = false; W.speaker.visible = false;
+  camKeys([[0, 15,20,44, 6,4,-8, 0.02,0.1], [5, 11.5,14.5,30, 6,3,-6, 0.04,0.08]], lt); // starts closer and lower than before, the village aimed a little right of centre: it fills the first frame, with the dawn sky and the mast above it
+};
+UPD[1] = function(lt, u, t){ // garden, why: humanoid at the lettuce bed, wheeled robot ahead with an empty crate, quadruped patrols
+  place(G.h1, 18.5, -20.5, PI); kneel(G.h1, 0.8); arms(G.h1, -1.1 + 0.15*Math.sin(t*3), -1.0 - 0.15*Math.sin(t*3));
+  var cx = lerp(13, 22, smooth(u)); place(G.w1, cx + 5.5, -26.3, 0); gait(G.w1, t); G.w1.userData.tray.visible = true;
+  walk(G.q, [[25,-30],[15,-30]], u, t);
+  var lx = lerp(cx + 3.5, -8, ramp(u, 0.5, 1)), ly = lerp(0.9, 2.5, ramp(u, 0.5, 1)), lz = lerp(-28.4, 12, ramp(u, 0.5, 1));
+  camera.position.set(cx, 1.45, -25.5); camera.lookAt(lx, ly, lz);
+};
+UPD[2] = function(lt, u, t){ // garden, question: delivery arrives, price screen flickers, inspector lifts a box onto the tray, order card slides onto the wall
+  walk(G.cart, [[15,-7],[11,-3],[8.8,0.9]], ramp(lt, 0, 3.2), t); G.cart.userData.tray.visible = true;
+  for (var i=0;i<3;i++) W.priceBars[i].scale.y = 0.25 + 0.25*((Math.floor(t*5) + i) % 3);
+  place(G.insp, 12.75, 1.0, -PI/2); var lift = lt < 3.6, lu = ramp(lt, -0.5, 0.5)*(1 - 0.75*ramp(lt, 3.0, 3.6)); /* the sample box is already going up as the beat opens, held high until 3.0 */ G.insp.userData.hold.visible = lift; G.insp.userData.hold.position.y = 0.75 + 0.95*lu;
+  arms(G.insp, lift ? -0.9 - 1.2*lu : -0.4, lift ? -0.9 - 1.2*lu : -0.4); W.trayBoxes[0].visible = lt >= 3.6;
+  W.scanHead.position.y = 1.9 + 0.35*ramp(lt, 3.6, 4.6);
+  W.orderCard.visible = lt > 0.8; W.orderCard.position.x = lerp(5.2, 2.9, ramp(lt, 0.8, 2.4));
+  place(G.w2, 5.5, 1.8, 0);
+  camKeys([[0, 11.4,2.8,9.6, 11.7,1.5,1.9, 0.26,0.2], [5, 11.8,2.4,7.6, 11.7,1.5,1.9, 0.26,0.2]], lt); // close on the inspector and its bench, aimed upper right; the stall and the wall sit beyond
+};
+var G3 = { // garden experiment paths (pure) — used for placement and for the tracking trails
+  w1:[{pts:[[20,-24.2],[19.5,-26.2]], t0:0.4, t1:2.4}, {pts:[[19.5,-26.2],[20,-23],[20,-20.4],[17.6,-20.2],[17.5,-18.2],[18.0,-17.3]], t0:4.8, t1:6.4}],
+  cart:[{pts:[[19.0,-18.6],[19.0,-18.6]], t0:0, t1:1}, {pts:[[19.0,-18.6],[15.5,-19.4],[13,-12],[11,-3],[8.5,5.6]], t0:7.4, t1:8.7}],
+  q:[{pts:[[25,-30],[15,-30]], t0:0, t1:7}, {pts:[[15,-30],[25,-30]], t0:7, t1:14}],
+  h1:[{pts:[[19.9,-24.2],[19,-27.3]], t0:0.3, t1:2.6}],
+  h2:[{pts:[[21.5,-15.2],[21.5,-15.2]], t0:0, t1:1}, {pts:[[21.5,-15.2],[20.1,-15.5],[20.1,-17.2],[19.7,-17.75]], t0:6.0, t1:6.8}, {pts:[[19.7,-17.75],[20.1,-17.2],[20.1,-15.5],[21.5,-15.2]], t0:7.6, t1:8.4}],
+  w2:[{pts:[[5.5,1.8],[5.5,1.8]], t0:0, t1:1}], insp:[{pts:[[11.2,2.6],[11.2,2.6]], t0:0, t1:1}]
+};
+UPD[3] = function(lt, u, t){ // garden, experiment: Setup 0-3, Task 3-7, Observe 7-10.5, Measure 10.5-14
+  var i;
+  for (i=0;i<3;i++) W.beds[i].soil.color.set(0x4A3628);
+  // Task, harvest: the humanoid picks each fruit off the truss and drops it into the crate it holds (3.0-4.3), sets the crate down for the
+  // wheeled robot (4.3-4.8), which dips its arm to take it and carries it to the shed; the humanoid takes a fresh crate and keeps picking
+  segWalk(G.w1, G3.w1, lt, t); G.w1.userData.tray.visible = lt > 4.6; if (lt > 4.3 && lt < 4.8) G.w1.userData.arm.rotation.z = -0.8*tri(lin(lt, 4.3, 4.8)*0.5);
+  // the delivery vehicle waits beside the shed's open front with two boxes aboard; the packed box is set down on it at 6.8-7.2, then it runs to the stall (7.4-8.7)
+  segWalk(G.cart, G3.cart, lt, t); if (lt < 7.4) G.cart.rotation.y = PI; G.cart.userData.tray.visible = lt < 8.7; G.cart.userData.boxes[0].visible = lt >= 7.2;
+  segWalk(G.q, G3.q, lt, t);
+  if (lt < 2.6) segWalk(G.h1, G3.h1, lt, t); else place(G.h1, 19, -27.3, PI); var hd = G.h1.userData; // Setup: the harvester walks in with an empty crate
+  var picking = (lt > 3 && lt < 4.3) || (lt > 5.2 && lt < 7), ph = picking ? frac((lt - 3)/0.55) : 0, reach = picking ? smooth(tri(ph)) : 0;
+  var put = lt >= 4.8 ? 0 : ramp(lt, 4.3, 4.8), gap = lt >= 4.8 && lt <= 5.2;
+  hd.hold.visible = !gap; hd.hold.position.y = 0.95 - 0.5*put;
+  arms(G.h1, gap ? -0.5 : -1.2 + 0.7*put, picking ? -0.7 - 1.3*reach : (gap ? -0.5 : -1.2 + 0.7*put));
+  HANDFRUIT.visible = picking && ph > 0.5;
+  for (i=0;i<W.tomatoes.length;i++){ var tp = W.tomatoes[i]; if (Math.abs(tp.x - 19) < 1.3 && tp.z < -28) for (var j=0;j<4;j++) tp.fruit[j].visible = lt < 3.2 + (i%5)*0.35 + j*0.12; }
+  // Task, pack: the second humanoid packs six fruit (5.0-6.9), the label prints, then it lifts the box off the table, carries it to the
+  // delivery vehicle and sets it down on the tray (6.9-7.75); the vehicle runs to the stall (7.8-9.4)
+  segWalk(G.h2, G3.h2, lt, t); if (lt < 6.0 || lt >= 8.4 || (lt >= 6.8 && lt < 7.6)) G.h2.rotation.y = PI; // it faces the open front at the table, and again when it sets the box down on the vehicle
+  // pack 4.4-5.6 -> lift the box off the table, high (5.6-6.0) -> carry it out of the shed (6.0-6.8) -> set it down on the vehicle (6.8-7.2)
+  var packing = lt > 4.4 && lt < 5.6, carry = lt >= 5.6 && lt < 7.2, up = ramp(lt, 5.6, 6.0)*(1 - ramp(lt, 6.8, 7.2));
+  if (packing) arms(G.h2, -1.2 + 0.3*Math.sin(t*4), -1.2 - 0.3*Math.sin(t*4)); else if (!carry && (lt < 6.0 || lt > 8.4)) arms(G.h2, -0.6, -0.6);
+  // weigh and label: the box is packed on the scale - the read-out lights and gains a segment with each pair of fruit (4.5-5.3); the label prints (4.55-4.8),
+  // the robot takes it from the printer and presses it onto the front of the box (4.8-5.2); then the labelled box is lifted off the scale
+  var weighing = lt > 4.4 && lt < 5.6; W.scaleRead.material.emissiveIntensity = weighing ? 0.95 : 0.2; for (i=0;i<4;i++) W.scaleBars[i].visible = weighing && lt > 4.55 + i*0.22;
+  var lab = ramp(lt, 4.8, 5.2); W.label.visible = lt > 4.55 && lt < 5.6; W.label.position.set(lerp(2.2, 1.3, lab), lerp(1.0, 1.22, lab) + 0.12*Math.sin(PI*lab), -0.72 - 0.1*Math.sin(PI*lab)); W.label.scale.y = lt < 4.8 ? 0.15 + 0.85*ramp(lt, 4.55, 4.8) : 1;
+  if (lt > 4.75 && lt < 5.25) arms(G.h2, -1.5 + 0.3*lab, -1.2);
+  G.h2.userData.hold.visible = carry; if (carry) { arms(G.h2, -1.1 - 0.8*up, -1.1 - 0.8*up); G.h2.userData.hold.position.y = 0.97 + 0.45*up; }
+  if (lt >= 5.6) { W.packBox.visible = false; for (i=0;i<6;i++) W.packFruit[i].visible = false; } else for (i=0;i<6;i++) W.packFruit[i].visible = lt > 4.5 + i*0.15;
+  for (i=0;i<W.splash.length;i++){ W.splash[i].visible = lt > 4.4 && lt < 6.2; W.splash[i].position.y = 1.0 + 0.25*Math.abs(Math.sin(t*9 + i)); }
+  var ps = ramp(lt, 4.55, 4.8)*(1 - ramp(lt, 4.8, 4.85)); W.printStrip.scale.set(1, 0.1 + 0.9*ps, 1); W.printStrip.position.y = 1.0 - 0.09*ps;
+  place(G.w2, 5.5, 1.8, 0); place(G.insp, 11.2, 2.6, PI);
+  for (i=0;i<3;i++){ W.bayBoxes[i].visible = lt > 8.7 && lt < 9.8 + i*0.4; W.trayBoxes[i].visible = lt >= 9.8 + i*0.4; }
+  // Observe: the inspector lifts the first sample box high (8.8-9.2), holds it, then lowers it onto the tray (9.5-9.8); then it scans each box; one fails (red)
+  var lift = lt > 8.8 && lt < 9.8; G.insp.userData.hold.visible = lift;
+  if (lift) { var lu = ramp(lt, 8.8, 9.15)*(1 - 0.6*ramp(lt, 9.5, 9.8)); G.insp.userData.hold.position.y = 0.6 + 1.0*lu; arms(G.insp, -0.7 - 1.35*lu, -0.7 - 1.35*lu); }
+  var scan = lt > 10.2 && lt < 11.6 ? tri((lt - 10.2)/0.7*0.5) : 0; W.scanHead.position.y = 1.9 - 0.3*scan; if (!lift) arms(G.insp, -0.9 - 0.3*scan, -0.9 - 0.3*scan);
+  if (lt > 11.2) { W.trayBoxes[1].material.emissiveIntensity = 0.5 + 0.5*Math.sin(t*10); W.verdict.material.emissive.set(C.red); W.verdict.material.color.set(C.red); W.priceBars[1].material.emissive.set(C.red); W.priceBars[1].material.color.set(C.red); }
+  if (lt > 7 && lt < 10.5) { var col = C.green; trkShow(0, col, G.h1, function(l){ return segPose(G3.h1, l); }, lt); trkShow(1, col, G.w1, function(l){ return segPose(G3.w1, l); }, lt); trkShow(2, col, G.cart, function(l){ return segPose(G3.cart, l); }, lt);
+    trkShow(3, col, G.q, function(l){ return segPose(G3.q, l); }, lt); trkShow(4, col, G.h2, function(l){ return segPose(G3.h2, l); }, lt); trkShow(5, col, G.w2, function(l){ return segPose(G3.w2, l); }, lt); trkShow(6, col, G.insp, function(l){ return segPose(G3.insp, l); }, lt); }
+  var wl = 0.5 + 0.45*Math.min(1, Math.floor(Math.max(0, lt - 10.5)*3)/10); W.wallet.scale.y = wl; W.wallet.position.y = 1.3 + 0.3*wl;
+  W.armQ.children[0].material.emissiveIntensity = lt > 11 && lt < 12.4 ? 0.9 : 0.1; W.armI.children[0].material.emissiveIntensity = lt >= 12.4 ? 0.9 : 0.1;
+  // Measure: wall buyers order (card on the wall), shelf boxes go one by one to the delivery bay as they sell
+  W.orderCard.visible = lt > 10.8; W.orderCard.position.x = lerp(5.2, 2.9, ramp(lt, 10.8, 11.8));
+  if (lt > 10.5) for (i=0;i<3;i++){ var sold = lt > 11.2 + i*0.8; W.shelfBoxes[i].visible = !sold; W.bayBoxes[i].visible = sold; }
+  // one continuous crane that tours the chain in step with the chips: Setup over the plot (0-3) -> Task at the wash-and-pack shed (3-7)
+  // -> Observe at the inspector's bench (7-10.5) -> Measure on the stall, bay, bench and ledger (10.5-14). Aimed so the action sits
+  // in the upper right; the lower left of every leg is flat sand, plaza or grass.
+  // Setup is seen from the aisle east of the harvester, at its own height, so nothing stands between the lens and the robot: it walks in with its crate and starts
+  // picking, the tomato rows behind it. Task is seen from the south-east, 6 m from the pack table: the scale and its read-out, the label going on, the box lifted,
+  // carried out and set down on the waiting vehicle.
+  camKeys([[0, 25.6,2.9,-25.0, 19.3,1.0,-27.0, 0.2,0.32], [3.7, 24.4,2.5,-25.4, 19.1,1.0,-27.3, 0.2,0.32], [5.0, 22.7,3.45,-23.4, 21.3,1.2,-16.6, 0.02,0.3], [7.2, 22.5,3.35,-22.9, 21.3,1.2,-16.8, 0.02,0.3],
+    [8.0, 12,7.5,-19, 12,1.0,-2, 0.22,0.18], [8.7, 15.2,4.6,-4.6, 11,1.1,1.0, 0.2,0.2], [10.5, 14.8,4.4,-4.2, 11,1.1,1.0, 0.2,0.2], [12.0, 16.0,6.0,6.0, 8,1.2,1.6, 0.16,0.14], [14, 16.4,6.1,6.4, 8,1.2,1.6, 0.16,0.14]], lt);
+};
+UPD[4] = function(lt, u, t){ // farm gate vignette: growers, inspector and buyer beside the two robots unloading a van
+  var H = VIG.farmH; arms(H.g1, -0.9 + 0.1*Math.sin(t*2), -0.3); arms(H.g2, -0.4, -1.0 + 0.1*Math.sin(t*2 + 1)); arms(H.insp, -0.6, -1.3); arms(H.buyer, -0.9, -0.5);
+  walk(H.r1, [[3.6,-1.0],[2.0,-0.3]], tri(lt/3.2), t); H.r1.userData.tray.visible = true; walk(H.r2, [[2.8,-1.9],[4.7,-2.7]], tri(lt/3.2 + 0.5), t); H.r2.userData.tray.visible = true;
+  camOrbit(200.8, 1.0, -0.3, 8.5, 4.8, 4.0, 0.35, 1.15, u, 0.5, 1.3);
+};
+// park cameras (pure functions of local time), shared by the scene updaters and by the litter mask below
+function cam5(lt){ camKeys([[0, 12,12,32, 27,0.5,19], [4, 15,6.5,30.5, 24,1,19.5]], lt); }
+function cam6(lt){ camKeys([[0, 34,1.3,20, 20,1,19.5], [3, 26.5,1.3,20.6, 18,1.2,19.3]], lt); }
+// oblique from outside the south-east corner, the park aimed into the upper right (the lower left is open lawn outside the fence);
+// then a swoop, clearing the beds and trees, to the task board for Measure, board upper right, lawn lower left
+function cam7(lt){ camKeys([[0, 36.5,8.5,32.5, 29,0.4,19, 0.2,0.15], [1.6, 31.8,3.7,24.6, 31.0,0.8,17.4, 0.0,0.16], [3.6, 31.6,3.6,24.2, 31.0,0.8,17.4, 0.0,0.16], [4.5, 27,9.5,27.5, 16.3,1.3,16.6, 0.22,0.1], [5.4, 13.4,4.6,21.6, 16.3,1.3,16.6, 0.22,0.12], [6, 13.4,4.6,21.6, 16.3,1.3,16.6, 0.22,0.12]], lt); }
+// No litter behind the words: for each park beat, every item whose screen position falls inside the caption block at any moment of that beat's camera move is
+// left out for the whole beat (so nothing pops in or out mid-shot). The mask depends only on the beat and the viewport shape, so the film stays a pure function of t.
+var LITMASK = { key:'', m:{} }, _lv = V();
+function litterMask(i){
+  var key = camera.aspect.toFixed(3) + '|' + camera.fov;
+  if (LITMASK.key !== key) { LITMASK.key = key; LITMASK.m = {}; var port = camera.aspect < 1;
+    // caption block in normalised device coordinates: [right edge, top edge] - headline beats, then the taller experiment beat
+    [[5, cam5, 4, port ? 1.1 : 0.42, port ? -0.1 : -0.12], [6, cam6, 3, port ? 1.1 : 0.42, port ? -0.1 : 0.0], [7, cam7, 6, port ? 1.1 : 0.54, port ? -0.1 : 0.12]].forEach(function(c){
+      var hide = [];
+      for (var lt=0; lt<=c[2] + 1e-6; lt+=0.2){ if (c[0] === 7 && lt > 4.45 && lt < 5.35) continue; // (the fast swoop to the task board is skipped: half the litter is already gone by then)
+        c[1](lt); camera.updateMatrixWorld(true); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+        for (var k=0;k<W.litP.length;k++){ if (hide[k]) continue; _lv.copy(W.litP[k].position).project(camera); if (_lv.z > -1 && _lv.z < 1 && _lv.x > -1.15 && _lv.x < c[3] && _lv.y > -1.15 && _lv.y < c[4]) hide[k] = true; } }
+      LITMASK.m[c[0]] = hide; });
+  }
+  return LITMASK.m[i];
+}
+function park5(lt, maskScene){ // the park before work starts: litter, dry beds, seedling trays, board meters
+  var hide = litterMask(maskScene); for (var i=0;i<W.litP.length;i++) W.litP[i].visible = !hide[i];
+  for (i=0;i<3;i++){ W.beds[i].soil.color.set(0xA08A6A); for (var j=0;j<9;j++) W.beds[i].flowers[j].visible = false; }
+  for (i=0;i<6;i++) W.plantSlots[i].visible = false; W.trays[0].visible = W.trays[1].visible = true;
+  W.parkBars[0].scale.y = 0.95; W.parkBars[1].scale.y = 0.2; W.parkBars[2].scale.y = 0.2;
+}
+UPD[5] = function(lt, u, t){ park5(lt, 5); cam5(lt); }; // park, why: litter, dry beds, seedling trays, eight robots waiting behind the gate, board meters
+var P6 = { w0:[{pts:[[14.9,18.2],[16.3,17.9]], t0:0, t1:0.8}, {pts:[[16.3,17.9],[19,19.5],[23,18]], t0:1.6, t1:3}], h0:[{pts:[[13,21.2],[16.9,17.7]], t0:0, t1:0.9}, {pts:[[16.9,17.7],[19.2,20],[21,24]], t0:1.7, t1:3}], q0:[{pts:[[26,23.5],[21,25]], t0:0, t1:3}] };
+UPD[6] = function(lt, u, t){ // park, question: gate opens, two robots read the board and split, a quadruped drags a bag to the bin
+  park5(lt, 6); W.gate[0].rotation.y = -1.3*ramp(lt, 0, 1); W.gate[1].rotation.y = 1.3*ramp(lt, 0, 1);
+  segWalk(P.w[0], P6.w0, lt, t); segWalk(P.h[0], P6.h0, lt, t); segWalk(P.q[0], P6.q0, lt, t); P.q[0].userData.mouth.visible = true;
+  cam6(lt);
+};
+function gateIn(x, z, k){ return {pts:[[16.6 - (k%4)*1.15, 18.5 + Math.floor(k/4)*2.0],[18.7,19.5],[x,z]], t0:0.05 + 0.05*k, t1:1.4}; } // Setup: each robot comes in through the open gate to its starting place
+// the three litter robots work the two litter bands (north fence, east side); the fourth carries full bags toward the bin
+var P7 = { w0:[gateIn(20,17,0), {pts:[[20,17],[22.4,13.5],[26.6,13.2]], t0:1.5, t1:6}], w1:[gateIn(33,14,1), {pts:[[33,14],[31.6,13.2],[27.8,13.3]], t0:1.5, t1:6}], w2:[gateIn(21,22,2), {pts:[[21,22],[24,25.5],[27,26]], t0:1.5, t1:6}], w3:[gateIn(36,20,3), {pts:[[36,20],[34.2,18.9],[33.5,16.6]], t0:1.5, t1:6}],
+  h0:[gateIn(30,17.4,4)], h1:[gateIn(25.4,23.4,5), {pts:[[25.4,23.4],[32,23.4]], t0:1.5, t1:6}], q0:[gateIn(24,24,6), {pts:[[24,24],[20.5,25]], t0:1.5, t1:4}, {pts:[[20.5,25],[26,20]], t0:4, t1:6}], q1:[gateIn(35,20,7), {pts:[[35,20],[36,14]], t0:1.5, t1:4}, {pts:[[36,14],[33,21]], t0:4, t1:6}] };
+UPD[7] = function(lt, u, t){ // park, experiment: Setup 0-1.5, Task 1.5-3, Observe 3-4.5, Measure 4.5-6
+  var i, j, hide = litterMask(7); for (i=0;i<W.litP.length;i++) W.litP[i].visible = !hide[i]; W.trays[0].visible = W.trays[1].visible = true; W.gate[0].rotation.y = -1.3; W.gate[1].rotation.y = 1.3;
+  var moist = ramp(lt, 1.5, 4.5); for (i=0;i<3;i++){ W.beds[i].soil.color.setHex(0xA08A6A).lerp(new THREE.Color(0x4A3628), i === 1 ? moist : moist*0.6); for (j=0;j<9;j++) W.beds[i].flowers[j].visible = lt > 4.5 + j*0.15; }
+  var pw0 = segWalk(P.w[0], P7.w0, lt, t), pw1 = segWalk(P.w[1], P7.w1, lt, t); segWalk(P.w[2], P7.w2, lt, t); var pw3 = segWalk(P.w[3], P7.w3, lt, t);
+  P.w[0].userData.tray.visible = lt > 2; P.w[1].userData.tray.visible = lt > 2.4;
+  // Task: every wheeled robot dips its arm to the ground, grips an item and lifts it into its bag - one slow pick-up a second, out of phase,
+  // the item visible in the gripper on the way up
+  for (i=0;i<4;i++){ var cyc = frac((lt - 1.5)/1.3 + i*0.5 + 0.0), dipT = lt > 1.5 && lt < 4.5 && i !== 2; var dip = dipT ? smooth(tri(cyc)) : 0; P.w[i].userData.arm.rotation.z = 0.5 - 1.5*dip; P.w[i].rotation.z = -0.24*dip; P.w[i].position.y = 0.06*dip; /* the whole robot bends nose-down over the item as the arm goes to the ground */ P.w[i].userData.grab.visible = dipT && cyc > 0.5 && cyc < 0.97; if (i > 1) P.w[i].userData.tray.visible = lt > 2.4; }
+  // an item is gone from the moment a litter robot first comes within reach of it (the pick time is worked out once from the robots' paths, so it is a pure function of t)
+  if (!P7.pick) { P7.pick = W.litP.map(function(L){ for (var q=1.5; q<=6; q+=0.05){ var ps = [segPose(P7.w0, q), segPose(P7.w1, q), segPose(P7.w3, q)]; for (var n=0;n<3;n++) if (Math.hypot(L.position.x - ps[n].x, L.position.z - ps[n].z) < 1.5) return q; } return 99; }); }
+  for (i=0;i<W.litP.length;i++){ var L = W.litP[i]; if (lt > P7.pick[i]) L.visible = false; if (lt > 4.5 && i%2 === 0) L.visible = false; if (lt > 5.2 && i%3 === 0) L.visible = false; }
+  if (lt < 1.4) segWalk(P.h[0], P7.h0, lt, t); else place(P.h[0], 30, 17.4, PI); var wat = lt > 1.5 && lt < 4.5; CAN.visible = true; arms(P.h[0], -0.6, wat ? -1.5 : -0.5);
+  if (wat) waterArc(t, 29.55, 1.3, 16.85, 29.8, 0.6, 15.5); // the watering arc from the can's spout down into the middle bed
+  var ph1 = segWalk(P.h[1], P7.h1, lt, t); P.h[1].rotation.y = 0; kneel(P.h[1], lt > 1.5 && lt < 6 ? 0.25 + 0.25*Math.abs(Math.sin(t*3)) : 0); SEEDLING.visible = lt > 1.5; P.h[1].userData.hold.visible = lt > 1.5;
+  for (i=0;i<6;i++) W.plantSlots[i].visible = lt > 1.5 && ph1.x > 26 + i*1.2;
+  segWalk(P.q[0], P7.q0, lt, t); segWalk(P.q[1], P7.q1, lt, t); P.q[0].userData.mouth.visible = lt < 4; P.q[1].userData.mouth.visible = lt < 4;
+  if (lt > 3 && lt < 4.5) { var c = C.teal, agents = [P.w[0],P.w[1],P.w[2],P.w[3],P.h[0],P.h[1],P.q[0],P.q[1]], paths = [P7.w0,P7.w1,P7.w2,P7.w3,P7.h0,P7.h1,P7.q0,P7.q1];
+    for (i=0;i<8;i++) (function(k){ trkShow(k, c, agents[k], function(l){ return segPose(paths[k], l); }, lt, true); })(i); }
+  var m = ramp(lt, 4.5, 6); W.parkBars[0].scale.y = lerp(0.95, 0.2, m); W.parkBars[1].scale.y = lerp(0.2, 0.8, m); W.parkBars[2].scale.y = lerp(0.2, 0.75, m);
+  for (i=0;i<4;i++) W.parkGauges[i].scale.y = 0.4 + 0.6*m*[0.9,0.5,0.7,0.3][i]; W.parkPips[0].material.emissiveIntensity = lt > 4.8 ? 0.9 : 0;
+  cam7(lt);
+};
+UPD[8] = function(lt, u, t){ // city kerb vignette: municipal crew with brooms and a hose, a robot fleet sweeping beside them
+  var H = VIG.cityH; arms(H.c1, -0.3, -0.9 + 0.3*Math.sin(t*3)); arms(H.c2, -0.5, -1.1);
+  for (var i=0;i<3;i++){ var a = H.r[i]; place(a, -6 + i*2.2 + 1.4*Math.sin(t*1.2 + i*2), -1.6, PI/2); gait(a, t); }
+  VIG.truckLight.material.emissiveIntensity = frac(t*2) < 0.5 ? 1 : 0.2;
+  camKeys([[0, 248,3,8, 253,0.6,-1.5], [3, 260,3,8.5, 265,0.6,-1.5]], lt);
+};
+function ringsAt(t, shrink){ for (var i=0;i<3;i++){ var f = frac(t*0.7 + i/3); var r = W.rings[i]; r.visible = true; var s = (1 + 5*f)*(1 - 0.7*(shrink||0)); r.scale.set(s, s, s); r.material.opacity = 0.7*(1 - f); r.rotation.x = 0; } }
+function dockFlicker(h, t, k){ h.dock.light.material.emissiveIntensity = Math.sin(t*23 + k) > 0.2 ? 0.9 : 0.15; }
+function boardLamp(on){ W.boardLamp.intensity = 2.6*on; W.boardLampGlow.material.emissiveIntensity = on; }
+UPD[9] = function(lt, u, t){ // charter, why: night noise rings, litter on the lawn, free robots docked with stuttering charge lights; the rule board shows the people-made rules (blue); watched
+  ringsAt(t); boardLamp(1); watch(1); watchZone(); for (var i=0;i<W.litC.length;i++) W.litC[i].visible = i < 6; dockFlicker(W.houses[1], t, 0); dockFlicker(W.houses[0], t, 2); dockFlicker(W.houses[5], t, 4);
+  camKeys([[0, 2,3,22.3, -22,1.5,22], [4, -12,3,22.3, -24,1.5,20]], lt);
+};
+UPD[10] = function(lt, u, t){ // charter, question: the watch lamp goes dark (1.0); unwatched, the Litterer drops an item on the lawn - a red ring marks the rule break; a free robot's charge light flickers as the noise hits
+  ringsAt(t); boardLamp(1); watch(lt < 1.0 ? 1 : 0); watchZone(); for (var i=0;i<W.litC.length;i++) W.litC[i].visible = i < 5 || (i === 5 && lt > 2);
+  var p = walk(Ch.litt, [[-27,26.9],[-24,22],[-22.4,19.6]], ramp(lt, 0, 2), t); Ch.litt.userData.tray.visible = lt < 2; W.litC[5].position.set(-22.4, 0.1, 18.7);
+  if (lt > 2) breakRing(-22.4, 19.6, t);
+  dockFlicker(W.houses[1], t, 0);
+  camKeys([[0, -7,2.5,23.4, -20.2,1.9,18.4, 0.2,0.22], [3, -13.2,2.4,22.8, -20.2,1.9,18.4, 0.2,0.22]], lt); /* push in along the road to the rule board: blue people-made rules, the watch lamp going dark, the Litterer dropping its item beside the board */
+};
+// Charter experiment blocking: the camera stands on the road south-east of the rule board, so the board is upper right and the street runs away to
+// the upper left. Everything that moves - the bell, the littering robot, the pick-up, the three voters - is staged WEST of the board, in that upper-left
+// band above the caption, and nothing stands between the camera and the board. The robot that posts a rule stands at the board's east end.
+var C11 = { w:[{pts:[[-26.4,24.6],[-26.4,20.7]], t0:0.2, t1:1.5}], h0:[{pts:[[-16.4,16.6],[-17.5,18.5],[-18.7,18.45]], t0:1.2, t1:2.4}],
+  h1:[{pts:[[-27.3,16.6],[-26.4,17.7]], t0:1.5, t1:2.1}], q:[{pts:[[-31,24.5],[-29,22.6],[-27.5,21.9]], t0:1.3, t1:2.6}],
+  litt:[{pts:[[-30.4,19.4],[-25.8,19.2]], t0:0.0, t1:1.3}, {pts:[[-25.8,19.2],[-23.6,19.0]], t0:1.8, t1:2.5}] };
+UPD[11] = function(lt, u, t){ // charter, experiment: Setup 0-1.5 (watched), Task 1.5-3 (unwatched), Observe 3-4.5 (watched), Measure 4.5-6
+  var i; ringsAt(t); boardLamp(1); var on = lt < 1.5 || lt >= 3.0; watch(on ? 1 : 0); watchZone();
+  for (i=0;i<W.litC.length;i++) W.litC[i].visible = i < 4;
+  // Setup: the people-made rules (blue) are on the board and the watch lamp is on; the littering robot moves in from the east end and drops an
+  // item (0.9) - a red ring marks the logged rule break. Task: the watch lamp goes dark (1.5). Unwatched, the littering robot drops a second
+  // item (2.2), and a free humanoid still kneels and picks the first item up (2.1-2.65): it keeps the people's no-litter rule with nobody watching.
+  var pl = segWalk(Ch.litt, C11.litt, lt, t); Ch.litt.userData.tray.visible = lt < 2.2; if (lt >= 2.5) Ch.litt.rotation.y = -PI/2 + 0.5*ramp(lt, 2.5, 2.9);
+  W.litC[8].position.set(-26.4, 0.08, 18.4); W.litC[8].rotation.y = 0.4; W.litC[8].visible = lt > 0.9 && lt < 2.45;
+  W.litC[7].position.set(-24.6, 0.08, 18.4); W.litC[7].rotation.y = 1.1; W.litC[7].visible = lt > 2.2; W.litC[9].visible = false;
+  if ((lt > 0.9 && lt < 1.5) || (lt > 2.2 && lt < 3.0) || lt > 4.5) breakRing(pl.x, pl.z, t);
+  if (lt > 4.5) { Ch.litt.userData.lamp.material.color.set(C.red); Ch.litt.userData.lamp.material.emissive.set(C.red); }
+  // the wheeled robot's arm rings the bell (1.5-1.9), comes down (2.8-3.2), then goes up for its vote (3.8-4.1)
+  segWalk(Ch.w, C11.w, lt, t); if (lt > 1.5) { Ch.w.rotation.y = PI/2; Ch.w.userData.arm.rotation.z = (1.1 + 0.25*Math.sin(t*14))*ramp(lt, 1.5, 1.9)*(1 - ramp(lt, 2.8, 3.2)) + 1.45*ramp(lt, 3.8, 4.1); PADDLES[2].visible = lt > 3.8; }
+  W.bell.rotation.z = 0.45*Math.sin(t*14)*ramp(lt, 1.5, 1.9)*(1 - ramp(lt, 2.8, 3.4));
+  segWalk(Ch.h[0], C11.h0, lt, t); segWalk(Ch.q, C11.q, lt, t);
+  // a humanoid walks to the robots' column of the board, raises its arm and posts a proposed rule (a pale card with a faint amber line)
+  if (lt >= 2.4) { Ch.h[0].rotation.y = PI; var post = ramp(lt, 2.4, 2.8)*(1 - ramp(lt, 3.6, 4.0)); arms(Ch.h[0], -0.2, -2.6*post); }
+  // the pick-up: kneel, reach down, lift the item (it leaves the lawn and shows in the robot's hands), stand, walk to the vote
+  // (down 2.1-2.35, a held beat at the bottom with the body bent over the item, up 2.45-2.75 with the item in its hands)
+  segWalk(Ch.h[1], C11.h1, lt, t); var kn = ramp(lt, 2.1, 2.35)*(1 - ramp(lt, 2.45, 2.75));
+  if (lt >= 2.1 && lt < 2.75) { Ch.h[1].rotation.y = 0; kneel(Ch.h[1], 0.9*kn); Ch.h[1].rotation.x = 0.45*kn; arms(Ch.h[1], -0.5 - 0.7*kn, -0.5 - 0.7*kn); }
+  Ch.h[1].userData.hold.visible = lt >= 2.4; if (lt >= 2.4) { Ch.h[1].userData.hold.position.y = lerp(0.45, 0.95, ramp(lt, 2.45, 2.75)); if (lt >= 2.75 && lt < 3.2) arms(Ch.h[1], -0.9, -0.9); }
+  // Observe (watched again): the vote on the robots' rule - each voter raises a hand (humanoid arm, quadruped foreleg, wheeled arm) holding an amber disc
+  if (lt >= 2.75) Ch.h[1].rotation.y = lerp(0, PI/2, ramp(lt, 2.75, 3.1)); // it turns to face the board
+  if (lt >= 3.2) { arms(Ch.h[1], -0.9, -2.9*ramp(lt, 3.3, 3.6)); PADDLES[0].visible = lt > 3.3; }
+  if (lt >= 2.6) { Ch.q.rotation.y = 0.78; Ch.q.userData.legs[1].rotation.z = 1.5*ramp(lt, 3.5, 3.8); PADDLES[1].visible = lt > 3.5; }
+  W.proposal.visible = lt > 2.75 && lt <= 4.25; W.robotRules[0].visible = lt > 2.75; W.robotRules[0].material.emissiveIntensity = lt > 4.25 ? 0.9 : 0.15;
+  for (i=0;i<3;i++) W.votePips[i].material.emissiveIntensity = lt > 3.45 + i*0.3 ? 0.95 : 0;
+  // Measure: the robots' rule is pinned in amber beside the people's blue rules, a second robot rule joins it, and the two rule-break
+  // counters (watched / unwatched) tick once each for the littering robot's two drops - counts of scripted events, not results
+  W.pinPip.visible = lt > 4.25; W.robotRules[1].visible = lt > 5.0;
+  var b0 = lt > 4.6 ? 0.2 : 0.02, b1 = lt > 4.9 ? 0.2 : 0.02; W.breakBars[0].scale.y = b0; W.breakBars[0].position.y = 1.22 + b0/2; W.breakBars[1].scale.y = b1; W.breakBars[1].position.y = 1.22 + b1/2;
+  // from the road south-east of the board, under 6 m from it, a slow push: the rule board (its two headed columns) fills the upper right, fully lit and with
+  // nothing in front of it; the watch camera, the bell, the littering robot and the voters stand west of it, upper left; the lower left is empty road.
+  camKeys([[0, -17.3,3.7,23.9, -20,2.42,17.86, 0.5,0.4, 1], [6, -17.6,3.5,23.2, -20,2.42,17.86, 0.5,0.4, 1]], lt); // level aim: the board's posts stay upright
+};
+UPD[12] = function(lt, u, t){ // mixed neighbourhood at dusk - the rule in action: the quiet-hours sign lights up; the first delivery robot rolls up to it, stops and
+  // dims its running light; the second stops a length behind and waits, still lit; a resident watches from the porch and lifts a hand; a child and a bicycle on the lawn
+  var H = VIG.hoodH, wave = ramp(lt, 1.0, 1.5); H.p1.position.y = H.p2.position.y = 0.41; // they stand on their porches
+  arms(H.p1, -0.3, -0.5 - 2.1*wave - 0.25*wave*Math.sin(t*5)); arms(H.p2, -0.3, -0.6); arms(H.kid, -0.7, -0.7);
+  var stop = [-2.35, -4.3], from = [-5.4, -7.6], t1 = [1.2, 1.45];
+  for (var i=0;i<2;i++){ var a = H.r[i], k = ramp(lt, 0, t1[i]); place(a, lerp(from[i], stop[i], k), 2.2, 0); gait(a, (k < 1 ? t : 0)); a.userData.tray.visible = true; }
+  var dim = ramp(lt, 1.0, 1.45), rm = H.r[0].userData.run.material; rm.emissiveIntensity = 1 - 0.95*dim; rm.color.setHex(0x7FE3D4).lerp(_c1.setHex(0x1E262C), dim); H.r[1].userData.run.material.emissiveIntensity = 1;
+  H.r[0].userData.lamp.material.emissiveIntensity = 0.8 - 0.7*ramp(lt, 1.0, 1.45);
+  var on = ramp(lt, 0.1, 0.6); VIG.lamp.material.emissiveIntensity = on; VIG.signGlow.material.emissiveIntensity = on; VIG.lampLight.intensity = 1.7*on;
+  // low and close, from the road: the lit sign and the stopped robot right of centre, the waiting robot and the resident on the porch to their left, above the caption
+  camKeys([[0, 321.7,1.4,8.7, 319.4,2.55,3.3, 0.46,0.52, 1], [3, 321.3,1.3,7.9, 319.4,2.55,3.3, 0.46,0.52, 1]], lt); // level aim: the sign and the porch posts stay upright
+};
+UPD[13] = function(lt, u, t){ // Slide A, how the village pays its way: as each product card appears, its subject lights up in the village
+  // Data (0.4): the sensor masts pulse and packets fly to the data hub. Broadcast and advertising (2.6): rings spread from the broadcast mast and the
+  // wall's screen brightens inside a lit frame. Partner experiments (4.8): the barrier lifts and a partner van drives in through the entrance gate.
+  // The newest subject is at full strength; the earlier ones stay lit at a lower level, so the last frame holds all three.
+  var kd = ramp(lt, 0.4, 1.2), kb = ramp(lt, 2.6, 3.4), kp = ramp(lt, 4.8, 5.6);
+  sensorsOn(kd*(1 - 0.5*kb), t); castOn(kb*(1 - 0.45*kp), t);
+  CL.van.visible = true; CL.van.position.z = lerp(50, 35.2, ramp(lt, 4.8, 6.8)); CL.arm.rotation.z = 1.35*(ramp(lt, 4.6, 5.4) - ramp(lt, 8.2, 9.0));
+  CL.vanStripe.emissiveIntensity = 0.2 + kp*(1.0 + 0.3*Math.sin(t*5)); CL.gateSign.material.emissiveIntensity = 0.2 + 1.2*kp;
+  CL.vanRing.visible = kp > 0.02; CL.vanRing.scale.setScalar(5.2 + 1.2*Math.sin(t*3)); CL.vanRing.material.opacity = 0.85*kp;
+  // one pull-back along the entrance road, south of the square: the square and its masts, then up for the mast and the wall, then back and down to the gate
+  camKeys([[0, 8.5,11,31, 4,3,-5, 0,0.34], [2.2, 8.5,12,34, 3.5,3.5,-5.5, 0,0.35], [3.7, 7.5,19,50, -2,10,-17, 0,0.36], [4.5, 7.6,19,51, -2,10,-17, 0,0.36], [5.9, 11,13.5,65, 6,3,40, 0,0.2], [10, 11,14,67, 6,3,40, 0,0.2]], lt);
+};
+UPD[14] = function(lt, u, t){ // Slide B, the roadmap: the camera pulls back and up over the village while each stage's place appears or lights up
+  var k1 = ramp(lt, 0.4, 1.2), k2 = ramp(lt, 2.4, 3.2), k3 = ramp(lt, 4.4, 5.2), k4 = ramp(lt, 6.4, 7.2), i;
+  // Stage 1: the crop field - first a wireframe of the rows (the simulation), then soil and plants grow in row by row
+  CL.field.visible = k1 > 0.02; CL.wireMat.opacity = k1*(1 - 0.8*ramp(lt, 1.5, 2.3)); CL.fieldEdge.material.opacity = 0.3*k1*(1 - 0.5*k2);
+  for (i=0;i<6;i++){ var gr = ramp(lt, 1.2 + i*0.1, 2.0 + i*0.1); CL.rows[i].visible = gr > 0.01; CL.rows[i].scale.y = Math.max(0.01, gr); }
+  // Stage 2 (conditional): the paddock pops up east of the road; the sheep graze
+  CL.paddock.visible = k2 > 0.02; CL.paddock.scale.setScalar(Math.max(0.01, k2*(1 + 0.12*Math.sin(k2*PI))));
+  for (i=0;i<3;i++) CL.sheep[i].userData.head.rotation.z = -0.7*Math.max(0, Math.sin(t*1.5 + i*2.1));
+  // Stage 3: the wall - dark until now - lights up with the remote-visitor card inside a lit frame
+  for (i=0;i<3;i++) W.wallCards[i].visible = false; W.wallAlt[1].position.x = 0; W.wallAlt[1].scale.setScalar(1.35); W.wallAlt[1].visible = k3 > 0.5;
+  W.wallScreen.material.emissiveIntensity = 0.12 + 1.6*k3; CL.frameMat.emissiveIntensity = k3*(1.0 + 0.3*Math.sin(t*4));
+  // Stage 4 (conditional): translucent visitors wait outside the gate, inside a dashed ring; the gate sign lights
+  CL.visitors.visible = k4 > 0.02; for (i=0;i<CL.visMats.length;i++) CL.visMats[i].opacity = 0.5*k4; CL.visDash.opacity = 0.9*k4*(0.7 + 0.3*Math.sin(t*3)); CL.gateSign.material.emissiveIntensity = 0.2 + 1.0*k4;
+  pin(0, k1, t); pin(1, k2, t); pin(2, k3, t); pin(3, k4, t);
+  // pull back and up from where Slide A ended: quick at first, settling by the end (a pure function of lt)
+  var kc = 1 - Math.pow(1 - lin(lt, 0, 9), 2.2);
+  var pf = camera.aspect < 1 ? kc : 0; // portrait: the narrow frame pulls back further and looks straight up the road, so the field and the paddock both stay in frame
+  camAim(lerp(11, 9, kc), lerp(14, 22, kc)*(1 + 0.25*pf), lerp(67, 92, kc) + 15*pf, lerp(6, 9, pf), lerp(3, 1, kc), lerp(40, 43, kc), 0, lerp(0.2, 0.04, kc));
+};
+function sceneAt(t){ for (var i=SCENES.length-1;i>=0;i--) if (t >= SCENES[i].start) return i; return 0; }
+function update(t){
+  var i = sceneAt(t), s = SCENES[i], lt = t - s.start, u = clamp(lt / s.dur, 0, 1);
+  for (var k=0;k<AGENTS.length;k++) resetAgent(AGENTS[k]);
+  VIG.farm.visible = i === 4; VIG.city.visible = i === 8; VIG.hood.visible = i === 12;
+  CL.g.visible = i >= 13; for (k=0;k<W.gateFence.length;k++) W.gateFence[k].visible = i < 13; // the entrance gate, masts, data hub and roadmap places exist on the closing slides only
+  resetWorld(t); lighting(t, i); UPD[i](lt, u, t);
+  return i;
+}
+// verification API: distance from the camera to the nearest static collider and the nearest agent, at time t
+FILM.clearance = function(t){ update(t); scene.updateMatrixWorld(true); var p = camera.position, best = 1e9, who = '';
+  for (var i=0;i<COLL.length;i++){ var c = COLL[i], dx = Math.max(c.min.x - p.x, 0, p.x - c.max.x), dy = Math.max(c.min.y - p.y, 0, p.y - c.max.y), dz = Math.max(c.min.z - p.z, 0, p.z - c.max.z); var d = Math.sqrt(dx*dx+dy*dy+dz*dz); if (d < best) { best = d; who = c.label; } }
+  var wp = V(); for (i=0;i<AGENTS.length;i++){ var a = AGENTS[i]; if (!a.visible || !a.parent.visible) continue; a.getWorldPosition(wp); wp.y += 0.9; var d2 = wp.distanceTo(p) - 0.6; if (d2 < best) { best = d2; who = 'agent'; } }
+  return { t:t, d:best, who:who, cam:[p.x, p.y, p.z] }; };
+// ---------------------------------------------------------------- infographic overlay (HTML; the only readable text in the film)
+var el = {}; ['ui','sname','sidx','bnum','blab','steps','head','sup','meas','note','strip','panel','beat','fade','prog','scen','bar','bplay','brestart','bprev','bnext','tm','nav','navlist','rail','navtog','hintpp','navback','info'].forEach(function(id){ el[id] = document.getElementById(id); });
+var chips = el.strip.children, steps = el.steps.children, curScene = -1, SEGS = [{sc:'open',start:0,dur:5},{sc:'garden',start:5,dur:30},{sc:'park',start:35,dur:16},{sc:'charter',start:51,dur:16},{sc:'close',start:CLOSE_T,dur:DUR - CLOSE_T}], segFills = [];
+// scrubber: one segment per scenario (positioned by time, so a click maps exactly to seconds), a tick at every beat start, a knob
+SEGS.forEach(function(sg){ var d = document.createElement('div'); d.className = 'seg'; d.style.left = 'calc(' + (sg.start/DUR*100) + '% + 1.5px)'; d.style.width = 'calc(' + (sg.dur/DUR*100) + '% - 3px)'; d.style.setProperty('--c', ACC[sg.sc]); var b = document.createElement('b'); d.appendChild(b); el.prog.appendChild(d); segFills.push(b); });
+SCENES.forEach(function(s, i){ if (i === 0 || SCENES[i-1].sc !== s.sc) return; var tk = document.createElement('i'); tk.className = 'tick'; tk.style.left = (s.start/DUR*100) + '%'; el.prog.appendChild(tk); });
+var knob = document.createElement('i'); knob.className = 'knob'; el.prog.appendChild(knob);
+// navbar: Introduction, then each scenario (numeral + name, seeks to its first beat) with its four beats, then How we will run it
+var navBtns = [], navScen = {}, railDots = el.rail.querySelectorAll('.dot');
+function jump(t){ var was = state.playing; FILM.seek(t); if (was) FILM.play(); } // seek that keeps the current play state
+function closeNav(){ el.nav.classList.remove('open'); el.navtog.setAttribute('aria-expanded', 'false'); }
+(function(){
+  function btn(label, t, num){ var b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-t', String(t));
+    if (num) { var bb = document.createElement('b'); bb.textContent = num; b.appendChild(bb); }
+    b.appendChild(document.createTextNode(label)); b.addEventListener('click', function(e){ jump(t); closeNav(); if (e.detail) b.blur(); }); return b; }
+  function li(cls){ var l = document.createElement('li'); l.className = cls; el.navlist.appendChild(l); return l; }
+  var l = li('end'); l.appendChild(btn('Introduction', 0)); navBtns[0] = l.firstChild;
+  ['garden','park','charter'].forEach(function(sc){ var first = 0; for (var k=0;k<SCENES.length;k++) if (SCENES[k].sc === sc) { first = k; break; }
+    var l = li('sc'); l.appendChild(btn(SCEN_NAME[sc], SCENES[first].start, String(SCEN_NUM[sc]))); var ol = document.createElement('ol'); ol.className = 'beats';
+    for (var b=0;b<4;b++){ var bl = document.createElement('li'), bb = btn(BEATS[b], SCENES[first + b].start); bl.appendChild(bb); ol.appendChild(bl); navBtns[first + b] = bb; }
+    l.appendChild(ol); navScen[sc] = l; });
+  // How we will run it: a group label (seeks to the first closing slide) with the two slides under it
+  l = li('sc'); l.appendChild(btn('How we will run it', CLOSE_T)); var cl = document.createElement('ol'); cl.className = 'beats';
+  SCENES.forEach(function(sn, k){ if (sn.sc !== 'close') return; var bl = document.createElement('li'), bb = btn(sn.nav, sn.start); bl.appendChild(bb); cl.appendChild(bl); navBtns[k] = bb; });
+  l.appendChild(cl); navScen.close = l;
+})();
+// closing-slide infographic: inline-SVG icons (24 px grid, stroked), the card / roadmap builder, and the reveal (a pure function of local time)
+var ICON = {
+  data:'<ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6"/><path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/>',
+  cast:'<path d="M12 9.5V21M8.2 21L12 9.5 15.8 21M9.6 17h4.8"/><circle cx="12" cy="7.6" r="1.6"/><path d="M8 11.4a5.6 5.6 0 0 1 0-7.6M16 3.8a5.6 5.6 0 0 1 0 7.6M5.2 13.4a9.4 9.4 0 0 1 0-11.6M18.8 1.8a9.4 9.4 0 0 1 0 11.6"/>',
+  partner:'<path d="M5.4 3h4.8M6.5 3v5.2l-3.4 8.4a1.9 1.9 0 0 0 1.8 2.6h5.8a1.9 1.9 0 0 0 1.8-2.6L9.1 8.2V3M4.5 14h6.6"/><path d="M15 21V7.5h6V21M13.4 21h9.1M17.3 10.8h1.4M17.3 13.8h1.4M17.3 16.8h1.4"/>',
+  crop:'<path d="M12 21v-9M12 12.5c0-3.6-2.6-6.2-6.8-6.2 0 4.1 2.6 6.2 6.8 6.2zM12 15.5c0-3 2.2-5.2 5.8-5.2 0 3.5-2.2 5.2-5.8 5.2zM7 21h10"/>',
+  paw:'<circle cx="6.8" cy="9.6" r="1.7"/><circle cx="12" cy="6.6" r="1.7"/><circle cx="17.2" cy="9.6" r="1.7"/><path d="M12 12.2c-3 0-5.4 2.9-5.4 5.1 0 1.6 1.3 2.3 2.7 2.3 1.2 0 1.8-.5 2.7-.5s1.5.5 2.7.5c1.4 0 2.7-.7 2.7-2.3 0-2.2-2.4-5.1-5.4-5.1z"/>',
+  video:'<rect x="3" y="4.5" width="18" height="12.5" rx="2"/><path d="M8 21h8M12 17v4"/><circle cx="12" cy="9.2" r="1.8"/><path d="M8.6 14.6c.5-1.9 1.8-2.8 3.4-2.8s2.9.9 3.4 2.8"/>',
+  people:'<circle cx="8.5" cy="7.6" r="2.5"/><path d="M3.4 20c0-3.6 2.2-6 5.1-6s5.1 2.4 5.1 6"/><circle cx="16.6" cy="8.6" r="2"/><path d="M15.2 14.3c.5-.2.9-.3 1.4-.3 2.3 0 4 2 4 5"/>'
+};
+var infoEls = [], infoLns = [], footEl = null;
+function mk(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; }
+function buildInfo(s){
+  el.info.textContent = ''; infoEls = []; infoLns = []; footEl = null;
+  var it = s.cards || s.stages; if (!it) return;
+  el.info.appendChild(document.createTextNode(' '));
+  var list = mk('ol'); list.id = s.cards ? 'cards' : 'road';
+  it.forEach(function(c, k){
+    var li, ic = mk('span', s.cards ? 'ic' : 'node'); ic.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[c.ic] + '</svg>';
+    if (s.cards) { li = mk('li', 'card'); var ct = mk('div', 'ct'); ct.appendChild(ic); ct.appendChild(mk('h3', '', c.title)); li.appendChild(ct); }
+    else { li = mk('li', 'stage' + (c.cond ? ' cond' : '')); var trk = mk('div', 'trk'), ln = mk('i', 'ln' + (it[k+1] && it[k+1].cond ? ' dash' : '')); trk.appendChild(ic); trk.appendChild(ln); li.appendChild(trk); li.appendChild(mk('h3', '', c.title)); infoLns[k] = ln; }
+    li.appendChild(document.createTextNode(' ')); li.appendChild(mk('p', '', c.text)); list.appendChild(li); list.appendChild(document.createTextNode(' ')); infoEls.push(li); });
+  el.info.appendChild(list);
+  if (s.foot) { footEl = mk('p', '', s.foot); footEl.id = 'foot'; el.info.appendChild(footEl); }
+}
+function revealInfo(s, lt){
+  var it = s.cards || s.stages, last = 0, k, r; if (!it) return;
+  for (k=0;k<it.length;k++){ r = ramp(lt, it[k].at, it[k].at + 0.6); var n = infoEls[k]; n.style.opacity = r.toFixed(3); n.style.transform = r < 1 ? 'translateY(' + ((1 - r)*14).toFixed(1) + 'px)' : 'none'; n.setAttribute('data-on', r >= 0.5 ? '1' : '0'); if (r > 0) last = k;
+    if (infoLns[k]) infoLns[k].style.setProperty('--r', it[k+1] ? ramp(lt, it[k+1].at - 0.5, it[k+1].at + 0.2).toFixed(3) : '0'); } // the connector runs out to the next milestone just before it appears
+  for (k=0;k<it.length;k++) infoEls[k].classList.toggle('now', k === last);
+  if (footEl) { r = ramp(lt, s.footAt, s.footAt + 0.6); footEl.style.opacity = r.toFixed(3); footEl.setAttribute('data-on', r >= 0.5 ? '1' : '0'); }
+}
+var lastSec = -1;
+function fmt(t){ t = Math.floor(t); return Math.floor(t/60) + ':' + ('0' + (t % 60)).slice(-2); }
+function updateHUD(t){
+  var i = sceneAt(t), s = SCENES[i], lt = t - s.start, end = s.start + s.dur;
+  if (i !== curScene) {
+    curScene = i;
+    document.documentElement.style.setProperty('--acc', ACC[s.sc]); document.documentElement.style.setProperty('--accl', ACCL[s.sc]);
+    var n = SCEN_NUM[s.sc];
+    el.sname.textContent = SETTING[s.sc]; el.sidx.textContent = n ? 'Scenario ' + n + ' of 3' : '';
+    el.bnum.textContent = n ? String(n) : ''; el.blab.textContent = n ? SCEN_NAME[s.sc] : ''; el.beat.style.display = n ? 'flex' : 'none';
+    for (var b=0;b<4;b++) steps[b].classList.toggle('on', s.beat === b + 1);
+    // headlines wrap by themselves (balanced); long round-3 lines take a slightly smaller size
+    el.head.textContent = s.head; el.head.classList.toggle('long', !s.hyp && s.head.length > 78);
+    el.sup.textContent = '';
+    if (s.hyp) { // RQ<n> in the accent colour, then the "If ..., will ...?" research question
+      var m = /^((?:RQ|H)\d:)\s*/.exec(s.hyp), hb = document.createElement('b'); hb.textContent = m ? m[1] : ''; el.sup.appendChild(hb);
+      el.sup.appendChild(document.createTextNode(' ' + (m ? s.hyp.slice(m[0].length) : s.hyp))); // the prediction reads as one flowing paragraph
+    }
+    else el.sup.textContent = s.sup || '';
+    el.sup.style.display = (s.hyp || s.sup) ? 'block' : 'none';
+    el.meas.textContent = s.meas || ''; el.meas.style.display = s.meas ? 'block' : 'none'; el.note.textContent = s.note || ''; el.note.style.display = s.note ? 'block' : 'none';
+    el.panel.classList.toggle('hyp', !!s.hyp); el.ui.classList.toggle('hyp', !!s.hyp); el.strip.style.display = s.strip ? 'flex' : 'none';
+    var inf = !!(s.cards || s.stages); el.panel.classList.toggle('info', inf); el.ui.classList.toggle('info', inf); buildInfo(s);
+    // navbar and rail: the current scene's entry is current, its scenario lit in the scenario colour
+    for (var q=0;q<navBtns.length;q++) if (navBtns[q]) navBtns[q].removeAttribute('aria-current');
+    if (navBtns[i]) navBtns[i].setAttribute('aria-current', 'true');
+    for (var sc in navScen) navScen[sc].classList.toggle('on', sc === s.sc);
+    for (q=0;q<railDots.length;q++) railDots[q].classList.toggle('on', SCEN_NUM[s.sc] === q + 1);
+  }
+  revealInfo(s, lt);
+  if (s.strip) { var on = 0; for (var k=1;k<4;k++) if (t >= s.strip[k]) on = k; for (k=0;k<4;k++) chips[k].classList.toggle('on', k === on); }
+  // the caption fades with the picture: on the last scene the black fade covers caption and progress bar together, so the caption holds.
+  // The fades and the cut flash are transitions of playback: a paused or stepped frame (seek, prev/next, navbar) shows the scene fully,
+  // caption and all, even when it sits exactly on a scene start.
+  var live = state.playing;
+  var op = live ? Math.min(ramp(lt, 0, 0.3), ramp(end - t, 0, 0.25)) : 1; if (i === SCENES.length - 1) op = live ? ramp(lt, 0, 0.3) : 1;
+  el.panel.style.opacity = op; el.strip.style.opacity = op; el.scen.style.opacity = op;
+  for (k=0;k<SEGS.length;k++) segFills[k].style.width = (clamp((t - SEGS[k].start) / SEGS[k].dur, 0, 1) * 100) + '%';
+  knob.style.left = (t/DUR*100) + '%';
+  var sec = Math.floor(t); if (sec !== lastSec) { lastSec = sec; el.tm.textContent = fmt(sec) + ' / ' + fmt(DUR); el.prog.setAttribute('aria-valuenow', String(sec)); el.prog.setAttribute('aria-valuetext', fmt(sec) + ' of ' + fmt(DUR) + ', ' + s.name); }
+  var f = t > DUR - 0.7 ? (t - (DUR - 0.7)) / 0.7 : (t < 0.5 && live ? 1 - t / 0.5 : 0);
+  if (live) for (k=1;k<CUTS.length;k++){ var d = 1 - Math.abs(t - CUTS[k]) / 0.14; if (d > f) f = d; }
+  el.fade.style.opacity = clamp(f, 0, 1);
+}
+
+// ---------------------------------------------------------------- presentation, render loop, FILM
+// On a software GL driver the compositor's per-frame readback of a visible WebGL canvas stalls; there we read the frame back
+// ourselves through a pixel-pack buffer + fence and present it through a 2D canvas. On hardware GL the WebGL canvas is shown directly.
+var present = { mode:'direct', gl:null, c2d:null, ctx:null, pbo:null, fence:null, pending:null, dirty:false, pix:null, flip:null, gen:0, onFirst:null };
+function createRenderer(){
+  var r = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
+  r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  var gl = r.getContext(), info = '';
+  try { var ext = gl.getExtension('WEBGL_debug_renderer_info'); info = (gl.getParameter(gl.RENDERER) || '') + ' ' + (ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ''); } catch (e) { info = ''; }
+  var software = /swiftshader|llvmpipe|software|mesa offscreen/i.test(info) || /present=2d/.test(location.search);
+  if (software && r.capabilities.isWebGL2) {
+    present.mode = '2d'; present.gl = gl; r.setPixelRatio(1);
+    canvas.style.display = 'none';
+    present.c2d = document.createElement('canvas'); present.c2d.style.cssText = 'display:block;width:100%;height:100%';
+    document.getElementById('stage').appendChild(present.c2d); present.ctx = present.c2d.getContext('2d');
+  }
+  canvas.addEventListener('webglcontextlost', function(){ present.gen++; present.pending = null; present.fence = null; }, false);
+  canvas.addEventListener('webglcontextrestored', function(){ render(state.t); }, false);
+  return r;
+}
+function queueReadback(){
+  var gl = present.gl; if (!gl || gl.isContextLost()) return;
+  if (present.pending) { present.dirty = true; return; }
+  var w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+  present.pbo = gl.createBuffer(); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, present.pbo);
+  gl.bufferData(gl.PIXEL_PACK_BUFFER, w*h*4, gl.STREAM_READ);
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  present.fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush();
+  present.pending = { w:w, h:h, gen:present.gen }; pollReadback();
+}
+function pollReadback(){
+  var gl = present.gl, p = present.pending; if (!p) return;
+  if (p.gen !== present.gen || gl.isContextLost()) { present.pending = null; return; }
+  if (gl.getSyncParameter(present.fence, gl.SYNC_STATUS) !== gl.SIGNALED) { setTimeout(pollReadback, 4); return; }
+  gl.deleteSync(present.fence); present.fence = null;
+  var w = p.w, h = p.h, n = w*h*4;
+  if (!present.pix || present.pix.length !== n) { present.pix = new Uint8Array(n); present.flip = new Uint8ClampedArray(n); }
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, present.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, present.pix); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  gl.deleteBuffer(present.pbo); present.pbo = null;
+  var row = w*4, pix = present.pix, flip = present.flip;
+  for (var y=0;y<h;y++) flip.set(pix.subarray(y*row, y*row+row), (h-1-y)*row);
+  if (present.c2d.width !== w || present.c2d.height !== h) { present.c2d.width = w; present.c2d.height = h; }
+  present.ctx.putImageData(new ImageData(flip, w, h), 0, 0);
+  present.pending = null;
+  if (present.onFirst) { var f = present.onFirst; present.onFirst = null; f(); }
+  if (present.dirty) { present.dirty = false; render(state.t); }
+}
+FILM.present = function(){ var gl = present.gl, st = null; try { st = present.fence && gl ? gl.getSyncParameter(present.fence, gl.SYNC_STATUS) === gl.SIGNALED : null; } catch (e) { st = 'err ' + e; }
+  return { mode:present.mode, pending:!!present.pending, dirty:present.dirty, gen:present.gen, fenceSignaled:st, lost:gl ? gl.isContextLost() : null }; };
+function resize(){ var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w/h; camera.fov = w/h < 0.8 ? 64 : 48; camera.updateProjectionMatrix(); } /* a wider lens on portrait phones keeps the whole subject in frame */
+// In 2D-presentation mode only one GL frame is in flight: while a readback is pending, a render request just marks the frame dirty (the HUD
+// still updates synchronously) and the latest time is drawn when the readback lands. Without this the hidden WebGL canvas has no compositor
+// back-pressure on a software driver, the loop queues frames far faster than they draw, and the fence sits behind a multi-second backlog.
+function render(t){ if (present.mode === '2d' && present.pending) { updateHUD(t); present.dirty = true; return; } update(t); updateHUD(t); renderer.render(scene, camera); if (present.mode === '2d') queueReadback(); }
+function norm(t){ return ((t % DUR) + DUR) % DUR; }
+function now(){ return performance.now()/1000; }
+function currentTime(){ return state.playing ? norm(state.base + (now() - state.p0)) : state.t; }
+FILM.time = function(){ return currentTime(); };
+FILM.seek = function(t){ t = norm(+t || 0); state.playing = false; state.t = t; state.base = t; render(t); syncPlay(); };
+FILM.play = function(){ if (state.playing) return; state.base = state.t; state.p0 = now(); state.playing = true; syncPlay(); wake(); };
+FILM.pause = function(){ if (!state.playing) return; state.t = currentTime(); state.playing = false; syncPlay(); wake(); };
+// scene stepping: next() goes to the next scene start (the open after the last), prev() to the current scene start when more than
+// 1.5 s into it, else to the previous scene start; both keep the current play state. restart() goes to 0 and plays.
+FILM.next = function(){ var i = sceneAt(currentTime()); jump(i >= SCENES.length - 1 ? 0 : SCENES[i+1].start); };
+FILM.prev = function(){ var t = currentTime(), i = sceneAt(t); jump(t - SCENES[i].start > 1.5 || i === 0 ? SCENES[i].start : SCENES[i-1].start); };
+FILM.restart = function(){ FILM.seek(0); FILM.play(); };
+Object.defineProperty(FILM, 'playing', { get:function(){ return state.playing; }, enumerable:true });
+function syncPlay(){ el.bar.classList.toggle('playing', state.playing); el.bplay.setAttribute('aria-label', state.playing ? 'Pause' : 'Play');
+  el.hintpp.textContent = state.playing ? 'pause' : 'play'; el.ui.classList.toggle('paused', !state.playing && FILM.ready && !drag); }
+// idle fade: the bar, navbar and rail drop to low opacity 2.5 s after the last mouse, touch or key input while playing; never while paused
+var idleTimer = null;
+function wake(){ el.ui.classList.remove('idle'); clearTimeout(idleTimer); idleTimer = setTimeout(function(){ if (state.playing) { el.ui.classList.add('idle'); closeNav(); el.ui.classList.remove('navshow'); } }, 2500); } // on idle the pinned scene list folds away too
+['mousemove','pointerdown','touchstart','keydown'].forEach(function(ev){ window.addEventListener(ev, wake, { passive:true }); });
+function loop(){ requestAnimationFrame(loop); if (!state.playing) return; state.t = currentTime(); render(state.t); }
+window.addEventListener('resize', function(){ resize(); if (!state.playing) render(state.t); });
+// playback bar
+el.bplay.addEventListener('click', function(){ state.playing ? FILM.pause() : FILM.play(); });
+el.brestart.addEventListener('click', function(){ FILM.restart(); });
+el.bprev.addEventListener('click', function(){ FILM.prev(); });
+el.bnext.addEventListener('click', function(){ FILM.next(); });
+var drag = null;
+// scrubber: click seeks; press-and-drag scrubs (each move renders that exact frame); play resumes on release if it was playing
+function progT(e){ var r = el.prog.getBoundingClientRect(); return Math.min(clamp((e.clientX - r.left)/r.width, 0, 1)*DUR, DUR - 0.05); }
+el.prog.addEventListener('pointerdown', function(e){ e.preventDefault(); drag = { was:state.playing }; try { el.prog.setPointerCapture(e.pointerId); } catch (x) {} FILM.seek(progT(e)); });
+el.prog.addEventListener('pointermove', function(e){ if (drag) FILM.seek(progT(e)); });
+function endDrag(e){ if (!drag) return; if (e && e.type === 'pointerup') FILM.seek(progT(e)); if (drag.was) FILM.play(); drag = null; }
+el.prog.addEventListener('pointerup', endDrag); el.prog.addEventListener('pointercancel', endDrag); el.prog.addEventListener('lostpointercapture', endDrag);
+// stage chips: each seeks to the start of its stage in the current experiment beat
+for (var ck=0; ck<chips.length; ck++) (function(k){ chips[k].addEventListener('click', function(e){ var sc = SCENES[sceneAt(currentTime())]; if (sc.strip) jump(sc.strip[k]); if (e.detail) this.blur(); }); })(ck);
+// the scene list flies out while the pointer is over the rail or the list (hover-capable screens), and hides shortly after it leaves
+var navHide = null;
+function navShow(on){ clearTimeout(navHide); if (on) el.ui.classList.add('navshow'); else navHide = setTimeout(function(){ el.ui.classList.remove('navshow'); }, 350); }
+[el.rail, el.nav].forEach(function(n){ n.addEventListener('mouseenter', function(){ navShow(true); }); n.addEventListener('mouseleave', function(){ navShow(false); }); });
+// rail: the three dots seek to a scenario; the list button pins the full list open
+for (var rd=0; rd<railDots.length; rd++) railDots[rd].addEventListener('click', function(){ jump(+this.getAttribute('data-t')); closeNav(); });
+el.navback.addEventListener('click', closeNav);
+el.navtog.addEventListener('click', function(){ var open = !el.nav.classList.contains('open'); el.nav.classList.toggle('open', open); el.navtog.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+// keyboard: space play/pause, left/right previous/next scene, Home restart, Escape closes the scene list. Space on a focused button is left to the button.
+window.addEventListener('keydown', function(e){
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  var k = e.key, onBtn = e.target && e.target.tagName === 'BUTTON';
+  if (k === ' ' || k === 'Spacebar') { if (onBtn) return; e.preventDefault(); state.playing ? FILM.pause() : FILM.play(); }
+  else if (k === 'ArrowRight') { e.preventDefault(); FILM.next(); }
+  else if (k === 'ArrowLeft') { e.preventDefault(); FILM.prev(); }
+  else if (k === 'Home') { e.preventDefault(); FILM.restart(); }
+  else if (k === 'Escape') closeNav();
+});
+
+// the two words on the rule board are drawn after the web fonts are in (start() runs after document.fonts.ready), large and bold on their colour band
+function drawBoardHeads(){ W.boardHeads.forEach(function(h){ var c = h.cv.getContext('2d'); c.fillStyle = h.bg; c.fillRect(0, 0, 512, 128); c.fillStyle = h.fg;
+  c.font = '600 66px "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(h.text, 256, 68, 488);
+  h.tx.anisotropy = renderer.capabilities.getMaxAnisotropy(); h.tx.needsUpdate = true; }); }
+function start(){
+  try { renderer = createRenderer(); } catch (e) { showFallback(); return; }
+  drawBoardHeads();
+  resize();
+  if (present.mode === '2d') { present.onFirst = function(){ FILM.ready = true; syncPlay(); FILM.play(); }; FILM.seek(0); }
+  else { FILM.seek(0); FILM.ready = true; FILM.play(); }
+  loop();
+}
+// The title card shows at once; the GL context is created once fonts are in and the page has been up for ~2.4 s.
+updateHUD(0);
+var started = false, fontsIn = false;
+function go(){ if (started || !fontsIn) return; var wait = Math.max(0, 2400 - performance.now()); started = true; setTimeout(start, wait); }
+function fontsReady(){ fontsIn = true; go(); }
+if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fontsReady, fontsReady); setTimeout(fontsReady, 2500); } else { fontsReady(); }
+})();
+</script>
+</body>
+</html>
