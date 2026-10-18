@@ -3012,7 +3012,8 @@ var REG_COLS = {
   canvas:[{h:"Initiative",f:function(c){return drillCell(initiative(c.init).title);}},
         {h:"Definition",f:function(c){ var miss=canvasMissing(c).length;
           return '<span class="pill" data-tone="'+(miss?"amber":"green")+'">'+(miss?(7-miss)+"/7 answered":"Complete")+'</span>'; }},
-        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}}],
+        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}},
+        {h:"Simulation",f:function(c){return filmButton(c.init);}}],
   impact:[{h:"Assessment",f:function(m){return drillCell(initiative(m.init).title);}},
         {h:"Status",f:function(m){return '<span class="pill" data-tone="'+(m.status==="signed-off"?"green":"amber")+'">'+esc(titleCase(m.status))+'</span>';}},
         {h:"Entries",f:function(m){return m.entries.length;}},
@@ -3171,6 +3172,11 @@ function filmLink(id){
     '<a class="btn-ghost" href="'+esc(href)+'" target="_blank" rel="noopener">Watch the simulation'+
       '<span aria-label="opens in a new tab">↗</span></a>'+
     '<span class="block-hint">A short film of this canvas in use: the situation, the AI at work, what can go wrong and how it is kept safe.</span></div>';
+}
+function filmButton(id){
+  var href=FILMS[id]; if(!href) return '<span class="muted-note">—</span>';
+  return '<a class="btn-ghost" data-film-link href="'+esc(href)+'" target="_blank" rel="noopener" style="white-space:nowrap">Watch'+
+    '<span aria-label="the simulation, opens in a new tab"> ↗</span></a>';
 }
 function pageInitiative(id){
   var i=initiative(id); if(!i) return notFound("initiative");
@@ -4017,6 +4023,7 @@ function toast(msg){ var t=document.getElementById("toast"); t.innerHTML=msg; t.
 
 document.addEventListener("click",function(e){
   var el;
+  if(e.target.closest("[data-film-link]")) return;
   if((el=e.target.closest("[data-theme-toggle]"))){ themeBtn.click(); return; }
   if((el=e.target.closest("[data-mmd-edit],[data-mmd-skeleton],[data-mmd-discard],[data-mmd-lastvalid],[data-mmd-save],[data-mmd-undo]"))){
     var top=ui.stack[ui.stack.length-1]; if(!top||top.type!=="diagram") return;

@@ -141,9 +141,26 @@ function filmLink(id){
       '<span aria-label="opens in a new tab">\u2197</span></a>'+
     '<span class="block-hint">A short film of this canvas in use: the situation, the AI at work, what can go wrong and how it is kept safe.</span></div>';
 }
+function filmButton(id){
+  var href=FILMS[id]; if(!href) return '<span class="muted-note">—</span>';
+  return '<a class="btn-ghost" data-film-link href="'+esc(href)+'" target="_blank" rel="noopener" style="white-space:nowrap">Watch'+
+    '<span aria-label="the simulation, opens in a new tab"> ↗</span></a>';
+}
 function pageInitiative(id){''')
 sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+'</div>'+""",
     """    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+filmLink(id)+'</div>'+""")
+# The AI Canvases register gets a "Simulation" column with the same film link.
+sub('''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}}],''',
+    '''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}},
+        {h:"Simulation",f:function(c){return filmButton(c.init);}}],''')
+# A film link inside a register row opens the film only; the row must not also open the canvas.
+sub('''document.addEventListener("click",function(e){
+  var el;
+  if((el=e.target.closest("[data-theme-toggle]"))){''',
+    '''document.addEventListener("click",function(e){
+  var el;
+  if(e.target.closest("[data-film-link]")) return;
+  if((el=e.target.closest("[data-theme-toggle]"))){''')
 
 # drop the "Made with Claude Design" badge from the original export
 badge = re.search(r'<div id="__claude_design_branding">.*?</div>(?=</body>)', html, re.S)
