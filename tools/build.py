@@ -88,6 +88,63 @@ sub('''document.addEventListener("click",function(e){
   if((el=e.target.closest("[data-theme-toggle]"))){ themeBtn.click(); return; }
   if((el=e.target.closest("[data-mmd-edit]''')
 
+# data: complete the AI Canvas for fraud triage (none in the export), CV screening and demand
+# forecasting, each block derived from that initiative's own records (summary, risks, incidents,
+# decisions, evidence, impacts, model and system card, data sources, supplier). Open issues stay
+# open in the wording: hiring is still held at the gate, forecast residency is still unresolved.
+sub('''  chatbot:{init:"chatbot",businessProblem:''',
+    '''  fraud:{init:"fraud",businessProblem:"Analysts cannot look at every card payment as it happens, so fraud is found only after the money has gone.",
+    businessValue:"Fraud stopped at the point of payment, with analyst time spent only on the borderline alerts that need judgement.",
+    objectiveFunction:"Probability that a card transaction is fraudulent, predicted from transaction, channel and account-history features.",
+    modelingApproach:"Gradient-boosted trees scoring each payment in real time inside a 150 ms budget; a tuned threshold ranks borderline scores into the human review queue.",
+    modelTraining:"Every reviewer block-or-release decision returns as a label; thresholds are re-tuned quarterly, and the calibration window does not yet capture seasonal traffic shifts.",
+    customerValue:"Fewer fraudulent charges reach the statement, and no payment is blocked on the model's word alone: a person reviews every block.",
+    dataStrategy:"Card transaction stream and core banking account history into the shared customer feature store, labelled with 24 months of confirmed fraud outcomes."},
+  chatbot:{init:"chatbot",businessProblem:''')
+sub('''    businessValue:"",objectiveFunction:"",modelingApproach:"",modelTraining:"",
+    customerValue:"",dataStrategy:"Application text and structured CV fields; special-category data is in scope and unresolved."},''',
+    '''    businessValue:"Recruiter time moves from first-pass reading to a reviewable shortlist; no value is claimed while the use case is held at the gate.",
+    objectiveFunction:"Match between an application and the requisition, scored from CV text and structured CV fields; which fields must be excluded as protected-group proxies is undecided.",
+    modelingApproach:"Similarity ranking on the shared document embedding model, co-built with TalentRank Partners; it ranks for a recruiter and never decides on its own.",
+    modelTraining:"Nothing is trained while the gate holds; as proposed, recruiter shortlist decisions are the feedback, and an independent bias audit must clear each version first.",
+    customerValue:"As proposed, every application is considered rather than missed, but a rejected candidate cannot yet be given the reason for the outcome.",
+    dataStrategy:"Application text and structured CV fields; special-category data is in scope and unresolved."},''')
+sub('''    businessValue:"Lower carrying cost and fewer stock-outs against the same working capital.",
+    objectiveFunction:"",modelingApproach:"",modelTraining:"",customerValue:"",dataStrategy:""}''',
+    '''    businessValue:"Lower carrying cost and fewer stock-outs against the same working capital.",
+    objectiveFunction:"Regional demand for each planning cycle, predicted from ERP demand history; any further features the vendor ensemble uses are not visible to us.",
+    modelingApproach:"Bought as SaaS: ForecastCloud AI's time-series ensemble behind a connector, evaluated as a black box because its weights cannot be inspected.",
+    modelTraining:"Retraining happens on the vendor's side and is not visible to us; a planner reviews every forecast before it enters the cycle, and actual demand is the only check we hold.",
+    customerValue:"Stock sits in the region where customers buy it, and a planner, not the vendor, answers for every move.",
+    dataStrategy:"ERP demand history leaves through the ForecastCloud connector; no personal data, but the residency clause is unresolved, which holds the pilot."}''')
+# the copilot's canned canvas answer described the incomplete canvases; restate it from the data
+sub('''    answer:"Four initiatives have an AI Canvas started and **two are complete** — retail credit scoring and the service copilot. The **CV screening assistant** has only its business problem answered, which is part of why it is held: an initiative with an incomplete canvas has been named, not defined.",
+    cites:[["canvas","rcr"],["canvas","hiring"],["initiative","hiring"]],
+    follow:["What is missing from the CV screening canvas?","Which initiatives have no canvas at all?"] },''',
+    '''    answer:"Five initiatives have an AI Canvas and **all five are complete** — retail credit, fraud triage, the service copilot, CV screening and demand forecasting. **Churn propensity, document intelligence and dynamic pricing** have none started, so they are named, not defined. A complete canvas does not clear the gate: the **CV screening assistant** is fully defined and still held.",
+    cites:[["canvas","fraud"],["canvas","hiring"],["initiative","hiring"]],
+    follow:["Why is CV screening held at the gate?","Which initiatives have no canvas at all?"] },''')
+
+# Integration (issue #1): each initiative with a standalone film links to it right after its AI Canvas.
+# Hrefs are relative to index.html with spaces URL-encoded, opened in a new tab like "AI benchmarks".
+sub('''function pageInitiative(id){''',
+    '''var FILMS={
+  rcr:"simulation/credit-scoring/Retail%20Credit%20Risk%20Scoring.html",
+  chatbot:"simulation/service-copilot/Customer%20Service%20Copilot.html",
+  hiring:"simulation/cv-screening/CV%20Screening%20Assistant.html",
+  fraud:"simulation/fraud-triage/Fraud%20Triage%20Model.html",
+  forecast:"simulation/demand-forecasting/Demand%20Forecasting.html"};
+function filmLink(id){
+  var href=FILMS[id]; if(!href) return "";
+  return '<div class="mmd-toolbar" data-film="'+esc(id)+'">'+
+    '<a class="btn-ghost" href="'+esc(href)+'" target="_blank" rel="noopener">Watch the simulation'+
+      '<span aria-label="opens in a new tab">\u2197</span></a>'+
+    '<span class="block-hint">A short film of this canvas in use: the situation, the AI at work, what can go wrong and how it is kept safe.</span></div>';
+}
+function pageInitiative(id){''')
+sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+'</div>'+""",
+    """    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+filmLink(id)+'</div>'+""")
+
 # drop the "Made with Claude Design" badge from the original export
 badge = re.search(r'<div id="__claude_design_branding">.*?</div>(?=</body>)', html, re.S)
 if not badge:
