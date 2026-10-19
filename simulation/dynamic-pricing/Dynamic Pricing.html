@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Pricing</title>
+<meta name="description" content="Dynamic Pricing, a standalone initiative film for the AI Center X prototype: a demand-based pricing proposal followed from the commercial office and meeting room to the intake review and the planned pricing desk, in four beats. It shows the use as proposed; nothing is built.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  DYNAMIC PRICING (simulation/dynamic-pricing/Dynamic Pricing.html) - initiative film for `pricing`, issue #9 phase 2.
+  Built from simulation/_template/film-template.html: only the CONFIG block differs (film-local glyph painters, the 12 shots of
+  "Dynamic Pricing - Script and Protocols.md" with their exact on-screen text and timings, build() and update()).
+  Everything after "END OF CONFIG" is the shared template machinery, unchanged. Not a scene in Village Film C.
+  Test: python test/film_controls_test.py "simulation/dynamic-pricing/Dynamic Pricing.html" test/shots/dynamic-pricing
+        python test/dynamic-pricing_test.py
+-->
+<style>
+  :root{
+    --ink:#17211f; --paper:#f3efe6; --neutral:#e8e6e1;
+    --acc:#e8e6e1; --accl:#f3efe6;
+    --hf:"Fraunces","Iowan Old Style",Georgia,serif; --bf:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  html,body{margin:0;height:100%;background:#0f1614;color:var(--paper);font-family:var(--bf);overflow:hidden}
+  #stage{position:fixed;inset:0;background:#dce3e6}
+  #stage canvas{display:block;width:100%;height:100%}
+  #ui{position:fixed;inset:0;pointer-events:none}
+  #scrim{position:absolute;inset:0;background:radial-gradient(125% 95% at 0% 100%,rgba(15,22,20,.9) 0%,rgba(15,22,20,.62) 32%,rgba(15,22,20,.22) 56%,rgba(15,22,20,0) 74%);transition:opacity .25s}
+  /* top corners: the setting (place and moment) on the left, the initiative on the right, each on its own small scrim pill */
+  #top{position:absolute;left:max(24px,4vw);right:max(24px,4vw);top:max(18px,2.6vh);display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:clamp(13px,1.15vw,17px);font-weight:500;letter-spacing:.01em;color:rgba(243,239,230,.95);text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  #top #scen,#top #sidx{background:rgba(15,22,20,.58);border:1px solid rgba(243,239,230,.12);border-radius:999px;padding:.38em .85em;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);min-width:0}
+  #top #scen{display:flex;align-items:center;gap:.6em}
+  #top #scen i{flex:0 0 auto;display:inline-block;width:.75em;height:.75em;border-radius:50%;background:var(--acc);box-shadow:0 0 0 2px rgba(15,22,20,.35)}
+  #top #sidx{opacity:.95;text-align:right}
+  #top #sidx:empty{display:none}
+  /* the caption block sits above the playback bar and stops short of the navigation column on the right */
+  #panel{box-sizing:border-box;position:absolute;left:max(24px,4vw);bottom:calc(max(12px,1.6vh) + 44px + clamp(12px,2vh,22px));width:min(64vw,900px);max-width:calc(100vw - 2*max(24px,4vw) - clamp(168px,14.5vw,200px) - 24px);padding-left:clamp(14px,1.6vw,24px);border-left:5px solid var(--acc);transition:border-color .25s}
+  /* beat row: the big numeral is the BEAT number (1-4); beside it the AI Canvas source line and the four-step indicator with the current beat lit */
+  #beat{display:flex;align-items:flex-end;gap:.5em;margin:0 0 clamp(6px,1vh,12px);line-height:1}
+  #bnum{font-family:var(--hf);font-weight:600;font-size:clamp(44px,6.4vw,92px);color:var(--acc);line-height:.86;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+  #bmeta{display:flex;flex-direction:column;gap:clamp(4px,.7vh,8px);padding-bottom:.06em;min-width:0}
+  #blab{font-size:clamp(14px,1.3vw,20px);font-weight:500;line-height:1.2;color:rgba(243,239,230,.9);text-shadow:0 1px 6px rgba(0,0,0,.55)}
+  #blab:empty{display:none}
+  #steps{display:flex;flex-wrap:wrap;align-items:center;align-self:flex-start;gap:.25em .5em;padding:.3em .75em;border-radius:999px;background:rgba(15,22,20,.66);font-size:clamp(12px,1.1vw,16px);font-weight:500;letter-spacing:.01em;color:rgba(243,239,230,.86);white-space:nowrap}
+  #steps span{transition:color .2s}
+  #steps span+span:before{content:"\2192";display:inline-block;margin-right:.5em;color:rgba(243,239,230,.5);font-weight:400}
+  #steps span.on{color:var(--accl);font-weight:600}
+  #cap p{margin:0}
+  #head{font-family:var(--hf);font-weight:500;font-size:clamp(26px,3.6vw,56px);line-height:1.12;letter-spacing:-.005em;text-shadow:0 2px 12px rgba(0,0,0,.5);text-wrap:balance}
+  #head.long{font-size:clamp(23px,3vw,48px);line-height:1.14}
+  #sup{margin-top:clamp(8px,1.2vh,14px)!important;font-size:clamp(16px,1.6vw,24px);font-weight:400;line-height:1.35;color:rgba(243,239,230,.9);text-shadow:0 1px 8px rgba(0,0,0,.55);text-wrap:pretty}
+  #note{margin:clamp(6px,.9vh,10px) 0 0;font-size:clamp(13px,1.05vw,15px);color:rgba(243,239,230,.78);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  #note:empty{display:none}
+  /* card slides: an infographic block inside the caption - cards in a row, or a roadmap of stages. Revealed by updateHUD as a pure function of t. */
+  #info{display:none;margin-top:clamp(12px,2vh,22px)}
+  #panel.info{width:min(78vw,1320px)}
+  #panel.info:before{content:"";position:absolute;left:-100vw;right:-100vw;top:-48px;bottom:-240px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,rgba(15,22,20,0) 0,rgba(15,22,20,.6) 52px,rgba(15,22,20,.84) 130px)}
+  #panel.info #info{display:block}
+  #panel.info #head{font-size:clamp(24px,3vw,48px)}
+  #info h3{margin:0;font-family:var(--hf);font-weight:500;font-size:clamp(18px,1.65vw,28px);line-height:1.14;letter-spacing:-.005em;color:var(--paper)}
+  #info p{font-size:clamp(14px,1.2vw,19px);line-height:1.38;color:rgba(243,239,230,.93);text-wrap:pretty}
+  #info svg{display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  #cards{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:clamp(10px,1.1vw,18px);margin:0;padding:0;list-style:none}
+  .card{box-sizing:border-box;padding:clamp(12px,1.15vw,20px);border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.2);border-top:3px solid rgba(243,239,230,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .card.now{border-color:rgba(243,239,230,.5);border-top-color:var(--paper)}
+  .card .ct{display:flex;align-items:center;gap:.7em;margin:0 0 clamp(7px,.9vh,12px)}
+  .card .ic{flex:0 0 auto;display:grid;place-items:center;width:clamp(38px,3.1vw,52px);height:clamp(38px,3.1vw,52px);border-radius:12px;background:var(--paper);color:#0f1614}
+  .card .ic svg{width:64%;height:64%}
+  #foot{margin-top:clamp(9px,1.4vh,16px)!important;font-size:clamp(12.5px,1.05vw,16px)!important;color:rgba(243,239,230,.86)!important;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  /* roadmap: milestones on a line. A firm stage has a filled node and a solid connector; a conditional stage an outlined node and a dashed connector. */
+  #road{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));margin:0;padding:clamp(14px,1.3vw,22px) clamp(14px,1.3vw,22px) clamp(12px,1.2vw,20px);list-style:none;border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .stage{min-width:0;padding-right:clamp(10px,1.2vw,22px)}
+  .stage:last-child{padding-right:0}
+  .stage .trk{display:flex;align-items:center;margin:0 calc(-1*clamp(10px,1.2vw,22px)) clamp(8px,1vh,12px) 0}
+  .stage:last-child .trk{margin-right:0}
+  .stage .node{flex:0 0 auto;box-sizing:border-box;display:grid;place-items:center;width:clamp(38px,3.1vw,52px);height:clamp(38px,3.1vw,52px);border-radius:50%;background:var(--paper);color:#0f1614;border:2px solid var(--paper)}
+  .stage.cond .node{background:rgba(15,22,20,.55);color:var(--paper);border-style:dashed}
+  .stage .node svg{width:60%;height:60%}
+  .stage .ln{flex:1 1 auto;height:0;border-top:3px solid var(--paper);transform:scaleX(var(--r,0));transform-origin:left center}
+  .stage .ln.dash{border-top-style:dashed;opacity:.85}
+  .stage:last-child .ln{visibility:hidden}
+  .stage p{margin-top:.3em!important}
+  /* step chips: real buttons - each seeks to the start of its step inside the current beat; a thin line links them */
+  #strip{display:none;flex-wrap:wrap;align-items:center;gap:6px 0;margin-top:clamp(10px,1.6vh,18px);font-size:clamp(12px,1.1vw,16px);font-weight:500;pointer-events:auto}
+  #strip button{margin:0;min-height:32px;padding:.4em .95em;border-radius:999px;background:rgba(15,22,20,.6);color:rgba(243,239,230,.82);border:1px solid rgba(243,239,230,.3);font:inherit;cursor:pointer;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}
+  #strip button+button{margin-left:16px;position:relative}
+  #strip button+button:before{content:"";position:absolute;right:100%;top:50%;width:16px;height:2px;margin-right:1px;background:rgba(243,239,230,.4);pointer-events:none}
+  #strip button:hover{background:rgba(243,239,230,.2);color:var(--paper);border-color:var(--paper)}
+  #strip button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  #strip button.on{background:var(--acc);color:#0f1614;border-color:var(--acc)}
+  /* playback bar: previous scene, play/pause, next scene, scrubber with scene ticks, keyboard hint, time readout, restart */
+  #bar{position:absolute;left:max(16px,2.4vw);right:max(16px,2.4vw);bottom:max(12px,1.6vh);height:44px;box-sizing:border-box;display:flex;align-items:center;gap:2px;padding:0 4px;border-radius:22px;background:rgba(15,22,20,.66);border:1px solid rgba(243,239,230,.14);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:auto;transition:opacity .35s}
+  #bar button{position:relative;flex:0 0 40px;width:40px;height:40px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--paper);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #bar button svg{width:18px;height:18px;fill:currentColor;display:block}
+  #bar button:hover{background:rgba(243,239,230,.14)}
+  #bar button:focus-visible{outline:2px solid var(--paper);outline-offset:-3px}
+  [data-tip]:after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);padding:.35em .7em;border-radius:7px;background:rgba(15,22,20,.94);border:1px solid rgba(243,239,230,.2);color:var(--paper);font:500 12.5px/1.2 var(--bf);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+  [data-tip]:focus-visible:after{opacity:1}
+  @media (hover:hover) and (min-width:641px){[data-tip]:hover:after{opacity:1}}
+  #bprev[data-tip]:after{left:0;transform:none}
+  #brestart[data-tip]:after{left:auto;right:0;transform:none}
+  #rail [data-tip]:after{left:auto;right:calc(100% + 8px);bottom:auto;top:50%;transform:translateY(-50%)}
+  #bplay{background:var(--paper);color:#0f1614}#bar #bplay:hover{background:#fff}
+  #bplay .ic-pause{display:none}#bar.playing #bplay .ic-pause{display:block}#bar.playing #bplay .ic-play{display:none}
+  #prog{position:relative;flex:1 1 60px;min-width:60px;height:40px;margin:0 6px;border-radius:8px;cursor:pointer;touch-action:none}
+  #prog:focus-visible{outline:2px solid var(--paper);outline-offset:-2px}
+  #prog .seg{position:absolute;top:17px;height:6px;border-radius:3px;background:rgba(243,239,230,.22);overflow:hidden}
+  #prog .seg b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c)}
+  #prog .tick{position:absolute;top:16px;width:2px;height:8px;margin-left:-1px;background:rgba(15,22,20,.85);pointer-events:none}
+  #prog .knob{position:absolute;top:14px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 2px rgba(15,22,20,.55);pointer-events:none}
+  #hint{flex:0 0 auto;padding:0 6px 0 2px;font-size:12px;font-weight:500;color:rgba(243,239,230,.78);white-space:nowrap}
+  #hint kbd{display:inline-block;min-width:1.3em;padding:.1em .4em;margin:0 .1em;border:1px solid rgba(243,239,230,.35);border-radius:5px;font:inherit;text-align:center;color:var(--paper)}
+  #tm{flex:0 0 auto;padding:0 6px 0 4px;font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(243,239,230,.9);white-space:nowrap}
+  #bar .sep{flex:0 0 1px;width:1px;height:22px;margin:0 3px 0 1px;background:rgba(243,239,230,.22)}
+  /* navigation on the right: at rest a thin rail (one numbered dot per beat and a list button); the full list flies out on hover or focus, or is pinned */
+  #nav{position:absolute;right:calc(max(10px,1vw) + 50px);top:50%;transform:translateY(-50%);width:clamp(184px,14.5vw,208px);max-height:calc(100vh - 150px);overflow:auto;box-sizing:border-box;padding:6px;border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;font-size:13.5px;line-height:1.25;display:none;transition:opacity .2s}
+  #nav.open{display:block}
+  #nav ol{list-style:none;margin:0;padding:0}
+  #nav button{display:flex;align-items:center;gap:.45em;width:100%;min-height:28px;margin:0;padding:3px 8px;border:0;border-radius:8px;background:transparent;color:rgba(243,239,230,.92);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #nav button:hover{color:#fff;background:rgba(243,239,230,.06);text-decoration:underline;text-decoration-color:rgba(243,239,230,.55);text-underline-offset:3px}
+  #nav button:focus-visible{outline:2px solid var(--paper);outline-offset:-2px}
+  #nav .sc>button{min-height:32px;margin-top:4px;font-weight:600;color:var(--paper)}
+  #nav .sc>button b{font-family:var(--hf);font-weight:600;font-size:1.5em;line-height:1;width:.75em;flex:0 0 auto;color:rgba(243,239,230,.6)}
+  #nav .sc.on>button b{color:var(--accl)}
+  #nav .beats{margin:0 0 2px calc(8px + 1.2em);border-left:2px solid rgba(243,239,230,.2);padding-left:3px}
+  #nav .sc.on .beats{border-color:var(--acc)}
+  #nav .beats button{min-height:26px;padding:2px 7px;font-size:.96em}
+  #nav button[aria-current],#nav button[aria-current]:hover{color:#0f1614;font-weight:600;background:var(--acc);text-decoration:none;box-shadow:0 0 0 1px rgba(15,22,20,.35)}
+  #nav button[aria-current] b{color:#0f1614!important}
+  #nav .end>button{min-height:30px}
+  #rail{display:flex;position:absolute;right:max(10px,1vw);top:50%;transform:translateY(-50%);flex-direction:column;gap:6px;pointer-events:auto;transition:opacity .35s}
+  #rail button{position:relative;width:40px;height:40px;margin:0;padding:0;border:1px solid rgba(243,239,230,.22);border-radius:50%;background:rgba(15,22,20,.72);color:rgba(243,239,230,.92);display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent}
+  #rail button:hover{border-color:var(--paper)}
+  #rail .dot{font-family:var(--hf);font-weight:600;font-size:19px;line-height:1}
+  #rail .dot.on{background:var(--acc);color:#0f1614;border-color:var(--acc)}
+  #rail button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  #rail button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  #rail #navtog[aria-expanded="true"]{background:var(--paper);color:#0f1614}
+  @media (hover:hover) and (min-width:901px){
+    #nav{display:block;opacity:0}
+    #ui.navshow #nav,#nav.open,#nav:focus-within{opacity:1}
+  }
+  #ui.idle #bar,#ui.idle #rail{opacity:.35}
+  #paused{position:absolute;left:50%;top:max(18px,2.6vh);transform:translateX(-50%);display:none;align-items:center;gap:.5em;padding:.38em .9em;border-radius:999px;background:rgba(15,22,20,.72);border:1px solid rgba(243,239,230,.22);font-size:clamp(12px,1.05vw,15px);font-weight:600;letter-spacing:.04em;color:var(--paper)}
+  #paused:before{content:"";width:.28em;height:.85em;border-left:.26em solid var(--paper);border-right:.26em solid var(--paper)}
+  #ui.paused #paused{display:flex}
+  #navback{display:none}
+  #fade{position:fixed;inset:0;background:#000;pointer-events:none;opacity:1}
+  #fallback{display:none;max-width:760px;margin:0 auto;padding:40px 24px;font-size:17px;line-height:1.5;color:var(--paper);height:100%;box-sizing:border-box;overflow:auto}
+  #fallback h1{font-family:var(--hf);font-weight:500;font-size:34px;margin:0 0 8px}
+  #fallback ol{padding-left:0;list-style:none}#fallback li{margin:10px 0}#fallback b{display:block;font-weight:600}
+  @media (max-width:1100px){
+    /* the paused pill moves under the setting label, so a long setting never runs into it */
+    #paused{top:calc(max(18px,2.6vh) + 44px);left:max(24px,4vw);transform:none}
+  }
+  @media (max-width:900px){
+    #nav{width:min(230px,calc(100vw - 90px))}
+    #hint{display:none}
+    #panel{box-sizing:border-box;max-width:calc(100vw - max(24px,4vw) - 72px)}
+  }
+  @media (max-width:640px){
+    /* phone: the corner labels stack; the rail is a row under them; the scrubber takes its own row; the indicator shows the current beat in words */
+    #top{flex-direction:column;align-items:flex-start;gap:6px;font-size:12px}
+    #top #sidx{text-align:left}
+    #panel{width:auto;bottom:calc(max(12px,1.6vh) + 88px + 12px)}
+    #steps{white-space:normal;gap:.45em}
+    #steps span{font-size:0;width:7px;height:7px;border-radius:50%;background:rgba(243,239,230,.45)}
+    #steps span+span:before{display:none}
+    #steps span.on{font-size:12.5px;width:auto;height:auto;border-radius:0;background:none}
+    /* phone: chips may wrap, so they sit in a plain row with a gap and no connector lines */
+    #strip{gap:6px}#strip button{padding:.35em .7em}#strip button+button{margin-left:0}#strip button+button:before{display:none}
+    #bar{left:10px;right:10px;height:88px;flex-wrap:wrap;align-content:center;padding:0 6px}
+    #prog{order:-1;flex:1 0 100%;margin:0;height:40px;box-sizing:border-box}
+    #tm{padding:0 6px;font-size:12px;margin-right:auto}
+    #head{font-size:23px;line-height:1.14}#head.long{font-size:20px}
+    #sup{font-size:15px;line-height:1.32}
+    #panel.info #head{font-size:22px}
+    #info{margin-top:10px}
+    #cards{grid-template-columns:1fr;gap:7px}
+    .card{padding:9px 11px;border-radius:12px;border-top-width:1px;border-left:3px solid rgba(243,239,230,.35)}
+    .card.now{border-left-color:var(--paper)}
+    .card .ct{margin-bottom:4px;gap:.55em}.card .ic{width:30px;height:30px;border-radius:8px}
+    #info h3{font-size:17px}#info p{font-size:14px;line-height:1.3}
+    #foot{font-size:12.5px!important;line-height:1.3!important;margin-top:8px!important}
+    #road{grid-template-columns:1fr;padding:11px 12px 4px}
+    .stage{display:grid;grid-template-columns:34px minmax(0,1fr);column-gap:11px;padding:0 0 9px}
+    .stage .trk{grid-column:1;grid-row:1 / span 2;flex-direction:column;margin:0 0 -9px}
+    .stage:last-child .trk{margin:0}
+    .stage .node{width:34px;height:34px}
+    .stage .ln{flex:1 1 auto;width:0;min-height:6px;border-top:0;border-left:3px solid var(--paper);transform:scaleY(var(--r,0));transform-origin:center top}
+    .stage .ln.dash{border-left-style:dashed}
+    .stage h3{grid-column:2;align-self:end;padding-top:5px}.stage p{grid-column:2;margin-top:1px!important}
+    #bnum{font-size:38px}#blab{font-size:13px}
+    #strip{margin-top:8px}
+    #rail{top:calc(max(18px,2.6vh) + 66px);right:10px;transform:none;flex-direction:row}
+    #rail [data-tip]:after{display:none}
+    #nav{top:calc(max(18px,2.6vh) + 114px);right:10px;transform:none;max-height:calc(100vh - max(18px,2.6vh) - 126px);z-index:2}
+    #nav.open~#navback,#navback.on{display:block;position:absolute;inset:0;background:rgba(15,22,20,.7);pointer-events:auto;z-index:1}
+    #rail{z-index:2}
+    #paused{top:calc(max(18px,2.6vh) + 72px);left:max(24px,4vw);transform:none}
+  }
+  @media (prefers-reduced-motion:reduce){#panel,#strip button,#steps span,#bar,#nav,#rail,[data-tip]:after{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+<div id="ui">
+  <div id="scrim"></div>
+  <div id="top"><span id="scen"><i></i><span id="sname"></span></span><span id="sidx"></span></div>
+  <div id="panel">
+    <div id="beat"><span id="bnum"></span><div id="bmeta"><span id="blab"></span><div id="steps"></div></div></div>
+    <div id="cap" data-caption><p id="head"></p><p id="sup"></p><div id="info"></div></div>
+    <p id="note"></p>
+    <div id="strip" role="group" aria-label="Steps in this beat"></div>
+  </div>
+  <div id="bar" role="group" aria-label="Playback controls">
+    <button id="bprev" type="button" aria-label="Previous scene" data-tip="Previous scene (Left arrow)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 4h2.2v12H4.5zM15.5 4L8 10l7.5 6z"/></svg></button>
+    <button id="bplay" type="button" aria-label="Pause" data-tip="Play or pause (Space)"><svg class="ic-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 3.5v13l10.5-6.5z"/></svg><svg class="ic-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4h3.6v12H5zM11.4 4H15v12h-3.6z"/></svg></button>
+    <button id="bnext" type="button" aria-label="Next scene" data-tip="Next scene (Right arrow)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.3 4h2.2v12h-2.2zM4.5 4l7.5 6-7.5 6z"/></svg></button>
+    <div id="prog" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
+    <span id="hint" aria-hidden="true"><kbd>Space</kbd> <span id="hintpp">pause</span> &nbsp;<kbd>&larr;</kbd><kbd>&rarr;</kbd> scenes</span>
+    <span id="tm">0:00 / 0:00</span>
+    <i class="sep" aria-hidden="true"></i>
+    <button id="brestart" type="button" aria-label="Restart" data-tip="Restart from the beginning (Home)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 10A5.5 5.5 0 1 1 10 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8.6 1.6l4.2 2.9-4.2 2.9z"/></svg></button>
+  </div>
+  <div id="paused" role="status" aria-live="polite">Paused</div>
+  <nav id="nav" aria-label="Scenes"><ol id="navlist"></ol></nav><div id="navback"></div>
+  <div id="rail"><button type="button" id="navtog" aria-label="Scene list" data-tip="All scenes" aria-expanded="false" aria-controls="nav"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5h9M7 10h9M7 15h9"/><circle cx="3.5" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="15" r="1" fill="currentColor" stroke="none"/></svg></button></div>
+</div>
+<div id="fade"></div>
+<div id="fallback"><h1 id="fbtitle"></h1><p>This film needs 3D graphics (WebGL). Your browser could not start it. Here is the film in words.</p><ol id="fblist"></ol></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script>
+(function(){
+'use strict';
+
+/* ==================================================================================================================
+   CONFIG - THE ONLY BLOCK A NEW FILM EDITS
+   ------------------------------------------------------------------------------------------------------------------
+   beats[]   one entry per scene on the timeline, in order, contiguous (start of each = start + dur of the one before).
+             beat: 0 = an open or close card, 1-4 = The situation / The AI at work / What can go wrong / How it is kept safe.
+             A beat may span several consecutive entries (e.g. two seeded faults in beat 3); they share the numeral.
+             Fields: name (scene name: navigation, FILM.scenes, fallback), start, dur (seconds), setting (top-left label:
+             the place and moment), source (small line beside the numeral: where the beat comes from, e.g. "AI Canvas:
+             Business Problem"), head (headline), sup (support line, optional), note (small line, optional, e.g. to mark a
+             staged fault), chips (optional step buttons [{label, at}] at local times), cards / stages (optional
+             infographic [{ic, at, title, text, cond}], with foot and footAt), nav (optional shorter navigation label),
+             cam (camera keys in LOCAL time: [lt, px,py,pz, lx,ly,lz] look-at, or [lt, px,py,pz, sx,sy,sz, nx,ny] aimed
+             so the subject (sx,sy,sz) lands at screen offset (nx,ny) in half-frames, +x right, +y up; a 10th element
+             (any value) keeps the horizon level).
+   build(THREE, scene, kit) -> objects   builds the whole 3D world ONCE, using the props kit. Never add objects later.
+   update(t, objects, ctx)               stages the world at film time t. Must be a pure function of t: the kit
+             restores every object, material, light and screen to its build-time state before each call, so update
+             only sets what differs from that state at time t. ctx = { i, entry, beat, lt (local time), u (0..1 in the
+             entry), kit, camKeys(keys, lt) }. Readable words never go in the 3D world: screens show glyphs, bars, colours.
+   ================================================================================================================== */
+/* ---- film-local glyph painters (canvas only; glyphs, bars, lines and colours, never words). Colours follow the script:
+   blue = demand and data; green = a person's approval; amber = open, or held for a person; red = a possible harm the screen must
+   test, drawn dashed only and never pulsing; grey = idle or empty; dashed white = planned, not built. */
+var DP = { blue:'#4a86d8', ok:'#3fa34d', amber:'#e9a23b', red:'#d84a3a', grey:'#8a8f98', dark:'#16222c', paper:'#f3f1ec', slate:'#4f5b66' };
+// the seven AI Canvas panels on the meeting-room wall: [x, y, w, h] as fractions (top row four, bottom row three)
+// 0 Business Problem, 1 Business Value, 2 Objective Function, 3 Modeling Approach, 4 Model Training, 5 Customer Value, 6 Data Strategy
+var DP_CELLS = [[0.03,0.05,0.22,0.43],[0.27,0.05,0.22,0.43],[0.51,0.05,0.22,0.43],[0.75,0.05,0.22,0.43],[0.03,0.52,0.30,0.43],[0.35,0.52,0.30,0.43],[0.67,0.52,0.30,0.43]];
+function dpRR(c, x, y, w, h, r){ r = Math.max(0, Math.min(r, w/2, h/2)); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+// a line, dashed or solid, with an optional arrowhead at its end
+function dpA(c, x0, y0, x1, y1, lw, col, dash, head){
+  c.save(); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = lw; c.lineCap = 'round'; c.setLineDash(dash || []); c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); c.setLineDash([]);
+  if (head) { var a = Math.atan2(y1 - y0, x1 - x0); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x1 - head*Math.cos(a - 0.45), y1 - head*Math.sin(a - 0.45)); c.lineTo(x1 - head*Math.cos(a + 0.45), y1 - head*Math.sin(a + 0.45)); c.closePath(); c.fill(); }
+  c.restore(); }
+// one glyph centred at (x, y) with radius r; o.fill fills a tag, o.hole is the colour of its punched hole, o.dash draws it dashed
+function dpG(c, n, x, y, r, col, o){
+  o = o || {}; var PI = Math.PI;
+  c.save(); c.translate(x, y); c.lineCap = 'round'; c.lineJoin = 'round'; c.setLineDash(o.dash ? [r*0.22, r*0.16] : []);
+  c.strokeStyle = col; c.fillStyle = col; c.lineWidth = Math.max(1.5, r*(o.lw || 0.14));
+  function P(pts, close, fill){ c.beginPath(); c.moveTo(pts[0]*r, pts[1]*r); for (var k=2;k<pts.length;k+=2) c.lineTo(pts[k]*r, pts[k+1]*r); if (close) c.closePath(); if (fill) c.fill(); else c.stroke(); }
+  function C(cx, cy, rad, fill){ c.beginPath(); c.arc(cx*r, cy*r, rad*r, 0, 2*PI); if (fill) c.fill(); else c.stroke(); }
+  switch (n) {
+    case 'tag': P([-0.95,0, -0.5,-0.5, 0.85,-0.5, 0.85,0.5, -0.5,0.5], true, o.fill); if (o.fill) { c.fillStyle = o.hole || DP.dark; C(-0.45,0,0.13,true); } else C(-0.45,0,0.13); break;
+    case 'box': P([-0.6,-0.2, 0.2,-0.2, 0.2,0.7, -0.6,0.7], true); P([-0.6,-0.2, -0.25,-0.6, 0.55,-0.6, 0.2,-0.2]); P([0.55,-0.6, 0.55,0.3, 0.2,0.7]); break;
+    case 'coin': C(0,0,0.72); C(0,0,0.42); break;
+    case 'target': C(0,0,0.75); C(0,0,0.45); C(0,0,0.14,true); break;
+    case 'loop': c.beginPath(); c.arc(0, 0, 0.6*r, -PI*0.3, PI*1.3); c.stroke(); P([0.12,-0.82, 0.48,-0.5, 0.08,-0.28]); break;
+    case 'person': C(0,-0.38,0.3,true); c.beginPath(); c.arc(0, 0.75*r, 0.62*r, PI, 2*PI); c.fill(); break;
+    case 'socket': dpRR(c, -0.62*r, -0.5*r, 1.24*r, 1.0*r, 0.2*r); c.stroke(); P([-0.25,-0.18, -0.25,0.12]); P([0.25,-0.18, 0.25,0.12]); break;
+    case 'clock': C(0,0,0.7); P([0,-0.42, 0,0, 0.3,0.2]); break;
+    case 'fork': P([-0.8,0, -0.1,0]); P([-0.1,0, 0.7,-0.55]); P([-0.1,0, 0.7,0.55]); C(-0.1,0,0.12,true); break;
+    case 'check': P([-0.55,0.02, -0.15,0.4, 0.6,-0.42]); break;
+    case 'up': P([0,0.75, 0,-0.7]); P([-0.42,-0.28, 0,-0.72, 0.42,-0.28]); break;
+    case 'cal': dpRR(c, -0.7*r, -0.55*r, 1.4*r, 1.25*r, 0.12*r); c.stroke(); P([-0.7,-0.15, 0.7,-0.15]); P([-0.35,-0.8, -0.35,-0.4]); P([0.35,-0.8, 0.35,-0.4]); break;
+    case 'slot': c.setLineDash([r*0.2, r*0.14]); dpRR(c, -0.9*r, -0.5*r, 1.8*r, 1.0*r, 0.12*r); c.stroke(); break;
+    case 'lines': P([-0.8,0.45, -0.3,0.05, 0.1,0.15, 0.8,-0.5]); P([-0.8,0.75, -0.3,0.35, 0.1,0.45, 0.8,-0.2]); P([-0.3,0.05, -0.3,0.35]); P([0.45,-0.18, 0.45,0.12]); break;
+    default: C(0,0,0.3,true);
+  }
+  c.restore(); }
+var DPP = {
+  // P1 wall screen: demand (blue) moves all the time; the price (white) is flat, steps once at the review marker, then is flat again.
+  // On the close: the closed gate with its amber lamp and two empty grey check rings (intake; first risk screen) in front of it.
+  office: function(c, W, H, p){
+    c.fillStyle = DP.dark; c.fillRect(0, 0, W, H);
+    var x0 = W*0.05, x1 = W*0.95, y0 = H*0.1, y1 = H*0.74, i, ms = 0.56;
+    c.globalAlpha = p.close ? 0.4 : 1;
+    c.fillStyle = 'rgba(235,240,245,.07)'; for (i=0;i<=6;i++) c.fillRect(x0, y0 + (y1 - y0)*i/6, x1 - x0, 1.5);
+    c.strokeStyle = DP.blue; c.lineWidth = H*0.022; c.lineJoin = 'round'; c.beginPath();
+    for (i=0;i<=48;i++){ var u = i/48, v = 0.5 + 0.26*Math.sin(u*9.5 + p.ph) + 0.08*Math.sin(u*23 + p.ph*1.7), xx = x0 + (x1 - x0)*u, yy = y1 - (y1 - y0)*v; if (i) c.lineTo(xx, yy); else c.moveTo(xx, yy); }
+    c.stroke();
+    var xs = x0 + (x1 - x0)*ms, ya = y1 - (y1 - y0)*0.38, yb = y1 - (y1 - y0)*0.58;
+    c.strokeStyle = '#ffffff'; c.lineWidth = H*0.018; c.beginPath(); c.moveTo(x0, ya); c.lineTo(xs, ya); c.lineTo(xs, yb); c.lineTo(x1, yb); c.stroke();
+    dpA(c, xs, y1 + H*0.02, xs, y0, 2, 'rgba(235,240,245,.35)', [5, 5]);
+    dpG(c, 'cal', xs, H*0.86, H*0.065, 'rgba(235,240,245,.85)');
+    c.globalAlpha = 1;
+    if (p.close) {
+      c.fillStyle = 'rgba(22,34,44,.88)'; dpRR(c, W*0.2, H*0.18, W*0.6, H*0.64, H*0.05); c.fill();
+      var gx = W*0.3, gy = H*0.7;
+      c.fillStyle = '#c9d2d9'; c.fillRect(gx - H*0.02, H*0.33, H*0.04, gy - H*0.33);
+      c.fillRect(gx - H*0.06, gy - H*0.01, H*0.12, H*0.03);
+      for (i=0;i<6;i++){ c.fillStyle = i % 2 ? '#7d8790' : '#f2f0ea'; c.fillRect(gx + H*0.02 + i*W*0.04, H*0.46, W*0.04, H*0.055); }
+      c.fillStyle = DP.amber; c.beginPath(); c.arc(gx, H*0.29, H*0.05, 0, 2*Math.PI); c.fill();
+      c.strokeStyle = DP.grey; c.lineWidth = H*0.018; for (i=0;i<2;i++){ c.beginPath(); c.arc(W*(0.62 + i*0.1), H*0.49, H*0.07, 0, 2*Math.PI); c.stroke(); }
+    }
+  },
+  // P1 analyst's monitor: the price list as tag rows, checked one by one (grey to white)
+  list: function(c, W, H, p){
+    c.fillStyle = DP.dark; c.fillRect(0, 0, W, H); c.fillStyle = '#2c3a46'; c.fillRect(0, 0, W, H*0.13);
+    var n = 7, rh = H*0.8/n, i;
+    for (i=0;i<n;i++){ var y = H*0.17 + i*rh, on = i < p.lit, col = on ? 'rgba(235,240,245,.9)' : 'rgba(235,240,245,.25)';
+      if (i === p.lit) { c.fillStyle = 'rgba(235,240,245,.08)'; c.fillRect(W*0.03, y, W*0.94, rh*0.86); }
+      dpG(c, 'tag', W*0.1, y + rh*0.43, rh*0.3, col, { fill:true, hole:DP.dark });
+      c.fillStyle = col; dpRR(c, W*0.2, y + rh*0.3, W*(0.35 + 0.25*((i*37 + 11) % 13)/13), rh*0.26, rh*0.13); c.fill();
+      dpRR(c, W*0.8, y + rh*0.3, W*0.12, rh*0.26, rh*0.13); c.fill(); }
+  },
+  // P2 wall canvas: the seven blocks as dashed panels with a glyph each; on = how many have lit up; hi = the panel pointed at.
+  // The value panel's bar is an empty dashed outline: it never fills.
+  canvas: function(c, W, H, p){
+    c.fillStyle = '#1b2530'; c.fillRect(0, 0, W, H);
+    for (var i=0;i<7;i++){ var q = DP_CELLS[i], x = q[0]*W, y = q[1]*H, w = q[2]*W, h = q[3]*H, g = Math.max(0, Math.min(1, p.on - i)), hi = p.hi === i;
+      c.fillStyle = 'rgba(235,240,245,' + (0.03 + 0.07*g + (hi ? 0.07 : 0)).toFixed(3) + ')'; dpRR(c, x, y, w, h, H*0.025); c.fill();
+      c.save(); c.strokeStyle = 'rgba(235,240,245,' + (0.25 + 0.6*g).toFixed(3) + ')'; c.lineWidth = hi ? H*0.012 : H*0.007; c.setLineDash([H*0.03, H*0.02]); dpRR(c, x, y, w, h, H*0.025); c.stroke(); c.restore();
+      var col = 'rgba(235,240,245,' + (0.2 + 0.75*g).toFixed(3) + ')', cx = x + w*0.5, cy = y + h*0.45, r = h*0.24;
+      if (i === 0) { dpG(c, 'clock', cx, cy - r*0.62, r*0.5, col); dpG(c, 'tag', cx, cy + r*0.55, r*0.6, col); }
+      else if (i === 1) { dpG(c, 'coin', cx - r*0.6, cy, r*0.8, col); dpG(c, 'up', cx + r*0.85, cy, r*0.7, col);
+        c.save(); c.strokeStyle = col; c.lineWidth = H*0.008; c.setLineDash([H*0.02, H*0.015]); dpRR(c, x + w*0.15, y + h*0.8, w*0.7, h*0.1, h*0.04); c.stroke(); c.restore(); }
+      else if (i === 2) dpG(c, 'target', cx, cy, r, col);
+      else if (i === 3) dpG(c, 'box', cx, cy, r, col, { dash:true });
+      else if (i === 4) dpG(c, 'loop', cx, cy, r, col);
+      else if (i === 5) dpG(c, 'person', cx, cy, r, col);
+      else dpG(c, 'socket', cx, cy, r, col); }
+  },
+  // P2 glass board, the plan drawn dashed: three empty sockets -> an empty model box -> a price tag; over the tag the margin curve with a
+  // dial that sweeps along it and back without stopping (no price is picked); in 2.2 the set-or-suggest fork. Neither path lights.
+  board: function(c, W, H, p){
+    c.fillStyle = '#25313b'; c.fillRect(0, 0, W, H);
+    var a = function(t0){ return Math.max(0, Math.min(1, (p.d - t0)/0.12)); }, wc = function(al){ return 'rgba(235,240,245,' + (0.9*al).toFixed(3) + ')'; }, lw = H*0.012, dash = [H*0.03, H*0.022], i;
+    if (a(0) > 0) { c.save(); c.globalAlpha = a(0); for (i=0;i<3;i++) dpG(c, 'socket', W*0.08, H*(0.38 + i*0.17), H*0.055, DP.grey); c.restore(); }
+    if (a(0.2) > 0) dpA(c, W*0.125, H*0.55, W*0.215, H*0.55, lw, wc(a(0.2)), dash, H*0.03);
+    if (a(0.4) > 0) { c.save(); c.strokeStyle = wc(a(0.4)); c.lineWidth = lw; c.setLineDash(dash); dpRR(c, W*0.23, H*0.42, W*0.12, H*0.26, H*0.02); c.stroke(); c.restore(); }
+    if (a(0.6) > 0) dpA(c, W*0.36, H*0.55, W*0.72, H*0.55, lw, wc(a(0.6)), dash, H*0.03);
+    if (a(0.8) > 0) dpG(c, 'tag', W*0.8, H*0.55, H*0.075, wc(a(0.8)), { dash:true, lw:0.16 });
+    if (p.cv > 0) { c.save(); c.globalAlpha = p.cv; var cx0 = W*0.6, cx1 = W*0.97, cb = H*0.36, ct = H*0.08;
+      c.strokeStyle = 'rgba(235,240,245,.3)'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx0, cb); c.lineTo(cx1, cb); c.stroke();
+      c.strokeStyle = DP.blue; c.lineWidth = lw; c.setLineDash(dash); c.beginPath();
+      for (i=0;i<=30;i++){ var u = i/30, xx = cx0 + (cx1 - cx0)*u, yy = cb - (cb - ct)*(1 - Math.pow(2*u - 1, 2)); if (i) c.lineTo(xx, yy); else c.moveTo(xx, yy); }
+      c.stroke(); c.setLineDash([]);
+      if (p.nd >= 0) { var un = 0.08 + 0.84*p.nd, nx = cx0 + (cx1 - cx0)*un, ny = cb - (cb - ct)*(1 - Math.pow(2*un - 1, 2));
+        c.strokeStyle = DP.blue; c.lineWidth = H*0.008; c.beginPath(); c.moveTo(nx, cb); c.lineTo(nx, ny); c.stroke(); c.fillStyle = DP.blue; c.beginPath(); c.arc(nx, ny, H*0.02, 0, 2*Math.PI); c.fill(); }
+      c.restore(); }
+    if (p.fk > 0) { c.save(); c.globalAlpha = p.fk;
+      dpA(c, W*0.45, H*0.55, W*0.53, H*0.8, lw, wc(1), dash);
+      dpG(c, 'person', W*0.585, H*0.755, H*0.05, wc(1)); c.strokeStyle = wc(1); c.lineWidth = lw; c.beginPath(); c.moveTo(W*0.54, H*0.84); c.lineTo(W*0.63, H*0.84); c.stroke();
+      c.fillStyle = DP.amber; c.fillRect(W*0.645, H*0.7, H*0.06, H*0.06); dpG(c, 'check', W*0.705, H*0.73, H*0.035, DP.ok, { lw:0.3 });
+      dpA(c, W*0.74, H*0.8, W*0.785, H*0.63, lw, wc(1), dash, H*0.03);
+      c.restore(); }
+  },
+  // a what-if customer's phone (desaturated): the same generic product glyph on both
+  mphone: function(c, W, H){ c.fillStyle = '#e4e2dd'; c.fillRect(0, 0, W, H); c.fillStyle = '#9aa1a8'; c.fillRect(0, 0, W, H*0.1); dpG(c, 'box', W*0.5, H*0.5, W*0.3, '#5d6a75'); },
+  // the what-if agent's screen: the product tag, an upward arrow, an empty grey reason slot; a dashed red outline forms around the slot
+  agent: function(c, W, H, p){
+    c.fillStyle = '#2b3238'; c.fillRect(0, 0, W, H); c.fillStyle = '#5b646c'; c.fillRect(0, 0, W, H*0.14);
+    dpG(c, 'tag', W*0.2, H*0.56, H*0.14, '#d9dcdf', { fill:true, hole:'#2b3238' }); dpG(c, 'up', W*0.38, H*0.56, H*0.15, '#d9dcdf', { lw:0.2 });
+    if (p.slot > 0) { c.save(); c.globalAlpha = p.slot; c.strokeStyle = DP.grey; c.lineWidth = H*0.025; c.setLineDash([H*0.05, H*0.035]); dpRR(c, W*0.52, H*0.36, W*0.4, H*0.4, H*0.04); c.stroke(); c.restore(); }
+    if (p.red > 0) { c.save(); c.globalAlpha = p.red; c.strokeStyle = DP.red; c.lineWidth = H*0.035; c.setLineDash([H*0.07, H*0.05]); dpRR(c, W*0.47, H*0.27, W*0.5, H*0.58, H*0.08); c.stroke(); c.restore(); }
+  },
+  // the shared-tool what-if backboard: our price line (left) and the rival's (right) rise together, step for step; the blue demand
+  // line along the bottom dips; a dashed red outline wraps both price lines
+  market: function(c, W, H, p){
+    c.fillStyle = '#d5d8db'; c.fillRect(0, 0, W, H);
+    // the price lines sit in the upper part of the board, clear of the shared tool (centre) and of the sellers' heads
+    var st = [[0,0.15],[0.2,0.15],[0.2,0.32],[0.4,0.32],[0.4,0.48],[0.6,0.48],[0.6,0.62],[0.8,0.62],[0.8,0.78],[1,0.78]], halves = [[0.07, DP.slate], [0.57, '#6f747a']], i, h;
+    for (h=0;h<2;h++){ var x0 = W*halves[h][0], w = W*0.36, y1 = H*0.45, hh = H*0.36;
+      c.strokeStyle = 'rgba(60,70,80,.25)'; c.lineWidth = 2; c.beginPath(); c.moveTo(x0, y1); c.lineTo(x0 + w, y1); c.stroke();
+      c.strokeStyle = halves[h][1]; c.lineWidth = H*0.035; c.lineJoin = 'round'; c.beginPath();
+      for (i=0;i<st.length;i++){ if (st[i][0] > p.p) { c.lineTo(x0 + w*p.p, y1 - hh*st[i-1][1]); break; } if (i) c.lineTo(x0 + w*st[i][0], y1 - hh*st[i][1]); else c.moveTo(x0, y1 - hh*st[0][1]); }
+      c.stroke(); }
+    c.strokeStyle = DP.blue; c.lineWidth = H*0.03; c.beginPath();
+    for (i=0;i<=30;i++){ var u = i/30; if (u > p.p + 1e-9) break; var v = 0.75 - 0.55*u + 0.06*Math.sin(u*14), xx = W*(0.05 + 0.9*u), yy = H*(0.95 - 0.22*v); if (i) c.lineTo(xx, yy); else c.moveTo(xx, yy); }
+    c.stroke();
+    if (p.red > 0) { c.save(); c.globalAlpha = p.red; c.strokeStyle = DP.red; c.lineWidth = H*0.025; c.setLineDash([H*0.06, H*0.04]); dpRR(c, W*0.035, H*0.06, W*0.93, H*0.45, H*0.05); c.stroke(); c.restore(); }
+  },
+  // the intake form: three empty dashed slots (products, data, who sets prices); seven signal boxes, only the last ticked (amber,
+  // classification uncertain); the tier badge in amber with the person glyph (held for a human decision)
+  intake: function(c, W, H){
+    c.fillStyle = DP.dark; c.fillRect(0, 0, W, H); c.fillStyle = '#2c3a46'; c.fillRect(0, 0, W, H*0.11);
+    var gl = ['box','socket','fork'], i;
+    for (i=0;i<3;i++){ var x = W*(0.04 + i*0.32); c.save(); c.strokeStyle = 'rgba(235,240,245,.55)'; c.lineWidth = H*0.012; c.setLineDash([H*0.03, H*0.02]); dpRR(c, x, H*0.16, W*0.28, H*0.17, H*0.02); c.stroke(); c.restore();
+      dpG(c, gl[i], x + W*0.06, H*0.245, H*0.05, 'rgba(235,240,245,.45)'); }
+    for (i=0;i<7;i++){ var y = H*(0.41 + i*0.077), last = i === 6;
+      if (last) { c.fillStyle = DP.amber; dpRR(c, W*0.05, y, H*0.055, H*0.055, H*0.01); c.fill(); dpG(c, 'check', W*0.05 + H*0.0275, y + H*0.0275, H*0.024, '#ffffff', { lw:0.35 }); }
+      else { c.strokeStyle = DP.grey; c.lineWidth = H*0.008; dpRR(c, W*0.05, y, H*0.055, H*0.055, H*0.01); c.stroke(); }
+      c.fillStyle = last ? 'rgba(233,162,59,.6)' : 'rgba(235,240,245,.22)'; dpRR(c, W*0.05 + H*0.09, y + H*0.015, W*(0.25 + 0.2*((i*37 + 11) % 13)/13), H*0.025, H*0.012); c.fill(); }
+    c.fillStyle = DP.amber; c.beginPath(); c.arc(W*0.8, H*0.66, H*0.14, 0, 2*Math.PI); c.fill(); dpG(c, 'person', W*0.8, H*0.66, H*0.085, '#ffffff');
+  },
+  // the second monitor, split: left the screen's question list (the three what-ifs settle as pending rows: empty owner circle, empty
+  // result square, grey clock); right the risk register, empty but for its grey empty-state line. Nothing passes into the register.
+  split: function(c, W, H, p){
+    c.fillStyle = DP.dark; c.fillRect(0, 0, W, H);
+    c.fillStyle = '#2c3a46'; c.fillRect(W*0.03, H*0.06, W*0.58, H*0.1); c.fillStyle = 'rgba(235,240,245,.05)'; c.fillRect(W*0.03, H*0.16, W*0.58, H*0.8);
+    for (var k=0;k<3;k++){ var q = Math.max(0, Math.min(1, p.n - k)); if (q <= 0) continue; var s = 0.45 + 0.55*q, y = H*(0.3 + k*0.23) - (1 - q)*H*0.12, x = W*0.05 - (1 - q)*W*0.04;
+      c.save(); c.globalAlpha = q; c.translate(x, y); c.scale(s, s);
+      c.fillStyle = 'rgba(235,240,245,.1)'; dpRR(c, 0, -H*0.085, W*0.54, H*0.17, H*0.03); c.fill();
+      if (k === 0) { dpG(c, 'tag', W*0.05, H*0.015, H*0.035, '#d9dcdf', { fill:true, hole:DP.dark }); dpG(c, 'tag', W*0.105, -H*0.01, H*0.05, '#d9dcdf', { fill:true, hole:DP.dark }); }
+      else if (k === 1) dpG(c, 'slot', W*0.075, 0, H*0.045, '#d9dcdf');
+      else dpG(c, 'lines', W*0.075, 0, H*0.055, '#d9dcdf');
+      c.strokeStyle = DP.grey; c.lineWidth = H*0.012; c.beginPath(); c.arc(W*0.23, 0, H*0.042, 0, 2*Math.PI); c.stroke();
+      dpRR(c, W*0.31, -H*0.042, H*0.084, H*0.084, H*0.012); c.stroke();
+      dpG(c, 'clock', W*0.45, 0, H*0.05, DP.grey);
+      c.restore(); }
+    c.fillStyle = '#3a434b'; c.fillRect(W*0.64, H*0.06, W*0.33, H*0.1); c.fillStyle = 'rgba(235,240,245,.05)'; c.fillRect(W*0.64, H*0.16, W*0.33, H*0.8);
+    c.fillStyle = 'rgba(138,143,152,.75)'; dpRR(c, W*0.69, H*0.54, W*0.23, H*0.035, H*0.017); c.fill();
+  },
+  // the planned pricing owner's monitor: a dashed blue price tile arrives and waits under an amber hold square; a green tick lands;
+  // then the tile leaves for the price tag
+  pown: function(c, W, H, p){
+    c.fillStyle = DP.dark; c.fillRect(0, 0, W, H); c.fillStyle = '#2c3a46'; c.fillRect(0, 0, W, H*0.13);
+    if (!p.gone && p.a > 0) { var x = W*0.35 - (1 - p.a)*W*0.45, y = H*0.42;
+      c.save(); c.globalAlpha = Math.min(1, p.a*1.5); c.strokeStyle = DP.blue; c.lineWidth = H*0.02; c.setLineDash([H*0.04, H*0.03]); dpRR(c, x, y, W*0.3, H*0.36, H*0.04); c.stroke(); c.setLineDash([]);
+      dpG(c, 'tag', x + W*0.15, y + H*0.18, H*0.08, DP.blue); c.restore();
+      if (p.tick < 1) { c.fillStyle = DP.amber; dpRR(c, x + W*0.15 - H*0.065, y - H*0.17, H*0.13, H*0.13, H*0.02); c.fill(); } }
+    if (p.tick > 0 && !p.gone) { var tx = W*0.5, ty = H*0.315 - (1 - p.tick)*H*0.2; c.fillStyle = DP.ok; c.beginPath(); c.arc(tx, ty, H*0.08, 0, 2*Math.PI); c.fill(); dpG(c, 'check', tx, ty, H*0.055, '#ffffff', { lw:0.3 }); }
+  },
+  // the canvas printout the owner slides across the intake desk: seven dashed boxes
+  paper: function(c, W, H){ c.fillStyle = DP.paper; c.fillRect(0, 0, W, H); c.strokeStyle = '#7d8790'; c.lineWidth = 2; c.setLineDash([5, 4]);
+    for (var i=0;i<7;i++) c.strokeRect(W*(0.1 + (i % 2)*0.42), H*(0.07 + Math.floor(i/2)*0.225), W*0.38, H*0.18); }
+};
+
+var CONFIG = {
+  title: 'Dynamic Pricing',
+  initiative: 'Dynamic Pricing · a proposal, nothing built',          // top-right label on every scene
+  fallbackTitle: 'Dynamic Pricing, as it is proposed.',
+  beatLabels: ['The situation', 'The AI at work', 'What can go wrong', 'How it is kept safe'],
+  accent:      { 0:'#e8e6e1', 1:'#2a9d8f', 2:'#4a86d8', 3:'#d84a3a', 4:'#3fa34d' },   // template defaults (script, Part 1)
+  accentLight: { 0:'#f3efe6', 1:'#7fe3d4', 2:'#a9c8ff', 3:'#ff9d90', 4:'#9be8a4' },
+  minClearance: 0.8,                                   // script, Part 1 conventions: >= 0.8 m from every collider and every figure
+  env: { bg:0xdfe5e8, fogNear:14, fogFar:45, shadowHalf:9, sunDir:[-0.45, 0.85, 0.55], center:[0, 0, -1] },
+  // camera keys use the level aim (10th element): [lt, camera xyz, subject xyz, screen offset nx, ny, level]
+  beats: [
+    { beat:0, name:'Open card — Dynamic Pricing', nav:'Introduction', start:0, dur:4, setting:'Dynamic Pricing',
+      head:'Dynamic Pricing is a plan. Nothing is built yet.',
+      cam:[[0, 38.9,1.5,0.6, 40.6,1.6,-3.42, 0,0.4,1], [4, 39.1,1.5,-0.25, 40.6,1.6,-3.42, 0,0.4,1]] },
+    { beat:1, name:'The situation — The commercial office, Monday morning', nav:'Prices lag demand', start:4, dur:5, setting:'The commercial office, Monday morning', source:'AI Canvas: Business Problem',
+      head:'Staff review prices by hand, too rarely to follow demand.', sup:'Demand moves between reviews, but the price waits.',
+      cam:[[0, 0.25,1.4,0.95, 0.9,1.65,-2.92, 0.22,0.2,1], [5, 0.1,1.35,0.75, 0.9,1.65,-2.92, 0.22,0.2,1]] },
+    { beat:1, name:'The situation — The commercial meeting room', nav:'The proposal', start:9, dur:5, setting:'The commercial meeting room', source:'AI Canvas: Business Value; initiative summary',
+      head:'The team wants prices that follow demand, to earn more margin.', sup:'Its value is not worked out yet.',
+      cam:[[0, 42.4,1.4,2.55, 40.6,1.6,-3.42, 0.2,0.18,1], [5, 41.95,1.4,2.75, 40.6,1.6,-3.42, 0.2,0.18,1]] },
+    { beat:2, name:'The AI at work — The whiteboard, as planned', nav:'The planned model', start:14, dur:6, setting:'The whiteboard, as planned', source:'AI Canvas: Objective Function, Data Strategy',
+      head:'As planned, a model would predict the margin at each price.', sup:'Which demand data it would use is still open.',
+      cam:[[0, 38.7,1.4,0.7, 40.2,1.5,-3.42, 0.2,0.15,1], [1.8, 38.0,1.4,0.15, 36.08,1.45,-1.2, 0.2,0.15,1], [6, 37.9,1.4,-0.3, 36.08,1.45,-1.2, 0.2,0.15,1]] },
+    { beat:2, name:'The AI at work — The whiteboard, as planned', nav:'Set or suggest?', start:20, dur:5, setting:'The whiteboard, as planned', source:'AI Canvas: Modeling Approach',
+      head:'Would it set prices itself, or suggest them to a person?', sup:'That is the first design question.',
+      cam:[[0, 37.9,1.4,-0.3, 36.08,1.45,-1.2, 0.2,0.15,1], [5, 37.55,1.38,-0.8, 36.15,1.35,-1.38, 0.22,0.18,1]] },
+    { beat:3, name:'What can go wrong — What-if: two customers, one product', nav:'Who pays more?', start:25, dur:5, setting:'What-if: two customers, one product', source:'AI Canvas: Customer Value, Data Strategy',
+      head:'Could two customers be charged more or less for who they are?', sup:'Data that points to who they are could do that.', note:'Staged what-ifs. None of this has happened.',
+      cam:[[0, 42.85,1.5,0.85, 41.2,0.92,0.55, 0.2,0.2,1], [5, 42.65,1.5,0.72, 41.2,0.92,0.55, 0.2,0.2,1]] },
+    { beat:3, name:'What can go wrong — What-if: a customer calls about a price', nav:'Why did it go up?', start:30, dur:5, setting:'What-if: a customer calls about a price', source:'AI Canvas: Customer Value',
+      head:'Could staff tell a buyer why a price went up?', sup:'A price must stay easy to explain.',
+      cam:[[0, 42.7,1.4,0.1, 41.2,0.92,-0.2, 0.22,0.18,1], [5, 42.7,1.4,-0.35, 41.2,0.92,-0.2, 0.22,0.18,1]] },
+    { beat:3, name:'What can go wrong — What-if: a pricing tool shared with rivals', nav:'Moving with rivals', start:35, dur:5, setting:'What-if: a pricing tool shared with rivals', source:'AI Canvas: Data Strategy; sourcing record',
+      head:'Could a pricing tool rivals also use pull our prices into line?', sup:'Buyers could then find no cheaper choice.',
+      cam:[[0, 42.8,1.2,-0.9, 41.2,0.95,-0.95, 0.2,0.2,1], [5, 42.8,1.6,-1.0, 41.2,0.95,-0.95, 0.2,0.2,1]] },
+    { beat:4, name:'How it is kept safe — The intake review', nav:'Intake', start:40, dur:5, setting:'The intake review', source:'Initiative record: tier Needs review; intake classifier signals',
+      head:'Intake must name the products, the data and who sets prices.', sup:'A person, not the form, decides which rules apply.',
+      cam:[[0, 78.7,1.4,0.75, 79.5,1.13,-1.85, 0.24,0.18,1], [5, 78.8,1.36,0.5, 79.5,1.13,-1.85, 0.24,0.18,1]] },
+    { beat:4, name:'How it is kept safe — The intake review', nav:'First risk screen', start:45, dur:5, setting:'The intake review', source:'Initiative summary: awaiting a first risk screen',
+      head:'Then a risk screen tests each question and logs its findings.', sup:'No screen has run yet.',
+      cam:[[0, 81.1,1.45,-0.15, 79.5,1.13,-1.85, 0.22,0.18,1], [1.6, 81.2,1.42,-0.25, 80.5,1.13,-1.85, 0.22,0.18,1], [5, 81.25,1.4,-0.3, 80.5,1.13,-1.85, 0.22,0.18,1]] },
+    { beat:4, name:'How it is kept safe — The pricing desk, as planned', nav:'A person approves', start:50, dur:5, setting:'The pricing desk, as planned', source:'AI Canvas: Model Training; wave three objective',
+      head:'As planned, a pricing owner approves each new price.', sup:'The gate decides if that holds before the model learns.',
+      cam:[[0, 120.15,1.5,1.15, 120.35,1.0,-1.8, 0.2,0.18,1], [5, 120.05,1.45,0.55, 120.35,1.0,-1.8, 0.2,0.18,1]] },
+    { beat:0, name:'Close card — What comes next', nav:'Close', start:55, dur:4, setting:'What comes next',
+      head:'Next come intake and a first risk screen.', sup:'Then the gate decides if the work goes on.',
+      cam:[[0, 0.9,1.4,-1.32, 0.9,1.65,-2.92, 0,0.4,1], [4, 0.9,1.45,-0.12, 0.9,1.65,-2.92, 0,0.4,1]] }
+  ],
+
+  // ---- the world: four sets far apart; only the current set's group is visible
+  //   P1 the commercial office (x 0) · P2 the commercial meeting room with the wall canvas, the glass board and the what-if dioramas
+  //   on its table (x 40) · P4 the governance office, intake review (x 80) · P5 the pricing desk as planned (x 120)
+  build: function(THREE, scene, k){
+    var P = k.PAL, PI = Math.PI, o = { sets:{}, cs:[], st:{} }, cur = null;
+    function set(name){ cur = k.grp(0, 0, 0); cur.visible = false; o.sets[name] = cur; return cur; }
+    function A(x){ var g = x && x.isObject3D ? x : (x.group || x.g); cur.add(g); return x; }
+    // film-local glyph screens: a canvas texture repainted only when its parameters change (painters above; glyphs only, never words)
+    function cscreen(w, h, res, painter, p0){
+      var cw = res, ch = Math.max(16, Math.round(res*h/w)), cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+      var tx = new THREE.CanvasTexture(cv); tx.minFilter = THREE.LinearFilter; tx.generateMipmaps = false;
+      var m = new THREE.Mesh(k.UG.plane, new THREE.MeshBasicMaterial({ map:tx })); m.scale.set(w, h, 1);
+      var s = { mesh:m, c:cv.getContext('2d'), W:cw, H:ch, tx:tx, p0:p0 || {}, want:null, key:'', paint:painter, show:function(p){ s.want = p; } };
+      s.want = s.p0; o.cs.push(s); return s; }
+    function rkey(p){ return JSON.stringify(p, function(kk, v){ return typeof v === 'number' ? Math.round(v*100)/100 : v; }); }
+    o.reset = function(){ for (var i=0;i<o.cs.length;i++) o.cs[i].want = o.cs[i].p0; };
+    o.flush = function(){ for (var i=0;i<o.cs.length;i++){ var s = o.cs[i], kk = rkey(s.want); if (kk !== s.key) { s.paint(s.c, s.W, s.H, JSON.parse(kk)); s.tx.needsUpdate = true; s.key = kk; } } };
+    function mon(x, z, ry, w, h, res, painter, p0){ var g = k.grp(x, 0.75, z, cur); g.rotation.y = ry || 0;
+      k.box(P.dark, 0.22, 0.02, 0.16, 0, 0.01, 0, g); k.box(P.dark, 0.04, 0.16, 0.03, 0, 0.09, -0.02, g); k.box(P.dark, w + 0.03, h + 0.03, 0.03, 0, 0.17 + h/2, 0, g);
+      var s = cscreen(w, h, res, painter, p0); s.mesh.position.set(0, 0.17 + h/2, 0.017); g.add(s.mesh); s.group = g; return s; }
+    function wall(x, y, z, w, h, res, painter, p0, ry){ var g = k.grp(x, y, z, cur); g.rotation.y = ry || 0; k.box(P.dark, w + 0.08, h + 0.08, 0.05, 0, 0, 0, g);
+      var s = cscreen(w, h, res, painter, p0); s.mesh.position.set(0, 0, 0.028); g.add(s.mesh); s.group = g; return s; }
+    // dashed lines from thin boxes: the film's "planned, not built" line, the what-if frames and the dashed red outlines
+    var BM = {}, ZV = new THREE.Vector3(0, 0, 1), DV = new THREE.Vector3();
+    function bmat(col){ if (!BM[col]) BM[col] = new THREE.MeshBasicMaterial({ color:col }); return BM[col]; }
+    function seg(a, b, th, m, parent){ var dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], L = Math.hypot(dx, dy, dz); if (L < 1e-5) return null;
+      var me = new THREE.Mesh(k.UG.box, m); me.scale.set(th, th, L); me.position.set((a[0] + b[0])/2, (a[1] + b[1])/2, (a[2] + b[2])/2);
+      me.quaternion.setFromUnitVectors(ZV, DV.set(dx/L, dy/L, dz/L)); parent.add(me); return me; }
+    function dashed(pts, q){ var g = k.grp(0, 0, 0, q.parent || cur), m = bmat(q.color), dash = q.dash || 0.05, gap = q.gap || 0.035, th = q.th || 0.008, on = true, left = dash;
+      function at(a, b, u){ return [a[0] + (b[0] - a[0])*u, a[1] + (b[1] - a[1])*u, a[2] + (b[2] - a[2])*u]; }
+      for (var i=0;i<pts.length-1;i++){ var a = pts[i], b = pts[i+1], L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), s = 0;
+        while (L - s > 1e-7) { var step = Math.min(left, L - s);   // each pass ends either the segment or the dash / gap, so it always moves on
+          if (on) seg(at(a, b, s/L), at(a, b, (s + step)/L), th, m, g);
+          s += step; left -= step; if (left <= 1e-7) { on = !on; left = on ? dash : gap; } } }
+      return g; }
+    function dashRect(w, h, q){ return dashed([[-w/2,-h/2,0],[w/2,-h/2,0],[w/2,h/2,0],[-w/2,h/2,0],[-w/2,-h/2,0]], q); }
+    function dashCube(w, h, d, q){ var g = k.grp(0, 0, 0, q.parent || cur), x = w/2, z = d/2, q2 = {}, key;
+      for (key in q) q2[key] = q[key]; q2.parent = g;
+      [[[-x,0,-z],[x,0,-z]], [[-x,0,z],[x,0,z]], [[-x,0,-z],[-x,0,z]], [[x,0,-z],[x,0,z]], [[-x,h,-z],[x,h,-z]], [[-x,h,z],[x,h,z]],
+       [[-x,h,-z],[-x,h,z]], [[x,h,-z],[x,h,z]], [[-x,0,-z],[-x,h,-z]], [[x,0,-z],[x,h,-z]], [[-x,0,z],[-x,h,z]], [[x,0,z],[x,h,z]]].forEach(function(e){ dashed(e, q2); });
+      return g; }
+    // the open-question token: an amber ring around a question-mark shape (half-torus hook, stem, sphere); a prop, not a character
+    var QM = new THREE.MeshLambertMaterial({ color:0xe9a23b, emissive:0xe9a23b, emissiveIntensity:0.55 });
+    var QG = { ring:new THREE.TorusGeometry(0.42, 0.05, 8, 40), hook:new THREE.TorusGeometry(0.16, 0.05, 8, 24, PI*1.5) };
+    function qtok(s, x, y, z, ry){ var g = k.grp(x, y, z, cur); g.rotation.y = ry || 0; var inner = k.grp(0, 0, 0, g);
+      inner.add(new THREE.Mesh(QG.ring, QM)); var hk = new THREE.Mesh(QG.hook, QM); hk.position.y = 0.1; hk.rotation.z = -PI/2; inner.add(hk);
+      var stem = new THREE.Mesh(k.UG.cyl, QM); stem.scale.set(0.1, 0.1, 0.1); stem.position.y = -0.11; inner.add(stem);
+      var dot = new THREE.Mesh(k.UG.sph, QM); dot.scale.setScalar(0.11); dot.position.y = -0.25; inner.add(dot);
+      g.scale.setScalar(s); g.userData.inner = inner; return g; }
+    // a small faceless figure for the what-if dioramas (a table-top prop, so it is not one of the template's people)
+    function mini(q){ var g = k.grp(q.x || 0, 0, q.z || 0, q.parent), sh = q.shirt, lg = q.legs || 0x6f747a, sk = q.skin || 0xc9bfb5;
+      k.box(lg, 0.034, 0.15, 0.04, -0.022, 0.075, 0, g); k.box(lg, 0.034, 0.15, 0.04, 0.022, 0.075, 0, g);
+      k.box(sh, 0.1, 0.13, 0.06, 0, 0.215, 0, g);
+      var head = k.grp(0, 0.307, 0, g); k.sph(sk, 0.036, 0, 0, 0, head); if (q.hair != null) k.mesh(k.UG.sph, q.hair, 0.077, 0.046, 0.077, 0, 0.017, -0.004, {}, head);
+      if (q.headset) { k.box(0x30363c, 0.082, 0.008, 0.012, 0, 0.037, 0, head); k.sph(0x30363c, 0.012, -0.037, 0, 0, head); k.sph(0x30363c, 0.012, 0.037, 0, 0, head); }
+      function arm(side){ var s = k.grp(side*0.062, 0.27, 0, g); k.cyl(sh, 0.012, 0.12, 0, -0.06, 0, s); k.sph(sk, 0.013, 0, -0.123, 0, s); return { s:s, hand:k.grp(0, -0.125, 0, s) }; }
+      var L = arm(1), R = arm(-1); g.rotation.y = q.ry || 0;
+      return { g:g, head:head, la:L.s, ra:R.s, handL:L.hand, handR:R.hand }; }
+    // a what-if phone held up (counter-rotated so its screen faces the figure's front)
+    function mphone(hand, tilt){ var g = k.grp(0, -0.01, 0.012, hand); g.rotation.x = tilt || 0; k.box(P.dark, 0.046, 0.082, 0.006, 0, 0, 0, g);
+      var s = cscreen(0.04, 0.072, 64, DPP.mphone, {}); s.mesh.position.set(0, 0, 0.0035); g.add(s.mesh); s.group = g; return s; }
+    // a price tag plate standing on its base; scale.y grows it from the base
+    function tagPlate(col, parent, x, y, z){ var g = k.grp(x, y, z, parent); k.box(col, 0.05, 0.05, 0.006, 0, 0.025, 0, g); k.sph(0x30363c, 0.005, 0, 0.042, 0.004, g); return g; }
+    // a what-if diorama on the meeting table: a pale base and backboard in a dashed white frame; local +z faces the camera side (+x)
+    function diorama(x, z){ var g = k.grp(x, 0.77, z, cur); g.rotation.y = PI/2;
+      k.box(0xcfd2d4, 0.6, 0.012, 0.5, 0, 0.006, 0, g);
+      dashed([[-0.3,0.014,-0.25],[0.3,0.014,-0.25],[0.3,0.014,0.25],[-0.3,0.014,0.25],[-0.3,0.014,-0.25]], { color:0xf2f0ea, parent:g, th:0.006, dash:0.03, gap:0.02 });
+      var bb = k.grp(0, 0.185, -0.245, g), fr = dashRect(0.6, 0.34, { color:0xf2f0ea, parent:bb, th:0.006, dash:0.03, gap:0.02 }); fr.position.z = 0.006;
+      return { g:g, bb:bb }; }
+
+    o.ground = k.mesh(k.UG.plane, 0, 600, 200, 1, 60, -0.006, 0, { rx:-PI/2, noShadow:true, mat:new THREE.MeshLambertMaterial({ color:0x9a978f }) });
+
+    // ---------------- P1 the commercial office: a pricing analyst works through the price list; the wall screen shows demand and price
+    set('off');
+    A(k.room({ w:7, d:6, h:2.8, x:0, z:0, ground:false, floor:0xC9C2B4, wall:0xE6E2D9 }));
+    A(k.windowPane({ x:-1.9, y:1.6, z:-2.92, w:1.8, h:1.2 }));
+    o.offWall = wall(0.9, 1.65, -2.9, 2.0, 1.1, 512, DPP.office, { ph:0, close:0 });
+    A(k.desk({ x:-0.6, z:-1.3, w:1.4, d:0.7 }));
+    o.list = mon(-0.6, -1.5, 0, 0.62, 0.38, 320, DPP.list, { lit:0 });
+    A(k.chair({ x:-0.6, z:-0.55, ry:PI }));
+    o.analyst = A(k.person({ shirt:P.shirt.grey, trousers:P.trousers.navy, skin:P.skin[1], hair:P.hair[1] })); k.place(o.analyst, -0.6, -0.55, PI);
+    A(k.desk({ x:2.5, z:-1.6, w:1.3, d:0.7 })); A(k.monitor({ x:2.5, z:-1.8, deskH:0.75, spec:{ header:'#3a4856', rows:5, lit:3 } })); A(k.chair({ x:2.5, z:-0.85, ry:PI, color:0x4A5A68 }));
+    A(k.shelf({ x:-3.3, z:0.6, ry:PI/2, seed:5 })); A(k.plant({ x:3.0, z:-2.55 })); A(k.plant({ x:-3.0, z:-2.5, s:0.9 }));
+
+    // ---------------- P2 the commercial meeting room: the AI Canvas on the back wall, the glass board on the left wall, the table
+    set('meet');
+    A(k.room({ w:8, d:7, h:2.8, x:40, z:0, ground:false, floor:0xB9B2A4, wall:0xE4E1DA }));
+    o.canvas = wall(40.6, 1.6, -3.4, 2.8, 1.4, 640, DPP.canvas, { on:7, hi:-1 });
+    o.board = wall(36.1, 1.45, -1.2, 2.2, 1.1, 640, DPP.board, { d:0, cv:0, nd:-1, fk:0 }, PI/2);
+    A(k.desk({ x:41.2, z:-0.2, w:2.6, d:1.1, ry:PI/2, color:0xB08A62 }));
+    A(k.chair({ x:40.2, z:-0.9, ry:PI/2 })); A(k.chair({ x:40.2, z:0.4, ry:PI/2 }));
+    A(k.plant({ x:43.4, z:-3.0 })); A(k.plant({ x:36.6, z:2.9, s:0.9 }));
+    // the five panels that carry an open-question token (Business Problem, Objective Function, Modeling Approach, Customer Value, Data Strategy)
+    o.ctok = [0, 2, 3, 5, 6].map(function(i){ var q = DP_CELLS[i]; return { i:i, g:qtok(0.17, 40.6 + (q[0] + q[2] - 0.5)*2.8 - 0.09, 1.6 + (0.5 - q[1])*1.4 - 0.09, -3.28) }; });
+    o.stok = qtok(0.13, 36.24, 1.66, -0.33, PI/2);          // on the first empty socket of the planned flow
+    o.ftok = qtok(0.22, 36.3, 1.38, -1.09, PI/2);           // at the set-or-suggest fork (2.2)
+    o.ftok.visible = false;
+    // shot 1.2: a commercial lead presents at the wall canvas; the sponsor and the owner sit at the table
+    o.lead = A(k.person({ shirt:P.shirt.visitor, trousers:P.trousers.dark, skin:P.skin[3], hair:P.hair[0] })); k.place(o.lead, 39.55, -2.75, 2.3);
+    o.spon = A(k.person({ shirt:0x5B6670, trousers:P.trousers.dark, skin:P.skin[0], hair:P.hair[4] })); k.place(o.spon, 40.2, -0.9, PI/2);
+    o.own1 = A(k.person({ shirt:P.shirt.staff2, trousers:P.trousers.navy, skin:P.skin[4], hair:P.hair[5], longHair:true })); k.place(o.own1, 40.2, 0.4, PI/2);
+    o.lead.visible = o.spon.visible = o.own1.visible = false;
+
+    // ---------------- P3 the what-if dioramas on the P2 table, desaturated, each in a dashed frame
+    // 3.1 two customers, one product: the same product on both phones; a dashed blue thread links the second phone to a small model box
+    var d1 = diorama(41.2, 0.55); o.d1 = d1.g; k.box(0xdcdedf, 0.6, 0.34, 0.006, 0, 0, -0.004, d1.bb);
+    o.c1 = mini({ x:-0.12, z:0.05, shirt:0x9aa0a6, hair:0x5a5550, parent:d1.g });
+    o.c2 = mini({ x:0.1, z:0.05, shirt:0xa8a39c, hair:0x4a4540, parent:d1.g });
+    [o.c1, o.c2].forEach(function(m){ m.ra.rotation.x = -1.1; m.head.rotation.x = 0.35; m.ph = mphone(m.handR, 1.1); m.tag = tagPlate(0xe8e6e1, m.ph.group, 0, 0.05, 0); });
+    o.red31 = dashRect(0.078, 0.112, { color:0xd84a3a, parent:o.c2.ph.group, th:0.0045, dash:0.014, gap:0.009 }); o.red31.position.set(0, 0.092, 0.006); o.red31.visible = false;
+    // the model box stands beside her (not behind her), so the shot's camera sees where the thread goes
+    var mb = dashCube(0.06, 0.06, 0.06, { color:0x4a86d8, parent:d1.g, th:0.004, dash:0.012, gap:0.008 }); mb.position.set(0.235, 0.1, 0.05);
+    dashed([[0.05,0.215,0.18],[0.12,0.26,0.14],[0.2,0.24,0.1],[0.235,0.165,0.08]], { color:0x4a86d8, parent:d1.g, th:0.003, dash:0.012, gap:0.008 });
+    var pin = k.grp(0.15, 0.27, 0.12, d1.g); k.mesh(k.UG.cone, 0x4a86d8, 0.018, 0.026, 0.018, 0, -0.013, 0, { rx:PI }, pin); k.sph(0x4a86d8, 0.011, 0, 0.004, 0, pin);
+    k.box(0x3d5f8f, 0.016, 0.026, 0.004, 0.205, 0.235, 0.1, d1.g);
+    // 3.2 a customer calls about a price: at home with her phone to her ear; a staff member in a headset at a screen; a partition between
+    var d2 = diorama(41.2, -0.2); o.d2 = d2.g; k.box(0xdcdedf, 0.6, 0.34, 0.006, 0, 0, -0.004, d2.bb);
+    k.box(0xbfc3c6, 0.008, 0.16, 0.34, -0.005, 0.08, -0.06, d2.g);
+    k.cyl(0x8a8f98, 0.005, 0.22, -0.26, 0.11, -0.15, d2.g); k.mesh(k.UG.cone, 0xd9d4c8, 0.07, 0.05, 0.07, -0.26, 0.24, -0.15, {}, d2.g);
+    k.box(0xa59c93, 0.12, 0.06, 0.09, -0.2, 0.03, -0.14, d2.g);
+    o.cust = mini({ x:-0.15, z:0.03, shirt:0xa8a39c, hair:0x4a4540, parent:d2.g, ry:0.35 });
+    // the phone sits against the side of her head and a short raised arm holds it there (the table-top figures have no elbow)
+    o.cust.ra.rotation.set(-2.16, 0, 0); o.cust.ra.scale.y = 0.43;
+    o.cphone = mphone(o.cust.head, 0); o.cphone.group.position.set(-0.043, -0.008, 0.012); o.cphone.group.rotation.set(0, -PI/2, 0); o.cphone.group.scale.setScalar(0.8);
+    k.box(0x8e959c, 0.22, 0.01, 0.12, 0.14, 0.08, -0.12, d2.g); k.box(0x6f747a, 0.01, 0.075, 0.1, 0.04, 0.0375, -0.12, d2.g); k.box(0x6f747a, 0.01, 0.075, 0.1, 0.24, 0.0375, -0.12, d2.g);
+    var ag = k.grp(0.13, 0.085, -0.15, d2.g); ag.rotation.y = -0.25; k.box(0x30363c, 0.012, 0.04, 0.012, 0, 0.02, 0, ag); k.box(0x30363c, 0.275, 0.185, 0.01, 0, 0.135, 0, ag);
+    o.agentScr = cscreen(0.26, 0.17, 256, DPP.agent, { slot:0, red:0 }); o.agentScr.mesh.position.set(0, 0.135, 0.006); ag.add(o.agentScr.mesh);
+    o.staff = mini({ x:0.27, z:0.02, shirt:0x9aa0a6, hair:0x5a5550, headset:true, parent:d2.g, ry:PI + 0.5 });
+    // 3.3 a pricing tool shared with rivals: our seller (the product with our tag) and a faceless grey seller either side of one grey
+    // shared tool; threads in and out; the price lines and the demand line on the backboard; a buyer, empty-handed, in front
+    var d3 = diorama(41.2, -0.95); o.d3 = d3.g;
+    o.market = cscreen(0.6, 0.34, 384, DPP.market, { p:0, red:0 }); o.market.mesh.position.z = -0.002; d3.bb.add(o.market.mesh);
+    var ours = k.grp(-0.18, 0, -0.03, d3.g); k.box(0xc9c3b8, 0.07, 0.07, 0.07, 0, 0.035, 0, ours); k.box(0xb3ab9e, 0.072, 0.008, 0.072, 0, 0.066, 0, ours); tagPlate(0x4f5b66, ours, 0.055, 0, 0.03);
+    // the rival stands at the right edge, a little smaller, so his price line on the backboard stays in view above his head
+    o.rival = mini({ x:0.25, z:-0.03, shirt:0x8a8f98, legs:0x7a7f86, skin:0x9a9fa5, parent:d3.g }); o.rival.g.scale.setScalar(0.85);
+    tagPlate(0x8a8f98, d3.g, 0.165, 0, 0.04);
+    k.cyl(0x7a7f86, 0.006, 0.16, 0, 0.08, -0.15, d3.g); k.box(0x8a8f98, 0.12, 0.08, 0.08, 0, 0.2, -0.15, d3.g); k.box(0xa3a8ae, 0.08, 0.035, 0.002, 0, 0.205, -0.109, d3.g);
+    o.thr = [[[-0.14,0.08,-0.02],[-0.12,0.24,-0.08],[-0.06,0.2,-0.13]], [[0.2,0.17,-0.02],[0.15,0.28,-0.08],[0.06,0.2,-0.13]]];
+    o.thr.forEach(function(T){ var pts = []; for (var j=0;j<=10;j++){ var u = j/10, a = (1-u)*(1-u), b = 2*u*(1-u), c2 = u*u; pts.push([a*T[0][0] + b*T[1][0] + c2*T[2][0], a*T[0][1] + b*T[1][1] + c2*T[2][1], a*T[0][2] + b*T[1][2] + c2*T[2][2]]); }
+      dashed(pts, { color:0x8a8f98, parent:d3.g, th:0.003, dash:0.012, gap:0.008 }); });
+    o.pk = [k.sph(0x4f5b66, 0.009, 0, 0, 0, d3.g), k.sph(0x6f747a, 0.009, 0, 0, 0, d3.g), k.sph(0x4f5b66, 0.009, 0, 0, 0, d3.g), k.sph(0x6f747a, 0.009, 0, 0, 0, d3.g)];
+    o.pk.forEach(function(s){ s.visible = false; });
+    o.buyer = mini({ x:0.0, z:0.19, shirt:0xa59c93, hair:0x4a4540, parent:d3.g, ry:PI }); o.buyer.g.scale.setScalar(0.62);
+    o.d1.visible = o.d2.visible = o.d3.visible = false;
+
+    // ---------------- P4 the governance office: intake review at one desk, the intake form and the split question list / register
+    set('gov');
+    A(k.room({ w:7, d:6, h:2.8, x:80, z:0, ground:false, floor:0xBDB6A8, wall:0xE2E4E0 }));
+    A(k.windowPane({ x:78.0, y:1.6, z:-2.92, w:1.6, h:1.2 }));
+    A(k.desk({ x:80, z:-1.6, w:2.0, d:0.9 }));
+    o.intake = mon(79.5, -1.85, 0.08, 0.7, 0.42, 320, DPP.intake, {});
+    o.split = mon(80.5, -1.85, -0.08, 0.7, 0.42, 320, DPP.split, { n:0 });
+    // the DPO sits at the desk's back-left corner, turned toward the owner and the manager, so all three are in the shots' frames
+    A(k.chair({ x:79.85, z:-0.75, ry:PI })); A(k.chair({ x:78.4, z:-1.6, ry:PI/2 })); A(k.chair({ x:78.85, z:-2.5, ry:0.55 }));
+    o.mgr = A(k.person({ shirt:P.shirt.staff, trousers:P.trousers.navy, skin:P.skin[2], hair:P.hair[0] })); k.place(o.mgr, 79.85, -0.75, PI);
+    o.own2 = A(k.person({ shirt:P.shirt.staff2, trousers:P.trousers.navy, skin:P.skin[4], hair:P.hair[5], longHair:true })); k.place(o.own2, 78.4, -1.6, PI/2);
+    o.dpo = A(k.person({ shirt:P.shirt.white, trousers:P.trousers.dark, skin:P.skin[1], hair:P.hair[2] })); k.place(o.dpo, 78.85, -2.5, 0.55);
+    o.paper = cscreen(0.21, 0.297, 128, DPP.paper, {}); o.paper.mesh.rotation.set(-PI/2, 0, 0.25); cur.add(o.paper.mesh); o.paper.mesh.position.set(79.0, 0.773, -1.4);
+    A(k.shelf({ x:82.4, z:-2.75, w:1.4, seed:9 })); A(k.plant({ x:77.2, z:-2.5 }));
+
+    // ---------------- P5 the pricing desk, as planned: a wireframe desk and figure, the model box, the price tag, the loop and the gate
+    set('plan');
+    A(k.room({ w:7, d:6, h:2.8, x:120, z:0, ground:false, floor:0xB7BEC6, wall:0xDCE2E7 }));
+    var wd = dashCube(1.4, 0.75, 0.7, { color:0xf2f0ea, th:0.012, dash:0.06, gap:0.04 }); wd.position.set(120.0, 0, -1.4); k.collBox(120.0, -1.4, 1.4, 0.7, 0.75, 0, 'desk');
+    o.pown = mon(120.0, -1.6, 0, 0.62, 0.38, 320, DPP.pown, { a:0, tick:0, gone:0 });
+    // the pricing owner, a planned role: an outline figure standing at the desk's left end
+    // (a faint pale body with its outline edges drawn, not a triangle wireframe, so it reads as a planned role rather than a glitch)
+    var GHOST = new THREE.MeshBasicMaterial({ color:0xdfe8ee, transparent:true, opacity:0.22, depthWrite:false }), EDGE = new THREE.LineBasicMaterial({ color:0xf4f8fa });
+    o.po = A(k.person({ shirt:0xdfe8ee, trousers:0xdfe8ee, skin:0xdfe8ee, hair:0xdfe8ee })); var poM = [];
+    o.po.traverse(function(m){ if (m.isMesh) poM.push(m); });
+    poM.forEach(function(m){ m.material = GHOST; m.castShadow = false; m.add(new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry, 35), EDGE)); });
+    k.place(o.po, 119.05, -1.55, PI/2 + 0.25);
+    // the model box (dashed blue, nothing built) on a stand, back left; the price tag on a stand, back right
+    k.box(0x8a939c, 0.3, 0.95, 0.3, 118.55, 0.475, -2.0, cur); k.coll(118.4, 0, -2.15, 118.7, 0.95, -1.85, 'stand');
+    var cube = dashCube(0.32, 0.32, 0.32, { color:0x4a86d8, th:0.01, dash:0.04, gap:0.03 }); cube.position.set(118.55, 0.97, -2.0);
+    k.box(0x8a939c, 0.26, 0.9, 0.26, 121.2, 0.45, -2.5, cur); k.coll(121.07, 0, -2.63, 121.33, 0.9, -2.37, 'stand');
+    var tg = k.grp(121.2, 0.9, -2.5, cur); tg.rotation.z = 0.12; k.box(0xf2f0ea, 0.3, 0.17, 0.02, 0, 0.12, 0, tg); k.cyl(0x30363c, 0.018, 0.022, -0.1, 0.12, 0.0, tg, { rx:PI/2 });
+    dashed([[118.72,1.14,-1.95],[119.66,1.12,-1.62]], { color:0xf2f0ea, th:0.012, dash:0.05, gap:0.035 });
+    dashed([[120.34,1.12,-1.62],[121.05,1.06,-2.45]], { color:0xf2f0ea, th:0.012, dash:0.05, gap:0.035 });
+    o.tile = k.box(0x4a86d8, 0.12, 0.08, 0.012, 120.0, 1.13, -1.56, cur); o.tile.visible = false;
+    // the loop: from the tag forward along the floor, across the front of the desk and back to the model box (dashed: planned);
+    // the closed gate with its amber lamp stands across it, between the tag and everything the model would learn from
+    dashed([[121.2,0.012,-2.35],[121.2,0.012,-0.6],[118.55,0.012,-0.6],[118.55,0.012,-1.72]], { color:0xf2f0ea, th:0.025, dash:0.1, gap:0.06 });
+    k.mesh(k.UG.cone, 0xf2f0ea, 0.1, 0.1, 0.012, 118.55, 0.014, -1.76, { rx:-PI/2, noShadow:true });
+    // a boom barrier: the housing post carries the lamp; the striped boom rests on a thin post at the far side
+    k.box(0x5d6a75, 0.12, 1.0, 0.12, 120.82, 0.5, -1.7, cur); k.cyl(0x5d6a75, 0.02, 0.79, 121.58, 0.395, -1.7, cur);
+    for (var b=0;b<6;b++) k.box(b % 2 ? 0x7d8790 : 0xf2f0ea, 0.127, 0.06, 0.05, 120.88 + b*0.127, 0.82, -1.7, cur);
+    // unlit amber (black base colour, amber emissive), so the lamp keeps the script's amber under the set's light instead of washing to yellow
+    o.lamp = k.sph(0, 0.055, 120.82, 1.06, -1.7, cur, { mat:new THREE.MeshLambertMaterial({ color:0x000000, emissive:0xe9a23b, emissiveIntensity:1 }) });
+    k.coll(120.75, 0, -1.77, 121.63, 1.1, -1.63, 'gate');
+    o.lpk = []; for (var j=0;j<4;j++){ var s4 = k.sph(0x4a86d8, 0.035, 121.2, 0.06, -2.35, cur); s4.visible = false; o.lpk.push(s4); }
+
+    window.FILM_DP = o;   // read-only debug hook for test/dynamic-pricing_test.py (world handles; never written by the page)
+    return o;
+  },
+
+  // ---- staging: a pure function of t (the template restores the build-time state before every call)
+  update: function(t, o, c){
+    var k = c.kit, i = c.i, lt = c.lt, PI = Math.PI, L = k.lights, sc = k.scene, ramp = k.ramp, lin = k.lin, lerp = k.lerp;
+    o.reset();
+    var SET = ['meet','off','meet','meet','meet','meet','meet','meet','gov','gov','plan','off'][i];
+    o.sets[SET].visible = true;
+    // light and air per set: [background, fog near, fog far, hemi, sun, fill, ground, set centre x, z]
+    var E = { dim:[0x1a1f26, 10, 34, 0.24, 0.1, 0.05, 0x23272c, 40, -1], off:[0xdfe5e8, 14, 45, 0.7, 0.75, 0.12, 0x9a978f, 0, -1],
+      meet:[0xe3e1dc, 14, 45, 0.68, 0.7, 0.12, 0x9a978f, 40, -1], gov:[0xe0e3e5, 14, 45, 0.68, 0.7, 0.12, 0x9a978f, 80, -1], plan:[0xd5dbe1, 12, 40, 0.62, 0.55, 0.14, 0x8f939a, 120, -1] };
+    var e = i === 0 ? E.dim : E[SET];
+    sc.background.setHex(e[0]); sc.fog.color.setHex(e[0]); sc.fog.near = e[1]; sc.fog.far = e[2];
+    L.hemi.intensity = e[3]; L.sun.intensity = e[4]; L.fill.intensity = e[5]; o.ground.material.color.setHex(e[6]);
+    L.sun.position.set(e[7] - 0.406*40, 0.767*40, e[8] + 0.496*40); L.sun.target.position.set(e[7], 0, e[8]);
+    var red = false;
+
+    // ---------------- P1 the office: shot 1.1 and the close
+    if (SET === 'off') {
+      k.sit(o.analyst, 1); k.typing(o.analyst, t, i === 1 ? 0.8 : 0.3); k.look(o.analyst, 0, -0.08);
+      o.offWall.show({ ph:Math.floor(t*10)/10*0.9, close:i === 11 ? 1 : 0 });
+      o.list.show({ lit:i === 1 ? Math.floor(lin(lt, 0.5, 4.5)*7) : 7 });
+    }
+
+    // ---------------- P2 the meeting room: open card, 1.2, the board (2.1, 2.2) and the what-ifs on the table (beat 3)
+    if (SET === 'meet') {
+      var on = i === 0 ? lin(lt, 0.2, 3.2)*7 : 7;
+      o.canvas.show({ on:on, hi:i === 2 ? 1 : -1 });
+      o.ctok.forEach(function(q){ var g = Math.max(0, Math.min(1, on - q.i)); q.g.visible = g > 0.02; q.g.scale.setScalar(0.17*k.smooth(g)); });
+      if (i === 2) {
+        o.lead.visible = o.spon.visible = o.own1.visible = true;
+        k.sit(o.spon, 1); k.sit(o.own1, 1); k.look(o.spon, 0.8, 0.05); k.look(o.own1, 0.9, 0.02);
+        k.point(o.lead, ramp(lt, 0.4, 1.2)); k.look(o.lead, 0.2, -0.1);
+      }
+      if (i === 3 || i === 4) {
+        var d = i === 3 ? lin(lt, 0.3, 3.0) : 1, cv = i === 3 ? ramp(lt, 3.3, 3.6) : 1, nd = -1;
+        if (i === 3 && lt >= 3.5) nd = k.tri((lt - 3.5)/1.5);   // along the curve and back, then again: it stops nowhere
+        o.board.show({ d:d, cv:cv, nd:nd, fk:i === 4 ? ramp(lt, 0.3, 0.9) : 0 });
+        var sg = i === 3 ? ramp(lt, 0.4, 0.9) : 1; o.stok.visible = sg > 0.02; o.stok.scale.setScalar(0.13*Math.max(sg, 0.02));
+        if (i === 4) { var r = ramp(lt, 0.5, 1.6); o.ftok.visible = true; o.ftok.position.y = 1.36 + 0.24*r; o.ftok.scale.setScalar(0.22*Math.max(0.05, r)); o.ftok.userData.inner.rotation.y = 0.45*Math.sin(lt*0.9); }
+      } else if (i >= 5) o.board.show({ d:1, cv:1, nd:-1, fk:1 });
+      else o.stok.visible = false;
+      if (i >= 5) {
+        o.d1.visible = true; o.d2.visible = i >= 6; o.d3.visible = i === 7;
+        // 3.1: her tag grows taller (1.5-3.0 s); then a dashed red outline appears round it (it never pulses)
+        var l1 = t - 25; o.c2.tag.scale.y = 1 + 0.6*ramp(l1, 1.5, 3.0);
+        if (l1 >= 2.9) { o.red31.visible = true; o.red31.scale.setScalar(0.75 + 0.25*ramp(l1, 2.9, 3.3)); red = true; }
+        // 3.2: the reason slot is empty (1.0 s); the staff member looks back to the call; a dashed red outline forms round the slot (2.5 s)
+        if (i >= 6) { var l2 = t - 30, rr = ramp(l2, 2.5, 2.9); o.agentScr.show({ slot:ramp(l2, 0.8, 1.2), red:rr }); if (rr > 0) red = true;
+          o.staff.head.rotation.y = 0.9*ramp(l2, 1.7, 2.3); o.cust.head.rotation.x = 0.15; }
+        // 3.3: prices go into the shared tool (0.5-1.0 s) and a suggested price comes back (1.0-1.5 s); the lines rise together (1.5-3.5 s)
+        if (i === 7) { var l3 = lt, rm = ramp(l3, 3.5, 3.9); o.market.show({ p:lin(l3, 1.5, 3.5), red:rm }); if (rm > 0) red = true;
+          o.buyer.head.rotation.y = 0.6*Math.sin(l3*2.0);
+          for (var s=0;s<2;s++){ var T = o.thr[s], ui = lin(l3, 0.5, 1.0), uo = lin(l3, 1.0, 1.5);
+            [[ui, false, o.pk[s*2]], [uo, true, o.pk[s*2 + 1]]].forEach(function(z){ var u = z[1] ? 1 - z[0] : z[0], pkt = z[2]; if (z[0] <= 0 || z[0] >= 1) return;
+              var a = (1-u)*(1-u), b = 2*u*(1-u), c2 = u*u; pkt.visible = true; pkt.position.set(a*T[0][0] + b*T[1][0] + c2*T[2][0], a*T[0][1] + b*T[1][1] + c2*T[2][1], a*T[0][2] + b*T[1][2] + c2*T[2][2]); }); } }
+      }
+    }
+
+    // ---------------- P4 the intake review (4.1, 4.2)
+    if (SET === 'gov') {
+      k.sit(o.mgr, 1); k.sit(o.own2, 1); k.sit(o.dpo, 1); k.typing(o.mgr, t, 0.15); k.look(o.own2, -0.35, 0.1); k.look(o.dpo, 0.35, 0.1);
+      var sl = i === 8 ? ramp(lt, 0.8, 2.4) : 1, ar = i === 8 ? ramp(lt, 0.5, 0.9)*(1 - ramp(lt, 2.4, 2.9)) : 0;
+      o.paper.mesh.position.set(lerp(79.0, 79.38, sl), 0.773, lerp(-1.4, -1.3, sl));
+      o.own2.userData.ra.rotation.x = -1.0*ar; o.own2.userData.re.rotation.x = -0.3*ar;
+      o.split.show({ n:i === 9 ? lin(lt, 1.0, 3.0)*3 : 0 });
+    }
+
+    // ---------------- P5 the pricing desk as planned (4.3)
+    if (SET === 'plan') {
+      o.pown.show({ a:ramp(lt, 0.0, 0.9), tick:ramp(lt, 1.2, 1.9), gone:lt >= 2.2 ? 1 : 0 });
+      k.point(o.po, ramp(lt, 0.8, 1.2)*(1 - ramp(lt, 1.9, 2.4)));
+      if (lt >= 2.2 && lt < 3.2) { var u = ramp(lt, 2.2, 3.2); o.tile.visible = true; o.tile.position.set(lerp(120.0, 121.15, u), lerp(1.13, 1.04, u) + 0.12*Math.sin(u*PI), lerp(-1.56, -2.47, u)); }
+      // the outcome would flow back from the tag; it stops at the closed gate: nothing flows past the barrier
+      if (lt >= 3.3) for (var j=0;j<4;j++){ var up = k.frac((lt - 3.3)*0.45 + j/4), pk = o.lpk[j];
+        pk.visible = true; pk.position.set(121.2, 0.06, lerp(-2.35, -1.8, up)); pk.scale.setScalar(0.07*(ramp(lt, 3.3, 3.7)*(1 - ramp(up, 0.75, 1.0))) + 1e-4); }
+    }
+
+    o.st = { set:SET, red:red };
+    o.flush();
+  }
+};
+/* ================================================== END OF CONFIG ================================================= */
+
+// ---------------------------------------------------------------- timeline (derived from CONFIG.beats)
+var B = CONFIG.beats, NB = B.length, DUR = B[NB-1].start + B[NB-1].dur;
+(function validate(){
+  var errs = [], at = 0;
+  B.forEach(function(s, i){
+    if (Math.abs(s.start - at) > 1e-6) errs.push('beats[' + i + '] "' + s.name + '" starts at ' + s.start + ', expected ' + at);
+    if (!(s.dur > 0)) errs.push('beats[' + i + '] has no positive dur');
+    if ([0,1,2,3,4].indexOf(s.beat) < 0) errs.push('beats[' + i + '].beat must be 0-4');
+    if (!s.name || !s.head) errs.push('beats[' + i + '] needs a name and a head');
+    at = s.start + s.dur;
+  });
+  if (errs.length) console.error('FILM CONFIG: ' + errs.join('; '));
+})();
+document.title = CONFIG.title;
+// a JSON-safe copy of the text and timing of CONFIG, for tests and tools (no functions, no camera keys)
+window.FILM_CONFIG = JSON.parse(JSON.stringify({ title:CONFIG.title, initiative:CONFIG.initiative, fallbackTitle:CONFIG.fallbackTitle, beatLabels:CONFIG.beatLabels,
+  accent:CONFIG.accent, minClearance:CONFIG.minClearance, duration:DUR,
+  beats:B.map(function(s){ var c = {}; for (var key in s) if (key !== 'cam') c[key] = s[key]; return c; }) }));
+
+// ---------------------------------------------------------------- FILM api
+var state = { t:0, playing:false, base:0, p0:0 };
+var FILM = window.FILM = {
+  ready:false, duration:DUR, version:'initiative-template-1',
+  scenes: B.map(function(s){ return { name:s.name, start:s.start, dur:s.dur, beat:s.beat }; }),
+  seek:function(){}, play:function(){}, pause:function(){}, time:function(){ return state.t; },
+  next:function(){}, prev:function(){}, restart:function(){}, mode:'starting'
+};
+
+// ---------------------------------------------------------------- fallback (the film in words)
+function infoText(s){ var it = s.cards || s.stages, out = '.'; if (!it) return ''; for (var k=0;k<it.length;k++) out += ' ' + it[k].title + (it[k].cond ? ' (conditional)' : '') + ': ' + it[k].text; return out + (s.foot ? ' ' + s.foot : ''); }
+function showFallback(){
+  var fb = document.getElementById('fallback'), list = document.getElementById('fblist');
+  document.getElementById('fbtitle').textContent = CONFIG.fallbackTitle;
+  list.textContent = '';
+  B.forEach(function(s){
+    var li = document.createElement('li'), b = document.createElement('b'), p = document.createElement('span');
+    b.textContent = s.beat ? s.beat + ' ' + s.name : s.name;
+    p.textContent = s.head + (s.sup ? ' — ' + s.sup : '') + (s.note ? ' ' + s.note : '') + infoText(s);
+    li.appendChild(b); li.appendChild(p); list.appendChild(li);
+  });
+  document.getElementById('stage').style.display = 'none';
+  document.getElementById('ui').style.display = 'none';
+  document.getElementById('fade').style.display = 'none';
+  document.body.style.overflow = 'auto';
+  fb.style.display = 'block';
+  FILM.mode = 'fallback'; FILM.ready = true;
+}
+if (typeof THREE === 'undefined' || !window.WebGLRenderingContext) { showFallback(); return; }
+
+// ---------------------------------------------------------------- maths
+var PI = Math.PI;
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function lerp(a,b,u){ return a + (b - a) * u; }
+function smooth(u){ u = clamp(u,0,1); return u*u*(3-2*u); }
+function ease(u){ u = clamp(u,0,1); return u*u*u*(u*(u*6 - 15) + 10); } // quintic ease-in-out for camera keys
+function ramp(t,a,b){ return smooth((t - a) / (b - a)); }
+function lin(t,a,b){ return clamp((t - a) / (b - a), 0, 1); }
+function frac(x){ return x - Math.floor(x); }
+function tri(x){ return 1 - Math.abs(frac(x)*2 - 1); }
+function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function V(x,y,z){ return new THREE.Vector3(x,y,z); }
+
+// ---------------------------------------------------------------- renderer / scene / light
+var canvas = document.getElementById('c');
+var renderer = null;
+var ENV = CONFIG.env || {};
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(ENV.bg != null ? ENV.bg : 0xDCE3E6);
+scene.fog = new THREE.Fog(scene.background.clone(), ENV.fogNear || 26, ENV.fogFar || 80);
+var camera = new THREE.PerspectiveCamera(48, 16/9, 0.1, 400);
+var hemi = new THREE.HemisphereLight(0xF2F4F6, 0xB9AE98, 0.62); scene.add(hemi);
+var fill = new THREE.AmbientLight(0xFFFFFF, 0.12); scene.add(fill);
+var sun = new THREE.DirectionalLight(0xFFF6EA, 0.72);
+(function(){ var d = ENV.sunDir || [-0.45, 0.85, 0.55], c = ENV.center || [0,0,0], h = ENV.shadowHalf || 12, dir = V(d[0], d[1], d[2]).normalize();
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -h; sun.shadow.camera.right = h; sun.shadow.camera.top = h; sun.shadow.camera.bottom = -h; sun.shadow.camera.near = 1; sun.shadow.camera.far = 120;
+  sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
+  sun.position.set(c[0] + dir.x*40, c[1] + dir.y*40, c[2] + dir.z*40); sun.target.position.set(c[0], c[1], c[2]); })();
+scene.add(sun); scene.add(sun.target);
+
+// ---------------------------------------------------------------- PROPS KIT: geometry helpers
+var UG = { box:new THREE.BoxGeometry(1,1,1), cyl:new THREE.CylinderGeometry(0.5,0.5,1,14), sph:new THREE.SphereGeometry(0.5,14,10),
+  cone:new THREE.ConeGeometry(0.5,1,12), plane:new THREE.PlaneGeometry(1,1), disc:new THREE.CircleGeometry(0.5,24) };
+var MATS = {};
+function mat(color, opt){ var key = color + '|' + JSON.stringify(opt||{}); if (!MATS[key]) { var o = { color:color }; if (opt) for (var k in opt) o[k] = opt[k]; MATS[key] = new THREE.MeshLambertMaterial(o); } return MATS[key]; }
+function emis(color, i){ return new THREE.MeshLambertMaterial({ color:color, emissive:color, emissiveIntensity:i == null ? 0.8 : i }); }
+function mesh(geo, color, sx, sy, sz, x, y, z, opt, parent){
+  var m = new THREE.Mesh(geo, opt && opt.mat ? opt.mat : mat(color, opt && opt.m));
+  m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = !(opt && opt.noShadow); m.receiveShadow = true;
+  if (opt && opt.ry) m.rotation.y = opt.ry; if (opt && opt.rx) m.rotation.x = opt.rx; if (opt && opt.rz) m.rotation.z = opt.rz;
+  (parent || scene).add(m); return m;
+}
+function box(c, sx, sy, sz, x, y, z, p, o){ return mesh(UG.box, c, sx, sy, sz, x, y, z, o, p); }
+function cyl(c, r, h, x, y, z, p, o){ return mesh(UG.cyl, c, r*2, h, r*2, x, y, z, o, p); }
+function sph(c, r, x, y, z, p, o){ return mesh(UG.sph, c, r*2, r*2, r*2, x, y, z, o, p); }
+function grp(x, y, z, p){ var g = new THREE.Group(); g.position.set(x||0, y||0, z||0); (p || scene).add(g); return g; }
+// camera clearance colliders (axis-aligned boxes, world space)
+var COLL = [];
+function coll(x0,y0,z0,x1,y1,z1,label){ COLL.push({min:V(Math.min(x0,x1),Math.min(y0,y1),Math.min(z0,z1)), max:V(Math.max(x0,x1),Math.max(y0,y1),Math.max(z0,z1)), label:label}); }
+function collBox(x, z, w, d, h, ry, label){ var c = Math.abs(Math.cos(ry||0)), s = Math.abs(Math.sin(ry||0)), ex = c*w/2 + s*d/2, ez = s*w/2 + c*d/2; coll(x-ex, 0, z-ez, x+ex, h, z+ez, label); }
+
+// ---------------------------------------------------------------- PROPS KIT: palette and status colours
+var PAL = { ground:0xB9B4AA, floor:0xCFC8BA, carpet:0x7A8794, wall:0xEAE6DD, wallAlt:0xD6DDE1, trim:0xB4AC9C, wood:0x9C7A57, woodDark:0x6B5038,
+  desk:0xDCD5C6, metal:0x9AA0A6, dark:0x1E262C, glass:0xBFDCE8, plant:0x3E8A3A, plantL:0x7FB45A, pot:0xB0724F, paper:0xF5F3EE,
+  skin:[0xF1C9A5, 0xE2B48F, 0xC98E6A, 0x9C6B4E, 0x6B4632], hair:[0x2B1E16, 0x5A3A22, 0x8C6A43, 0xC9A66B, 0x9A9A9A, 0x111111],
+  shirt:{ staff:0x2F5D8C, staff2:0x3E7C6B, customer:0xC75B39, visitor:0x8E5BA8, white:0xF2F0EA, grey:0x7D8790 },
+  trousers:{ navy:0x26324A, dark:0x2B2B2E, khaki:0x9C8E6E, denim:0x3D5A80 } };
+// one colour language for every film: green = passed / safe, amber = held for a person, red = fault / risk, blue = the AI or its data, grey = idle
+var STATUS = { ok:'#3fa34d', warn:'#e9a23b', fault:'#d84a3a', ai:'#4a86d8', idle:'#8d99a3' };
+
+// ---------------------------------------------------------------- PROPS KIT: rooms and furniture
+function room(o){ o = o || {}; var w = o.w || 12, d = o.d || 9, h = o.h || 3, x = o.x || 0, z = o.z || 0, th = 0.15, wc = o.wall != null ? o.wall : PAL.wall;
+  var g = grp(x, 0, z), r = { g:g };
+  if (o.ground !== false) mesh(UG.plane, PAL.ground, 160, 160, 1, 0, -0.005, 0, { rx:-PI/2, noShadow:true }, g);
+  r.floor = mesh(UG.plane, o.floor != null ? o.floor : PAL.floor, w, d, 1, 0, 0.002, 0, { rx:-PI/2, noShadow:true }, g);
+  if (o.back !== false) { r.back = box(wc, w + th, h, th, 0, h/2, -d/2, g); box(PAL.trim, w, 0.1, 0.02, 0, 0.05, -d/2 + th/2 + 0.01, g, { noShadow:true }); coll(x - w/2, 0, z - d/2 - th/2, x + w/2, h, z - d/2 + th/2, 'wall'); }
+  if (o.left !== false) { r.left = box(wc, th, h, d, -w/2, h/2, 0, g); coll(x - w/2 - th/2, 0, z - d/2, x - w/2 + th/2, h, z + d/2, 'wall'); }
+  if (o.right !== false) { r.right = box(wc, th, h, d, w/2, h/2, 0, g); coll(x + w/2 - th/2, 0, z - d/2, x + w/2 + th/2, h, z + d/2, 'wall'); }
+  return r; }
+function windowPane(o){ var g = grp(o.x, o.y, o.z); g.rotation.y = o.ry || 0; var w = o.w || 2, h = o.h || 1.4;
+  mesh(UG.plane, 0, w, h, 1, 0, 0, 0, { mat:emis(o.color || 0xDDEFF6, 0.75), noShadow:true }, g);
+  box(PAL.trim, w + 0.1, 0.08, 0.06, 0, h/2, 0, g); box(PAL.trim, w + 0.1, 0.08, 0.06, 0, -h/2, 0, g); box(PAL.trim, 0.08, h, 0.06, -w/2, 0, 0, g); box(PAL.trim, 0.08, h, 0.06, w/2, 0, 0, g); box(PAL.trim, 0.05, h, 0.05, 0, 0, 0, g);
+  return g; }
+function door(o){ var g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0; var w = o.w || 1.0, h = o.h || 2.1;
+  box(o.color || 0x5E6B75, w, h, 0.04, 0, h/2, 0, g); box(PAL.trim, w + 0.12, 0.08, 0.06, 0, h + 0.04, 0, g); box(PAL.trim, 0.06, h, 0.06, -w/2 - 0.03, h/2, 0, g); box(PAL.trim, 0.06, h, 0.06, w/2 + 0.03, h/2, 0, g);
+  sph(PAL.metal, 0.03, w*0.38, 1.0, 0.04, g); return g; }
+function desk(o){ o = o || {}; var w = o.w || 1.6, d = o.d || 0.8, h = o.h || 0.75, top = o.color || PAL.desk, leg = o.legs || PAL.metal;
+  var g = grp(o.x || 0, 0, o.z || 0); g.rotation.y = o.ry || 0;
+  box(top, w, 0.04, d, 0, h - 0.02, 0, g);
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(p){ box(leg, 0.05, h - 0.04, 0.05, p[0]*(w/2 - 0.06), (h - 0.04)/2, p[1]*(d/2 - 0.06), g); });
+  box(leg, w - 0.12, 0.35, 0.02, 0, h - 0.25, -d/2 + 0.06, g);
+  collBox(o.x || 0, o.z || 0, w, d, h, o.ry || 0, o.label || 'desk'); return g; }
+function counter(o){ var w = o.w || 2.4, d = o.d || 0.7, h = o.h || 1.05, g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0;
+  box(o.color || 0x8E9AA4, w, h - 0.05, d, 0, (h - 0.05)/2, 0, g); box(o.top || PAL.desk, w + 0.06, 0.05, d + 0.08, 0, h - 0.025, 0, g);
+  collBox(o.x, o.z, w, d, h, o.ry || 0, 'counter'); return g; }
+function chair(o){ var g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0; var c = o.color || 0x2B3440;
+  cyl(PAL.metal, 0.03, 0.4, 0, 0.22, 0, g); box(PAL.dark, 0.5, 0.03, 0.06, 0, 0.03, 0, g); box(PAL.dark, 0.06, 0.03, 0.5, 0, 0.03, 0, g);
+  box(c, 0.46, 0.07, 0.44, 0, 0.45, 0, g); box(c, 0.44, 0.5, 0.06, 0, 0.78, -0.22, g);
+  collBox(o.x, o.z, 0.5, 0.5, 1.05, o.ry || 0, 'chair'); return g; }
+function shelf(o){ var w = o.w || 1.8, h = o.h || 1.9, d = 0.38, g = grp(o.x, 0, o.z), r = rng(o.seed || 7); g.rotation.y = o.ry || 0;
+  box(o.color || PAL.woodDark, w, 0.04, d, 0, h, 0, g); box(o.color || PAL.woodDark, 0.04, h, d, -w/2, h/2, 0, g); box(o.color || PAL.woodDark, 0.04, h, d, w/2, h/2, 0, g); box(o.color || PAL.woodDark, w, h, 0.03, 0, h/2, -d/2, g);
+  var cols = [0x3E6FB0, 0xC75B39, 0x3FA34D, 0xE9A23B, 0x7D8790, 0xF2F0EA];
+  for (var s=0;s<4;s++){ var y = 0.05 + s*h/4; box(o.color || PAL.woodDark, w, 0.03, d, 0, y, 0, g); var x = -w/2 + 0.08;
+    while (x < w/2 - 0.12) { var bw = 0.05 + r()*0.06, bh = h/4*(0.55 + r()*0.3); box(cols[Math.floor(r()*cols.length)], bw, bh, d*0.75, x + bw/2, y + 0.015 + bh/2, 0.02, g); x += bw + 0.01 + (r() < 0.12 ? 0.12 : 0); } }
+  collBox(o.x, o.z, w, d, h, o.ry || 0, 'shelf'); return g; }
+function plant(o){ var s = o.s || 1, g = grp(o.x, 0, o.z);
+  cyl(PAL.pot, 0.2*s, 0.4*s, 0, 0.2*s, 0, g); sph(PAL.plant, 0.36*s, 0, 0.72*s, 0, g); sph(PAL.plantL, 0.26*s, 0.14*s, 0.95*s, 0.06*s, g); sph(PAL.plant, 0.22*s, -0.16*s, 1.05*s, -0.05*s, g);
+  coll(o.x - 0.4*s, 0, o.z - 0.4*s, o.x + 0.4*s, 1.3*s, o.z + 0.4*s, 'plant'); return g; }
+// a server rack with blinking status lights (the AI service); call rack.set(t, on) from update()
+function rack(o){ var g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0; var w = 0.7, h = 2.0, d = 0.9, leds = [], r = rng(o.seed || 11);
+  box(PAL.dark, w, h, d, 0, h/2, 0, g); box(0x2C3640, w - 0.08, h - 0.12, 0.02, 0, h/2, d/2 + 0.005, g);
+  for (var i=0;i<8;i++) for (var j=0;j<3;j++){ var m = emis(j === 2 ? 0x4A86D8 : 0x3FA34D, 0.2); leds.push({ m:mesh(UG.box, 0, 0.05, 0.03, 0.01, -0.18 + j*0.08, 0.35 + i*0.2, d/2 + 0.02, { mat:m, noShadow:true }, g), rate:0.6 + r()*1.8, ph:r() }); }
+  coll(o.x - 0.5, 0, o.z - 0.5, o.x + 0.5, h, o.z + 0.5, 'rack');
+  return { g:g, leds:leds, set:function(t, on){ for (var i=0;i<leds.length;i++){ var L = leds[i]; L.m.material.emissiveIntensity = on ? (frac(t*L.rate + L.ph) < 0.55 ? 1.1 : 0.15) : 0.05; } } }; }
+// a coloured plate that labels a prop by colour (never by words)
+function tag(o){ return box(o.color || 0x4A86D8, o.w || 0.12, o.h || 0.08, 0.01, o.x, o.y, o.z, o.parent, { m:{ emissive:new THREE.Color(o.color || 0x4A86D8), emissiveIntensity:0.35 }, noShadow:true }); }
+// a status ring on the floor; ring.pulse(t, colour, k, steady) shows it
+function ring(o){ var m = new THREE.Mesh(new THREE.RingGeometry((o.r || 1.5) - 0.07, o.r || 1.5, 64), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.9, depthWrite:false }));
+  m.rotation.x = -PI/2; m.position.set(o.x || 0, 0.012, o.z || 0); m.visible = false; m.renderOrder = 2; scene.add(m);
+  m.pulse = function(t, color, k, steady){ m.visible = k > 0.01; m.material.color.set(color); m.material.opacity = 0.9*k; m.scale.setScalar(steady ? 1 : 1 + 0.06*tri(t*1.2)); };
+  return m; }
+// a data link: a thin arc between two points with packets travelling along it; link.set(t, k, reverse, colour)
+function link(o){ var a = V(o.from[0], o.from[1], o.from[2]), b = V(o.to[0], o.to[1], o.to[2]), c = a.clone().add(b).multiplyScalar(0.5); c.y += o.lift || 1;
+  var curve = new THREE.QuadraticBezierCurve3(a, c, b), g = grp(0,0,0); g.visible = false;
+  var tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 32, 0.012, 6, false), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.55, depthWrite:false })); g.add(tube);
+  var pm = new THREE.MeshBasicMaterial({ color:0xffffff }), pk = [], n = o.n || 7, p = V();
+  for (var i=0;i<n;i++){ var s = new THREE.Mesh(UG.sph, pm); s.scale.setScalar(0.07); g.add(s); pk.push(s); }
+  return { g:g, set:function(t, k, reverse, color){ g.visible = k > 0.01; tube.material.color.set(color); pm.color.set(color); tube.material.opacity = 0.55*k;
+    for (var i=0;i<n;i++){ var u = frac(t*0.55 + i/n); curve.getPoint(reverse ? 1 - u : u, p); pk[i].position.copy(p); pk[i].scale.setScalar(0.075*k); } } }; }
+
+// ---------------------------------------------------------------- PROPS KIT: glyph screens (canvas textures; glyphs, bars and colours only, never words)
+// spec fields (all optional): bg, header (colour of the app bar), rows (n text-like strokes), lit (how many of them are filled in),
+// mark {row, color} (one row highlighted), tiles [colours] (a queue of cards instead of rows), bars [0..1], barColor, threshold (0..1, dashed),
+// over (colour of bars above the threshold), line [0..1], lineColor, progress (0..1), progressColor, badge {glyph, color}, off (screen dark)
+var SCREENS = [];
+function rr(c, x, y, w, h, r){ r = Math.max(0, Math.min(r, w/2, h/2)); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); c.fill(); }
+function glyph(c, name, cx, cy, r, color){
+  c.fillStyle = color; c.beginPath(); c.arc(cx, cy, r, 0, 2*PI); c.fill();
+  c.strokeStyle = '#ffffff'; c.fillStyle = '#ffffff'; c.lineWidth = Math.max(2, r*0.17); c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath();
+  if (name === 'check') { c.moveTo(cx - r*0.42, cy + r*0.02); c.lineTo(cx - r*0.1, cy + r*0.34); c.lineTo(cx + r*0.45, cy - r*0.3); c.stroke(); }
+  else if (name === 'cross') { c.moveTo(cx - r*0.35, cy - r*0.35); c.lineTo(cx + r*0.35, cy + r*0.35); c.moveTo(cx + r*0.35, cy - r*0.35); c.lineTo(cx - r*0.35, cy + r*0.35); c.stroke(); }
+  else if (name === 'warn') { c.moveTo(cx, cy - r*0.5); c.lineTo(cx, cy + r*0.12); c.stroke(); c.beginPath(); c.arc(cx, cy + r*0.42, r*0.1, 0, 2*PI); c.fill(); }
+  else if (name === 'clock') { c.arc(cx, cy, r*0.55, 0, 2*PI); c.moveTo(cx, cy - r*0.32); c.lineTo(cx, cy); c.lineTo(cx + r*0.24, cy + r*0.16); c.stroke(); }
+  else if (name === 'loop') { c.arc(cx, cy, r*0.5, -PI*0.35, PI*1.25); c.stroke(); c.beginPath(); var ax = cx + r*0.5*Math.cos(-PI*0.35), ay = cy + r*0.5*Math.sin(-PI*0.35); c.moveTo(ax - r*0.28, ay - r*0.05); c.lineTo(ax, ay); c.lineTo(ax + r*0.04, ay - r*0.3); c.stroke(); }
+  else if (name === 'person') { c.arc(cx, cy - r*0.22, r*0.22, 0, 2*PI); c.fill(); c.beginPath(); c.arc(cx, cy + r*0.55, r*0.42, PI, 2*PI); c.fill(); }
+  else if (name === 'shield') { c.moveTo(cx, cy - r*0.55); c.lineTo(cx + r*0.42, cy - r*0.35); c.lineTo(cx + r*0.38, cy + r*0.15); c.quadraticCurveTo(cx + r*0.25, cy + r*0.45, cx, cy + r*0.58); c.quadraticCurveTo(cx - r*0.25, cy + r*0.45, cx - r*0.38, cy + r*0.15); c.lineTo(cx - r*0.42, cy - r*0.35); c.closePath(); c.stroke(); }
+  else if (name === 'lock') { c.arc(cx, cy - r*0.12, r*0.24, PI, 2*PI); c.stroke(); rr(c, cx - r*0.36, cy - r*0.12, r*0.72, r*0.56, r*0.08); }
+  else { c.arc(cx, cy, r*0.3, 0, 2*PI); c.fill(); } // 'dot'
+}
+function paintScreen(c, W, H, s){
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.setLineDash([]);
+  c.fillStyle = s.bg || '#16222c'; c.fillRect(0, 0, W, H);
+  if (s.off) return;
+  var portrait = H > W, pad = Math.round(Math.min(W, H)*0.07), y0 = pad, light = /^#(f|e|d)/i.test(s.bg || '');
+  var ink = light ? '30,40,48' : '235,240,245';
+  if (s.header) { var hh = Math.round(H*(portrait ? 0.1 : 0.15)); c.fillStyle = s.header; c.fillRect(0, 0, W, hh); c.fillStyle = 'rgba(255,255,255,.85)'; rr(c, pad, hh*0.38, W*0.26, hh*0.26, hh*0.13); c.beginPath(); c.arc(W - pad - hh*0.22, hh*0.5, hh*0.2, 0, 2*PI); c.fill(); y0 = hh + pad; }
+  var side = !portrait && (s.bars || s.line || s.badge), colX = pad, colW = side ? W*0.5 : W - 2*pad, sideX = colX + colW + pad, sideW = W - sideX - pad, bottom = H - pad - (s.progress != null ? H*0.1 : 0);
+  var by0 = y0, bcx, bcy, br;
+  if (s.badge) { if (portrait) { br = W*0.17; bcx = W/2; bcy = y0 + br; y0 = bcy + br + pad; } else { br = Math.min(sideW*0.24, (bottom - y0)*0.2); bcx = sideX + sideW/2; bcy = by0 + br; by0 = bcy + br + pad*0.7; } glyph(c, s.badge.glyph, bcx, bcy, br, s.badge.color); }
+  // rows (text-like strokes) or tiles (queue cards) in the main column
+  var rowsBottom = portrait && (s.bars || s.line) ? y0 + (bottom - y0)*0.55 : bottom;
+  if (s.tiles) { var nt = s.tiles.length, th = Math.min((rowsBottom - y0)/Math.max(nt, 1) - pad*0.4, H*0.2);
+    for (var q=0;q<nt;q++){ var ty = y0 + q*(th + pad*0.4); c.fillStyle = 'rgba(' + ink + ',.12)'; rr(c, colX, ty, colW, th, th*0.18); c.fillStyle = s.tiles[q]; rr(c, colX, ty, th*0.22, th, th*0.11); c.fillStyle = 'rgba(' + ink + ',.55)'; rr(c, colX + th*0.45, ty + th*0.3, colW*0.5, th*0.14, th*0.07); c.fillStyle = 'rgba(' + ink + ',.3)'; rr(c, colX + th*0.45, ty + th*0.58, colW*0.32, th*0.12, th*0.06); } }
+  else if (s.rows) { var n = s.rows, rh = (rowsBottom - y0)/n, lit = s.lit == null ? n : s.lit;
+    for (var r=0;r<n;r++){ var len = 0.42 + 0.5*(((r*37 + 11) % 13)/13), yy = y0 + r*rh + rh*0.3, hh2 = Math.max(3, rh*0.36);
+      var on = r < lit, mk = s.mark && s.mark.row === r;
+      c.fillStyle = 'rgba(' + ink + ',' + (on ? '.18' : '.08') + ')'; rr(c, colX, yy - rh*0.08, colW, hh2 + rh*0.16, rh*0.12);
+      c.fillStyle = mk ? s.mark.color : 'rgba(' + ink + ',' + (on ? '.82' : '.2') + ')'; rr(c, colX + rh*0.15, yy, colW*len*0.9, hh2, hh2/2); } }
+  // bars or a line chart: the side column (landscape) or the lower part (portrait)
+  var ax = portrait ? pad : sideX, aw = portrait ? W - 2*pad : sideW, ay0 = portrait ? rowsBottom + pad*0.6 : by0, ay1 = bottom, ah = Math.max(4, ay1 - ay0);
+  if (s.bars) { var nb = s.bars.length, gap = aw*0.12/Math.max(nb, 1), bw = (aw - gap*(nb + 1))/nb;
+    c.fillStyle = 'rgba(' + ink + ',.15)'; c.fillRect(ax, ay1 - 2, aw, 2);
+    for (var bi=0;bi<nb;bi++){ var v = clamp(s.bars[bi], 0, 1), over = s.threshold != null && v > s.threshold; c.fillStyle = over ? (s.over || STATUS.fault) : (s.barColor || STATUS.ai); rr(c, ax + gap + bi*(bw + gap), ay1 - 2 - v*(ah - 4), bw, v*(ah - 4), Math.min(6, bw*0.15)); }
+    if (s.threshold != null) { c.strokeStyle = 'rgba(' + ink + ',.75)'; c.lineWidth = Math.max(1.5, H*0.008); c.setLineDash([H*0.025, H*0.02]); c.beginPath(); var ty2 = ay1 - 2 - s.threshold*(ah - 4); c.moveTo(ax, ty2); c.lineTo(ax + aw, ty2); c.stroke(); c.setLineDash([]); } }
+  else if (s.line) { var nl = s.line.length; c.strokeStyle = s.lineColor || STATUS.ai; c.lineWidth = Math.max(2, H*0.018); c.lineJoin = 'round'; c.beginPath();
+    for (var li=0;li<nl;li++){ var lx = ax + aw*li/Math.max(nl - 1, 1), ly = ay1 - clamp(s.line[li], 0, 1)*ah; if (li) c.lineTo(lx, ly); else c.moveTo(lx, ly); } c.stroke();
+    c.fillStyle = 'rgba(' + ink + ',.15)'; c.fillRect(ax, ay1, aw, 2); }
+  if (s.progress != null) { var py = H - pad - H*0.05; c.fillStyle = 'rgba(' + ink + ',.15)'; rr(c, pad, py, W - 2*pad, H*0.04, H*0.02); c.fillStyle = s.progressColor || s.barColor || STATUS.ai; rr(c, pad, py, (W - 2*pad)*clamp(s.progress, 0, 1), H*0.04, H*0.02); }
+}
+function specKey(sp){ return JSON.stringify(sp || {}, function(k, v){ return typeof v === 'number' ? Math.round(v*100)/100 : v; }); }
+function glyphScreen(w, h, opt){ opt = opt || {}; var cw = opt.res || 256, ch = Math.max(16, Math.round(cw*h/w)), cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+  var tx = new THREE.CanvasTexture(cv); tx.minFilter = THREE.LinearFilter; tx.generateMipmaps = false;
+  var m = new THREE.Mesh(UG.plane, new THREE.MeshBasicMaterial({ map:tx })); m.scale.set(w, h, 1);
+  var s = { mesh:m, cv:cv, c:cv.getContext('2d'), tx:tx, spec0:opt.spec || { header:'#3a4856', rows:5, lit:0 }, want:null, key:'', show:function(sp){ s.want = sp; } };
+  s.want = s.spec0; SCREENS.push(s); return s; }
+function flushScreens(){ for (var i=0;i<SCREENS.length;i++){ var s = SCREENS[i], k = specKey(s.want); if (k !== s.key) { paintScreen(s.c, s.cv.width, s.cv.height, JSON.parse(k)); s.tx.needsUpdate = true; s.key = k; } } }
+// a desk monitor facing +z (rotate with ry); returns the screen with .group
+function monitor(o){ var w = o.w || 0.62, h = o.h || 0.38, g = grp(o.x, o.deskH || 0.75, o.z); g.rotation.y = o.ry || 0;
+  box(PAL.dark, 0.22, 0.02, 0.16, 0, 0.01, 0, g); box(PAL.dark, 0.04, 0.16, 0.03, 0, 0.09, -0.02, g); box(PAL.dark, w + 0.03, h + 0.03, 0.03, 0, 0.17 + h/2, 0, g);
+  var s = glyphScreen(w, h, o); s.mesh.position.set(0, 0.17 + h/2, 0.017); g.add(s.mesh); s.group = g; return s; }
+// a large display on a wall, facing +z (rotate with ry)
+function wallScreen(o){ var w = o.w || 2, h = o.h || 1.15, g = grp(o.x, o.y, o.z); g.rotation.y = o.ry || 0;
+  box(PAL.dark, w + 0.08, h + 0.08, 0.05, 0, 0, 0, g); var s = glyphScreen(w, h, { res:o.res || 384, spec:o.spec }); s.mesh.position.set(0, 0, 0.028); g.add(s.mesh); s.group = g; return s; }
+// a phone; attach to a hand anchor (person.userData.handR) or place it with x, y, z; the screen faces local +z
+function phone(o){ var g = o.parent ? grp(0, -0.02, 0.03, o.parent) : grp(o.x, o.y, o.z); if (!o.parent) g.rotation.set(o.rx || 0, o.ry || 0, 0);
+  box(PAL.dark, 0.075, 0.15, 0.01, 0, 0, 0, g); var s = glyphScreen(0.066, 0.136, { res:96, spec:o.spec || { bg:'#f3f1ec', header:STATUS.ai, rows:4, lit:2 } }); s.mesh.position.set(0, 0, 0.0055); g.add(s.mesh); s.group = g; return s; }
+
+// ---------------------------------------------------------------- PROPS KIT: people (simple articulated figures; they face +z)
+var AGENTS = [];
+function person(o){ o = o || {};
+  var skin = o.skin != null ? o.skin : PAL.skin[1], shirt = o.shirt != null ? o.shirt : PAL.shirt.grey, legC = o.trousers != null ? o.trousers : PAL.trousers.navy, hair = o.hair != null ? o.hair : PAL.hair[0];
+  var g = grp(0, 0, 0), body = grp(0, 0, 0, g);
+  box(legC, 0.36, 0.16, 0.22, 0, 0.9, 0, body);                         // hips
+  box(shirt, 0.42, 0.56, 0.24, 0, 1.24, 0, body);                       // torso
+  if (o.badge) box(new THREE.Color(o.badge).getHex(), 0.07, 0.05, 0.01, 0.1, 1.36, 0.125, body, { noShadow:true });
+  cyl(skin, 0.05, 0.08, 0, 1.56, 0, body);                              // neck
+  var head = grp(0, 1.6, 0, body);
+  sph(skin, 0.115, 0, 0.12, 0, head); box(skin, 0.03, 0.04, 0.03, 0, 0.1, 0.115, head);
+  sph(0x1E262C, 0.014, -0.04, 0.14, 0.1, head, { noShadow:true }); sph(0x1E262C, 0.014, 0.04, 0.14, 0.1, head, { noShadow:true });
+  mesh(UG.sph, hair, 0.25, 0.15, 0.255, 0, 0.18, -0.012, {}, head); if (o.longHair) box(hair, 0.22, 0.26, 0.08, 0, 0.04, -0.09, head);
+  if (o.headset) { box(PAL.dark, 0.26, 0.025, 0.04, 0, 0.245, 0, head); sph(PAL.dark, 0.045, -0.12, 0.12, 0, head); sph(PAL.dark, 0.045, 0.12, 0.12, 0, head); box(PAL.dark, 0.014, 0.014, 0.13, 0.1, 0.05, 0.065, head, { ry:-0.5 }); }
+  function arm(side){ var sh = grp(side*0.265, 1.48, 0, body); cyl(shirt, 0.055, 0.32, 0, -0.16, 0, sh); var el = grp(0, -0.32, 0, sh); cyl(o.sleeves === false ? skin : shirt, 0.047, 0.27, 0, -0.135, 0, el); sph(skin, 0.05, 0, -0.29, 0, el); var hand = grp(0, -0.3, 0, el); return { sh:sh, el:el, hand:hand }; }
+  function leg(side){ var hp = grp(side*0.1, 0.88, 0, body); box(legC, 0.15, 0.44, 0.17, 0, -0.22, 0, hp); var kn = grp(0, -0.44, 0, hp); box(legC, 0.13, 0.4, 0.15, 0, -0.2, 0, kn); box(o.shoes || 0x2A2522, 0.12, 0.07, 0.25, 0, -0.42, 0.045, kn); return { hp:hp, kn:kn }; }
+  var L = arm(1), R = arm(-1), LL = leg(1), RL = leg(-1);   // the figure faces +z, so its right side is -x
+  g.userData = { kind:'person', body:body, head:head, la:L.sh, ra:R.sh, le:L.el, re:R.el, handL:L.hand, handR:R.hand, ll:LL.hp, rl:RL.hp, lk:LL.kn, rk:RL.kn };
+  AGENTS.push(g); return g; }
+function place(a, x, z, ry){ a.position.set(x, 0, z); a.rotation.y = ry || 0; }
+function polyAt(pts, u){ var L = [], tot = 0, i; for (i=1;i<pts.length;i++){ var d = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); L.push(d); tot += d; }
+  var s = clamp(u,0,1) * tot; for (i=0;i<L.length;i++){ if (s <= L[i] || i === L.length-1){ var f = L[i] > 0 ? clamp(s / L[i], 0, 1) : 0, a = pts[i], b = pts[i+1];
+    return { x:lerp(a[0], b[0], f), z:lerp(a[1], b[1], f), ry:Math.atan2(b[0]-a[0], b[1]-a[1]), moving: u > 0 && u < 1 }; } s -= L[i]; } }
+function gait(a, t){ var d = a.userData, s = Math.sin(t*6.5);
+  d.ll.rotation.x = s*0.45; d.rl.rotation.x = -s*0.45; d.lk.rotation.x = 0.55*Math.max(0, -Math.sin(t*6.5 + 0.9)); d.rk.rotation.x = 0.55*Math.max(0, Math.sin(t*6.5 + 0.9));
+  d.la.rotation.x = -s*0.35; d.ra.rotation.x = s*0.35; d.le.rotation.x = d.re.rotation.x = -0.25; d.body.position.y = 0.02*Math.abs(Math.sin(t*6.5)); }
+function walk(a, pts, u, t){ var p = polyAt(pts, u); place(a, p.x, p.z, p.ry); if (p.moving) gait(a, t); return p; }
+function sit(a, k){ var d = a.userData; d.body.position.y = -0.38*k; d.ll.rotation.x = d.rl.rotation.x = -PI/2*k; d.lk.rotation.x = d.rk.rotation.x = PI/2*k; }
+function typing(a, t, k){ var d = a.userData; k = k == null ? 1 : k; d.la.rotation.x = d.ra.rotation.x = -0.55; d.le.rotation.x = -0.9 - 0.06*k*Math.sin(t*14); d.re.rotation.x = -0.9 - 0.06*k*Math.sin(t*14 + 2); }
+function holdPhone(a, k){ var d = a.userData; d.ra.rotation.x = -0.4*k; d.re.rotation.x = -1.7*k; }
+function point(a, k){ var d = a.userData; d.ra.rotation.x = -1.35*k; d.re.rotation.x = -0.1*k; }
+function gesture(a, k, t){ var d = a.userData; d.la.rotation.x = -k*(0.9 + 0.15*Math.sin(t*5)); d.le.rotation.x = -0.9*k; }
+function look(a, yaw, pitch){ a.userData.head.rotation.set(pitch || 0, yaw || 0, 0); }
+
+// ---------------------------------------------------------------- camera helpers (pure)
+var _p = V(), _l = V();
+// place the camera and put the subject at normalised screen position (nx, ny): +nx right of centre, +ny above centre, in half-frames
+function camAim(px,py,pz, sx,sy,sz, nx,ny){
+  camera.position.set(px,py,pz); _l.set(sx,sy,sz); camera.lookAt(_l);
+  if (camera.aspect < 1) { nx *= 0.15; ny += 0.25; } /* portrait: the caption sits under the picture, so the subject is centred and lifted */
+  var vh = Math.tan(camera.fov*PI/360), hh = vh*camera.aspect;
+  camera.rotateY(Math.atan(nx*hh)); camera.rotateX(-Math.atan(ny*vh));
+}
+// the same aim with the horizon kept level (no roll): verticals stay upright even with a large offset and a steep pitch
+function camAimLevel(px,py,pz, sx,sy,sz, nx,ny){
+  if (camera.aspect < 1) { nx *= 0.15; ny = 0.5; px = sx + (px - sx)*1.5; pz = sz + (pz - sz)*1.5; }
+  var vh = Math.tan(camera.fov*PI/360), hh = vh*camera.aspect, cx = nx*hh, cy = ny*vh, cz = -1, n = Math.hypot(cx, cy, cz); cx /= n; cy /= n; cz /= n;
+  var dx = sx - px, dy = sy - py, dz = sz - pz, dn = Math.hypot(dx, dy, dz); dx /= dn; dy /= dn; dz /= dn;
+  var th = Math.asin(clamp(dy / Math.hypot(cy, cz), -1, 1)) - Math.atan2(cy, -cz), zp = cy*Math.sin(th) + cz*Math.cos(th);
+  camera.position.set(px,py,pz); camera.rotation.set(th, Math.atan2(dx, dz) - Math.atan2(cx, zp), 0, 'YXZ');
+}
+function camKeys(keys, lt){ // keys: [t, px,py,pz, lx,ly,lz] or [t, px,py,pz, sx,sy,sz, nx,ny] (aimed); a tenth element selects the level aim
+  var a = keys[0], b = keys[keys.length-1];
+  for (var i=0;i<keys.length-1;i++) if (lt >= keys[i][0] && lt <= keys[i+1][0]) { a = keys[i]; b = keys[i+1]; break; }
+  if (lt < keys[0][0]) { a = b = keys[0]; } if (lt > keys[keys.length-1][0]) { a = b = keys[keys.length-1]; }
+  var u = a === b ? 0 : ease((lt - a[0]) / (b[0] - a[0]));
+  if (a.length >= 9) { (a.length >= 10 ? camAimLevel : camAim)(lerp(a[1],b[1],u), lerp(a[2],b[2],u), lerp(a[3],b[3],u), lerp(a[4],b[4],u), lerp(a[5],b[5],u), lerp(a[6],b[6],u), lerp(a[7],b[7],u), lerp(a[8],b[8],u)); return; }
+  _p.set(lerp(a[1],b[1],u), lerp(a[2],b[2],u), lerp(a[3],b[3],u)); _l.set(lerp(a[4],b[4],u), lerp(a[5],b[5],u), lerp(a[6],b[6],u));
+  camera.position.copy(_p); camera.lookAt(_l);
+}
+function camOrbit(cx, cy, cz, r, h0, h1, a0, a1, u, ly){ var a = lerp(a0, a1, ease(u)); camera.position.set(cx + r*Math.cos(a), lerp(h0, h1, ease(u)), cz + r*Math.sin(a)); camera.lookAt(cx, ly == null ? cy : ly, cz); }
+
+// ---------------------------------------------------------------- the kit object handed to build() and update()
+var kit = { THREE:THREE, scene:scene, camera:camera, PI:PI, PAL:PAL, STATUS:STATUS, lights:{ hemi:hemi, sun:sun, fill:fill },
+  clamp:clamp, lerp:lerp, smooth:smooth, ease:ease, ramp:ramp, lin:lin, frac:frac, tri:tri, rng:rng, V:V,
+  mat:mat, emis:emis, mesh:mesh, box:box, cyl:cyl, sph:sph, grp:grp, coll:coll, collBox:collBox, UG:UG,
+  room:room, windowPane:windowPane, door:door, desk:desk, counter:counter, chair:chair, shelf:shelf, plant:plant, rack:rack, tag:tag, ring:ring, link:link,
+  glyphScreen:glyphScreen, monitor:monitor, wallScreen:wallScreen, phone:phone,
+  person:person, place:place, polyAt:polyAt, gait:gait, walk:walk, sit:sit, typing:typing, holdPhone:holdPhone, point:point, gesture:gesture, look:look,
+  camAim:camAim, camAimLevel:camAimLevel, camKeys:camKeys, camOrbit:camOrbit };
+
+// ---------------------------------------------------------------- build the world, then snapshot it (the rest state every frame starts from)
+var OBJ = CONFIG.build(THREE, scene, kit) || {};
+var SNAP = { o:[], m:[], bg:scene.background.clone(), fog:scene.fog ? [scene.fog.color.clone(), scene.fog.near, scene.fog.far] : null };
+scene.traverse(function(o){
+  SNAP.o.push({ o:o, p:o.position.clone(), q:o.quaternion.clone(), s:o.scale.clone(), v:o.visible, li:o.isLight ? { i:o.intensity, c:o.color.clone() } : null });
+  var ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+  ms.forEach(function(m){ if (m.userData.snap) return; m.userData.snap = true; SNAP.m.push({ m:m, c:m.color ? m.color.clone() : null, e:m.emissive ? m.emissive.clone() : null, ei:m.emissiveIntensity, op:m.opacity, v:m.visible }); });
+});
+function restore(){
+  var i, r;
+  for (i=0;i<SNAP.o.length;i++){ r = SNAP.o[i]; r.o.position.copy(r.p); r.o.quaternion.copy(r.q); r.o.scale.copy(r.s); r.o.visible = r.v; if (r.li) { r.o.intensity = r.li.i; r.o.color.copy(r.li.c); } }
+  for (i=0;i<SNAP.m.length;i++){ r = SNAP.m[i]; if (r.c) r.m.color.copy(r.c); if (r.e) r.m.emissive.copy(r.e); if (r.ei != null) r.m.emissiveIntensity = r.ei; r.m.opacity = r.op; r.m.visible = r.v; }
+  for (i=0;i<SCREENS.length;i++) SCREENS[i].want = SCREENS[i].spec0;
+  scene.background.copy(SNAP.bg); if (SNAP.fog) { scene.fog.color.copy(SNAP.fog[0]); scene.fog.near = SNAP.fog[1]; scene.fog.far = SNAP.fog[2]; }
+}
+
+// ---------------------------------------------------------------- the frame at time t (pure function of t)
+function sceneAt(t){ for (var i=NB-1;i>=0;i--) if (t >= B[i].start) return i; return 0; }
+function update(t){
+  var i = sceneAt(t), s = B[i], lt = t - s.start, u = clamp(lt / s.dur, 0, 1);
+  restore();
+  if (s.cam) camKeys(s.cam, lt);
+  CONFIG.update(t, OBJ, { i:i, entry:s, beat:s.beat, lt:lt, u:u, t:t, kit:kit, camKeys:camKeys });
+  return i;
+}
+// verification API: distance from the camera to the nearest collider and the nearest visible person at time t
+FILM.clearance = function(t){ update(t); scene.updateMatrixWorld(true); var p = camera.position, best = 1e9, who = '';
+  for (var i=0;i<COLL.length;i++){ var c = COLL[i], dx = Math.max(c.min.x - p.x, 0, p.x - c.max.x), dy = Math.max(c.min.y - p.y, 0, p.y - c.max.y), dz = Math.max(c.min.z - p.z, 0, p.z - c.max.z); var d = Math.sqrt(dx*dx+dy*dy+dz*dz); if (d < best) { best = d; who = c.label; } }
+  var wp = V(); for (i=0;i<AGENTS.length;i++){ var a = AGENTS[i], vis = a.visible, q = a.parent; while (vis && q) { vis = q.visible; q = q.parent; } if (!vis) continue; a.getWorldPosition(wp); wp.y += 0.9; var d2 = wp.distanceTo(p) - 0.6; if (d2 < best) { best = d2; who = 'person'; } }
+  return { t:t, d:best, who:who, cam:[p.x, p.y, p.z] }; };
+// the closest the camera comes to anything over the whole film, sampled every `step` seconds
+FILM.minClearance = function(step){ step = step || 0.1; var worst = null, n = Math.ceil(DUR/step);
+  for (var k=0;k<n;k++){ var c = FILM.clearance(k*step); if (!worst || c.d < worst.d) worst = c; }
+  if (renderer && !state.playing) render(state.t); return worst; };
+// a fingerprint of the world at time t (camera, every object's transform and visibility, material colours, screen contents);
+// the same t must always give the same fingerprint, whatever was shown before
+FILM.signature = function(t){ update(t); flushScreens(); var parts = [], i, r, f = function(x){ return (Math.round(x*1e4)/1e4).toString(); };
+  parts.push(f(camera.position.x), f(camera.position.y), f(camera.position.z), f(camera.quaternion.x), f(camera.quaternion.y), f(camera.quaternion.z), f(camera.quaternion.w));
+  for (i=0;i<SNAP.o.length;i++){ r = SNAP.o[i].o; parts.push(r.visible ? 1 : 0, f(r.position.x), f(r.position.y), f(r.position.z), f(r.quaternion.x), f(r.quaternion.y), f(r.quaternion.z), f(r.scale.x), f(r.scale.y)); if (r.isLight) parts.push(f(r.intensity)); }
+  for (i=0;i<SNAP.m.length;i++){ r = SNAP.m[i].m; if (r.color) parts.push(r.color.getHexString()); if (r.emissive) parts.push(r.emissive.getHexString(), f(r.emissiveIntensity)); parts.push(f(r.opacity)); }
+  for (i=0;i<SCREENS.length;i++) parts.push(SCREENS[i].key);
+  var str = parts.join('|'), h = 2166136261; for (i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  if (renderer && !state.playing) render(state.t);
+  return { t:t, hash:(h >>> 0).toString(16), n:parts.length, cam:[camera.position.x, camera.position.y, camera.position.z] }; };
+
+// ---------------------------------------------------------------- overlay (HTML; the only readable text in the film)
+var el = {}; ['ui','sname','sidx','bnum','blab','steps','head','sup','note','strip','panel','beat','fade','prog','scen','bar','bplay','brestart','bprev','bnext','tm','nav','navlist','rail','navtog','hintpp','navback','info'].forEach(function(id){ el[id] = document.getElementById(id); });
+CONFIG.beatLabels.forEach(function(l){ var s = document.createElement('span'); s.textContent = l; el.steps.appendChild(s); });
+var steps = el.steps.children, curScene = -1, segFills = [];
+el.prog.setAttribute('aria-valuemax', String(Math.round(DUR)));
+// groups: consecutive entries of the same beat form one group (one scrubber segment, one rail dot, one navigation heading); each card is its own group
+var GROUPS = [];
+B.forEach(function(s, i){ var g = GROUPS[GROUPS.length-1]; if (g && s.beat > 0 && g.beat === s.beat) { g.items.push(i); g.dur += s.dur; } else GROUPS.push({ beat:s.beat, start:s.start, dur:s.dur, items:[i] }); });
+function groupOf(i){ for (var k=0;k<GROUPS.length;k++) if (GROUPS[k].items.indexOf(i) >= 0) return k; return 0; }
+GROUPS.forEach(function(g){ var d = document.createElement('div'); d.className = 'seg'; d.style.left = 'calc(' + (g.start/DUR*100) + '% + 1.5px)'; d.style.width = 'calc(' + (g.dur/DUR*100) + '% - 3px)'; d.style.setProperty('--c', CONFIG.accent[g.beat]); var b = document.createElement('b'); d.appendChild(b); el.prog.appendChild(d); segFills.push(b); });
+B.forEach(function(s, i){ var g = GROUPS[groupOf(i)]; if (g.items[0] === i) return; var tk = document.createElement('i'); tk.className = 'tick'; tk.style.left = (s.start/DUR*100) + '%'; el.prog.appendChild(tk); });
+var knob = document.createElement('i'); knob.className = 'knob'; el.prog.appendChild(knob);
+// navigation: cards by name; each beat as numeral + beat label (seeks to its first entry), with its entries under it when it has more than one
+var navBtns = [], navGroups = [], railDots = [];
+function jump(t){ var was = state.playing; FILM.seek(t); if (was) FILM.play(); } // seek that keeps the current play state
+function closeNav(){ el.nav.classList.remove('open'); el.navtog.setAttribute('aria-expanded', 'false'); }
+(function(){
+  function btn(label, t, num){ var b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-t', String(t));
+    if (num) { var bb = document.createElement('b'); bb.textContent = num; b.appendChild(bb); }
+    b.appendChild(document.createTextNode(label)); b.addEventListener('click', function(e){ jump(t); closeNav(); if (e.detail) b.blur(); }); return b; }
+  function li(cls){ var l = document.createElement('li'); l.className = cls; el.navlist.appendChild(l); return l; }
+  GROUPS.forEach(function(g, gi){
+    if (g.beat === 0) { g.items.forEach(function(i){ var l = li('end'), b = btn(B[i].nav || B[i].name, B[i].start); l.appendChild(b); navBtns[i] = b; navGroups[gi] = l; }); return; }
+    var l = li('sc'), hb = btn(CONFIG.beatLabels[g.beat - 1], g.start, String(g.beat)); l.appendChild(hb); navGroups[gi] = l;
+    if (g.items.length === 1) navBtns[g.items[0]] = hb;
+    else { var ol = document.createElement('ol'); ol.className = 'beats'; g.items.forEach(function(i){ var bl = document.createElement('li'), bb = btn(B[i].nav || B[i].name, B[i].start); bl.appendChild(bb); ol.appendChild(bl); navBtns[i] = bb; }); l.appendChild(ol); }
+    var dot = document.createElement('button'); dot.type = 'button'; dot.className = 'dot'; dot.setAttribute('data-t', String(g.start)); dot.setAttribute('data-group', String(gi));
+    dot.setAttribute('aria-label', 'Beat ' + g.beat + ' ' + CONFIG.beatLabels[g.beat - 1]); dot.setAttribute('data-tip', g.beat + ' ' + CONFIG.beatLabels[g.beat - 1]); dot.textContent = String(g.beat);
+    el.rail.insertBefore(dot, el.navtog); railDots.push(dot);
+  });
+})();
+// card slides: inline-SVG icons (24 px grid, stroked), the card / roadmap builder and the reveal (a pure function of local time)
+var ICON = {
+  shield:'<path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 15.5h5M10 9h2"/>',
+  gate:'<path d="M6 21V4M6 4h11l-2.5 3.5L17 11H6"/>',
+  people:'<circle cx="8.5" cy="7.6" r="2.5"/><path d="M3.4 20c0-3.6 2.2-6 5.1-6s5.1 2.4 5.1 6"/><circle cx="16.6" cy="8.6" r="2"/><path d="M15.2 14.3c.5-.2.9-.3 1.4-.3 2.3 0 4 2 4 5"/>',
+  data:'<ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6"/><path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/>',
+  check:'<circle cx="12" cy="12" r="8.5"/><path d="M8 12.4l2.7 2.7L16.2 9.4"/>',
+  alert:'<path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17.4v.2"/>',
+  loop:'<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.8 4.2v3.6h-3.6"/>',
+  chart:'<path d="M4 20h16M7 17v-5M11.5 17V8M16 17v-8"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  person:'<circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c0-3.9 2.9-6.4 6.5-6.4s6.5 2.5 6.5 6.4"/>'
+};
+var infoEls = [], infoLns = [], footEl = null;
+function mk(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; }
+function buildInfo(s){
+  el.info.textContent = ''; infoEls = []; infoLns = []; footEl = null;
+  var it = s.cards || s.stages; if (!it) return;
+  el.info.appendChild(document.createTextNode(' '));
+  var list = mk('ol'); list.id = s.cards ? 'cards' : 'road'; list.style.setProperty('--n', String(it.length));
+  it.forEach(function(c, k){
+    var li, ic = mk('span', s.cards ? 'ic' : 'node'); ic.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICON[c.ic] || ICON.check) + '</svg>';
+    if (s.cards) { li = mk('li', 'card'); var ct = mk('div', 'ct'); ct.appendChild(ic); ct.appendChild(mk('h3', '', c.title)); li.appendChild(ct); }
+    else { li = mk('li', 'stage' + (c.cond ? ' cond' : '')); var trk = mk('div', 'trk'), ln = mk('i', 'ln' + (it[k+1] && it[k+1].cond ? ' dash' : '')); trk.appendChild(ic); trk.appendChild(ln); li.appendChild(trk); li.appendChild(mk('h3', '', c.title)); infoLns[k] = ln; }
+    li.appendChild(document.createTextNode(' ')); li.appendChild(mk('p', '', c.text)); list.appendChild(li); list.appendChild(document.createTextNode(' ')); infoEls.push(li); });
+  el.info.appendChild(list);
+  if (s.foot) { footEl = mk('p', '', s.foot); footEl.id = 'foot'; el.info.appendChild(footEl); }
+}
+function revealInfo(s, lt){
+  var it = s.cards || s.stages, last = 0, k, r; if (!it) return;
+  for (k=0;k<it.length;k++){ r = ramp(lt, it[k].at, it[k].at + 0.6); var n = infoEls[k]; n.style.opacity = r.toFixed(3); n.style.transform = r < 1 ? 'translateY(' + ((1 - r)*14).toFixed(1) + 'px)' : 'none'; n.setAttribute('data-on', r >= 0.5 ? '1' : '0'); if (r > 0) last = k;
+    if (infoLns[k]) infoLns[k].style.setProperty('--r', it[k+1] ? ramp(lt, it[k+1].at - 0.5, it[k+1].at + 0.2).toFixed(3) : '0'); }
+  for (k=0;k<it.length;k++) infoEls[k].classList.toggle('now', k === last);
+  if (footEl) { r = ramp(lt, s.footAt || 0, (s.footAt || 0) + 0.6); footEl.style.opacity = r.toFixed(3); footEl.setAttribute('data-on', r >= 0.5 ? '1' : '0'); }
+}
+// step chips: rebuilt per entry; each seeks to its step; the active one is lit (a pure function of t)
+var chips = [];
+function buildChips(s){ el.strip.textContent = ''; chips = [];
+  (s.chips || []).forEach(function(c){ var b = document.createElement('button'); b.type = 'button'; b.textContent = c.label; b.title = 'Go to ' + c.label;
+    b.addEventListener('click', function(e){ jump(s.start + c.at); if (e.detail) b.blur(); }); el.strip.appendChild(b); chips.push(b); });
+  el.strip.style.display = chips.length ? 'flex' : 'none'; }
+var lastSec = -1;
+function fmt(t){ t = Math.floor(t); return Math.floor(t/60) + ':' + ('0' + (t % 60)).slice(-2); }
+function updateHUD(t){
+  var i = sceneAt(t), s = B[i], lt = t - s.start, end = s.start + s.dur, k;
+  if (i !== curScene) {
+    curScene = i;
+    document.documentElement.style.setProperty('--acc', CONFIG.accent[s.beat]); document.documentElement.style.setProperty('--accl', CONFIG.accentLight[s.beat]);
+    el.sname.textContent = s.setting || ''; el.sidx.textContent = CONFIG.initiative || '';
+    el.bnum.textContent = s.beat ? String(s.beat) : ''; el.blab.textContent = s.beat ? (s.source || '') : ''; el.beat.style.display = s.beat ? 'flex' : 'none';
+    for (var b=0;b<steps.length;b++) steps[b].classList.toggle('on', s.beat === b + 1);
+    el.head.textContent = s.head; el.head.classList.toggle('long', s.head.length > 78);
+    el.sup.textContent = s.sup || ''; el.sup.style.display = s.sup ? 'block' : 'none';
+    el.note.textContent = s.note || '';
+    var inf = !!(s.cards || s.stages); el.panel.classList.toggle('info', inf); el.ui.classList.toggle('info', inf); buildInfo(s); buildChips(s);
+    for (var q=0;q<navBtns.length;q++) if (navBtns[q]) navBtns[q].removeAttribute('aria-current');
+    if (navBtns[i]) navBtns[i].setAttribute('aria-current', 'true');
+    var gi = groupOf(i); for (q=0;q<navGroups.length;q++) if (navGroups[q]) navGroups[q].classList.toggle('on', q === gi);
+    for (q=0;q<railDots.length;q++) railDots[q].classList.toggle('on', +railDots[q].getAttribute('data-group') === gi);
+  }
+  revealInfo(s, lt);
+  if (chips.length) { var on = 0; for (k=0;k<chips.length;k++) if (lt >= s.chips[k].at) on = k; for (k=0;k<chips.length;k++) chips[k].classList.toggle('on', k === on); }
+  // the caption fades with the picture while playing; a paused or stepped frame shows the scene fully, caption and all
+  var live = state.playing;
+  var op = live ? Math.min(ramp(lt, 0, 0.3), ramp(end - t, 0, 0.25)) : 1; if (i === NB - 1) op = live ? ramp(lt, 0, 0.3) : 1;
+  el.panel.style.opacity = op; el.scen.style.opacity = op;
+  for (k=0;k<GROUPS.length;k++) segFills[k].style.width = (clamp((t - GROUPS[k].start) / GROUPS[k].dur, 0, 1) * 100) + '%';
+  knob.style.left = (t/DUR*100) + '%';
+  var sec = Math.floor(t); if (sec !== lastSec) { lastSec = sec; el.tm.textContent = fmt(sec) + ' / ' + fmt(DUR); el.prog.setAttribute('aria-valuenow', String(sec)); el.prog.setAttribute('aria-valuetext', fmt(sec) + ' of ' + fmt(DUR) + ', ' + s.name); }
+  var f = t > DUR - 0.7 ? (t - (DUR - 0.7)) / 0.7 : (t < 0.5 && live ? 1 - t / 0.5 : 0);
+  if (live) for (k=1;k<NB;k++){ var d = 1 - Math.abs(t - B[k].start) / 0.14; if (d > f) f = d; }
+  el.fade.style.opacity = clamp(f, 0, 1);
+}
+
+// ---------------------------------------------------------------- presentation, render loop, FILM
+// On a software GL driver the compositor's per-frame readback of a visible WebGL canvas stalls; there the frame is read back
+// through a pixel-pack buffer + fence and shown through a 2D canvas. On hardware GL the WebGL canvas is shown directly.
+var present = { mode:'direct', gl:null, c2d:null, ctx:null, pbo:null, fence:null, pending:null, dirty:false, pix:null, flip:null, gen:0, onFirst:null };
+function createRenderer(){
+  var r = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
+  r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  var gl = r.getContext(), info = '';
+  try { var ext = gl.getExtension('WEBGL_debug_renderer_info'); info = (gl.getParameter(gl.RENDERER) || '') + ' ' + (ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ''); } catch (e) { info = ''; }
+  var software = /swiftshader|llvmpipe|software|mesa offscreen/i.test(info) || /present=2d/.test(location.search);
+  if (software && r.capabilities.isWebGL2) {
+    present.mode = '2d'; present.gl = gl; r.setPixelRatio(1);
+    canvas.style.display = 'none';
+    present.c2d = document.createElement('canvas'); present.c2d.style.cssText = 'display:block;width:100%;height:100%';
+    document.getElementById('stage').appendChild(present.c2d); present.ctx = present.c2d.getContext('2d');
+  }
+  canvas.addEventListener('webglcontextlost', function(){ present.gen++; present.pending = null; present.fence = null; }, false);
+  canvas.addEventListener('webglcontextrestored', function(){ render(state.t); }, false);
+  return r;
+}
+function queueReadback(){
+  var gl = present.gl; if (!gl || gl.isContextLost()) return;
+  if (present.pending) { present.dirty = true; return; }
+  var w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+  present.pbo = gl.createBuffer(); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, present.pbo);
+  gl.bufferData(gl.PIXEL_PACK_BUFFER, w*h*4, gl.STREAM_READ);
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  present.fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush();
+  present.pending = { w:w, h:h, gen:present.gen }; pollReadback();
+}
+function pollReadback(){
+  var gl = present.gl, p = present.pending; if (!p) return;
+  if (p.gen !== present.gen || gl.isContextLost()) { present.pending = null; return; }
+  if (gl.getSyncParameter(present.fence, gl.SYNC_STATUS) !== gl.SIGNALED) { setTimeout(pollReadback, 4); return; }
+  gl.deleteSync(present.fence); present.fence = null;
+  var w = p.w, h = p.h, n = w*h*4;
+  if (!present.pix || present.pix.length !== n) { present.pix = new Uint8Array(n); present.flip = new Uint8ClampedArray(n); }
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, present.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, present.pix); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  gl.deleteBuffer(present.pbo); present.pbo = null;
+  var row = w*4, pix = present.pix, flip = present.flip;
+  for (var y=0;y<h;y++) flip.set(pix.subarray(y*row, y*row+row), (h-1-y)*row);
+  if (present.c2d.width !== w || present.c2d.height !== h) { present.c2d.width = w; present.c2d.height = h; }
+  present.ctx.putImageData(new ImageData(flip, w, h), 0, 0);
+  present.pending = null;
+  if (present.onFirst) { var f = present.onFirst; present.onFirst = null; f(); }
+  if (present.dirty) { present.dirty = false; render(state.t); }
+}
+FILM.present = function(){ return { mode:present.mode, pending:!!present.pending, dirty:present.dirty, gen:present.gen }; };
+function resize(){ var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w/h; camera.fov = w/h < 0.8 ? 64 : 48; camera.updateProjectionMatrix(); }
+function render(t){ if (present.mode === '2d' && present.pending) { updateHUD(t); present.dirty = true; return; } update(t); flushScreens(); updateHUD(t); renderer.render(scene, camera); if (present.mode === '2d') queueReadback(); }
+function norm(t){ return ((t % DUR) + DUR) % DUR; }
+function now(){ return performance.now()/1000; }
+function currentTime(){ return state.playing ? norm(state.base + (now() - state.p0)) : state.t; }
+FILM.time = function(){ return currentTime(); };
+FILM.seek = function(t){ t = norm(+t || 0); state.playing = false; state.t = t; state.base = t; render(t); syncPlay(); };
+FILM.play = function(){ if (state.playing) return; state.base = state.t; state.p0 = now(); state.playing = true; syncPlay(); wake(); };
+FILM.pause = function(){ if (!state.playing) return; state.t = currentTime(); state.playing = false; render(state.t); syncPlay(); wake(); };
+// scene stepping: next() goes to the next scene start (the first after the last), prev() to the current scene start when more than
+// 1.5 s into it, else to the previous scene start; both keep the current play state. restart() goes to 0 and plays.
+FILM.next = function(){ var i = sceneAt(currentTime()); jump(i >= NB - 1 ? 0 : B[i+1].start); };
+FILM.prev = function(){ var t = currentTime(), i = sceneAt(t); jump(t - B[i].start > 1.5 || i === 0 ? B[i].start : B[i-1].start); };
+FILM.restart = function(){ FILM.seek(0); FILM.play(); };
+Object.defineProperty(FILM, 'playing', { get:function(){ return state.playing; }, enumerable:true });
+var drag = null;
+function syncPlay(){ el.bar.classList.toggle('playing', state.playing); el.bplay.setAttribute('aria-label', state.playing ? 'Pause' : 'Play');
+  el.hintpp.textContent = state.playing ? 'pause' : 'play'; el.ui.classList.toggle('paused', !state.playing && FILM.ready && !drag); }
+// idle fade: the bar and rail drop to low opacity 2.5 s after the last input while playing; never while paused
+var idleTimer = null;
+function wake(){ el.ui.classList.remove('idle'); clearTimeout(idleTimer); idleTimer = setTimeout(function(){ if (state.playing) { el.ui.classList.add('idle'); closeNav(); el.ui.classList.remove('navshow'); } }, 2500); }
+['mousemove','pointerdown','touchstart','keydown'].forEach(function(ev){ window.addEventListener(ev, wake, { passive:true }); });
+function loop(){ requestAnimationFrame(loop); if (!state.playing) return; state.t = currentTime(); render(state.t); }
+window.addEventListener('resize', function(){ if (!renderer) return; resize(); if (!state.playing) render(state.t); });
+el.bplay.addEventListener('click', function(){ state.playing ? FILM.pause() : FILM.play(); });
+el.brestart.addEventListener('click', function(){ FILM.restart(); });
+el.bprev.addEventListener('click', function(){ FILM.prev(); });
+el.bnext.addEventListener('click', function(){ FILM.next(); });
+// scrubber: click seeks; press-and-drag scrubs; play resumes on release if it was playing; arrow keys on the focused slider step 5 s
+function progT(e){ var r = el.prog.getBoundingClientRect(); return Math.min(clamp((e.clientX - r.left)/r.width, 0, 1)*DUR, DUR - 0.05); }
+el.prog.addEventListener('pointerdown', function(e){ e.preventDefault(); drag = { was:state.playing }; try { el.prog.setPointerCapture(e.pointerId); } catch (x) {} FILM.seek(progT(e)); });
+el.prog.addEventListener('pointermove', function(e){ if (drag) FILM.seek(progT(e)); });
+function endDrag(e){ if (!drag) return; if (e && e.type === 'pointerup') FILM.seek(progT(e)); var was = drag.was; drag = null; if (was) FILM.play(); else syncPlay(); }
+el.prog.addEventListener('pointerup', endDrag); el.prog.addEventListener('pointercancel', endDrag); el.prog.addEventListener('lostpointercapture', endDrag);
+var navHide = null;
+function navShow(on){ clearTimeout(navHide); if (on) el.ui.classList.add('navshow'); else navHide = setTimeout(function(){ el.ui.classList.remove('navshow'); }, 350); }
+[el.rail, el.nav].forEach(function(n){ n.addEventListener('mouseenter', function(){ navShow(true); }); n.addEventListener('mouseleave', function(){ navShow(false); }); });
+railDots.forEach(function(d){ d.addEventListener('click', function(){ jump(+d.getAttribute('data-t')); closeNav(); }); });
+el.navback.addEventListener('click', closeNav);
+el.navtog.addEventListener('click', function(){ var open = !el.nav.classList.contains('open'); el.nav.classList.toggle('open', open); el.navtog.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+// keyboard: Space play/pause, Left/Right previous/next scene, Home restart, Escape closes the scene list. Space on a focused button is left to the button.
+window.addEventListener('keydown', function(e){
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  var k = e.key, onBtn = e.target && e.target.tagName === 'BUTTON';
+  if (k === ' ' || k === 'Spacebar') { if (onBtn) return; e.preventDefault(); state.playing ? FILM.pause() : FILM.play(); }
+  else if (k === 'ArrowRight') { e.preventDefault(); FILM.next(); }
+  else if (k === 'ArrowLeft') { e.preventDefault(); FILM.prev(); }
+  else if (k === 'Home') { e.preventDefault(); FILM.restart(); }
+  else if (k === 'Escape') closeNav();
+});
+function start(){
+  try { renderer = createRenderer(); } catch (e) { showFallback(); return; }
+  resize();
+  FILM.mode = present.mode;
+  if (present.mode === '2d') { present.onFirst = function(){ FILM.ready = true; syncPlay(); FILM.play(); }; FILM.seek(0); }
+  else { FILM.seek(0); FILM.ready = true; FILM.play(); }
+  loop();
+}
+// The title card shows at once; the GL context is created once the fonts are in and the page has been up for about 2.4 s.
+updateHUD(0);
+var started = false, fontsIn = false;
+function go(){ if (started || !fontsIn) return; var wait = Math.max(0, 2400 - performance.now()); started = true; setTimeout(start, wait); }
+function fontsReady(){ fontsIn = true; go(); }
+if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fontsReady, fontsReady); setTimeout(fontsReady, 2500); } else { fontsReady(); }
+})();
+</script>
+</body>
+</html>

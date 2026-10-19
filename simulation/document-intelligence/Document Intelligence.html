@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Document Intelligence</title>
+<meta name="description" content="Document Intelligence, a standalone initiative film for the AI Center X prototype: a back office where scanned customer contracts are keyed into the record, the pipeline that would send the scans to a bought extraction service, the test that found long contracts cut short, and the checks that hold the pilot, in four beats grounded in the initiative's AI Canvas and governance record. Staged events only; no results.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  DOCUMENT INTELLIGENCE (simulation/document-intelligence/Document Intelligence.html) - initiative film for `docai`, issue #8 phase 2.
+  Built from simulation/_template/film-template.html: only the CONFIG block differs (film-local glyph painters, the ten shots of
+  "Document Intelligence - Script and Protocols.md" with their exact on-screen text and timings, build() and update()).
+  Everything after "END OF CONFIG" is the shared template machinery, unchanged. Not a scene in Village Film C.
+  Test: python test/film_controls_test.py "simulation/document-intelligence/Document Intelligence.html"
+        python test/document-intelligence_test.py
+-->
+<style>
+  :root{
+    --ink:#17211f; --paper:#f3efe6; --neutral:#e8e6e1;
+    --acc:#e8e6e1; --accl:#f3efe6;
+    --hf:"Fraunces","Iowan Old Style",Georgia,serif; --bf:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  html,body{margin:0;height:100%;background:#0f1614;color:var(--paper);font-family:var(--bf);overflow:hidden}
+  #stage{position:fixed;inset:0;background:#dce3e6}
+  #stage canvas{display:block;width:100%;height:100%}
+  #ui{position:fixed;inset:0;pointer-events:none}
+  #scrim{position:absolute;inset:0;background:radial-gradient(125% 95% at 0% 100%,rgba(15,22,20,.9) 0%,rgba(15,22,20,.62) 32%,rgba(15,22,20,.22) 56%,rgba(15,22,20,0) 74%);transition:opacity .25s}
+  /* top corners: the setting (place and moment) on the left, the initiative on the right, each on its own small scrim pill */
+  #top{position:absolute;left:max(24px,4vw);right:max(24px,4vw);top:max(18px,2.6vh);display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:clamp(13px,1.15vw,17px);font-weight:500;letter-spacing:.01em;color:rgba(243,239,230,.95);text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  #top #scen,#top #sidx{background:rgba(15,22,20,.58);border:1px solid rgba(243,239,230,.12);border-radius:999px;padding:.38em .85em;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);min-width:0}
+  #top #scen{display:flex;align-items:center;gap:.6em}
+  #top #scen i{flex:0 0 auto;display:inline-block;width:.75em;height:.75em;border-radius:50%;background:var(--acc);box-shadow:0 0 0 2px rgba(15,22,20,.35)}
+  #top #sidx{opacity:.95;text-align:right}
+  #top #sidx:empty{display:none}
+  /* the caption block sits above the playback bar and stops short of the navigation column on the right */
+  #panel{box-sizing:border-box;position:absolute;left:max(24px,4vw);bottom:calc(max(12px,1.6vh) + 44px + clamp(12px,2vh,22px));width:min(64vw,900px);max-width:calc(100vw - 2*max(24px,4vw) - clamp(168px,14.5vw,200px) - 24px);padding-left:clamp(14px,1.6vw,24px);border-left:5px solid var(--acc);transition:border-color .25s}
+  /* beat row: the big numeral is the BEAT number (1-4); beside it the AI Canvas source line and the four-step indicator with the current beat lit */
+  #beat{display:flex;align-items:flex-end;gap:.5em;margin:0 0 clamp(6px,1vh,12px);line-height:1}
+  #bnum{font-family:var(--hf);font-weight:600;font-size:clamp(44px,6.4vw,92px);color:var(--acc);line-height:.86;text-shadow:0 2px 10px rgba(0,0,0,.4)}
+  #bmeta{display:flex;flex-direction:column;gap:clamp(4px,.7vh,8px);padding-bottom:.06em;min-width:0}
+  #blab{font-size:clamp(14px,1.3vw,20px);font-weight:500;line-height:1.2;color:rgba(243,239,230,.9);text-shadow:0 1px 6px rgba(0,0,0,.55)}
+  #blab:empty{display:none}
+  #steps{display:flex;flex-wrap:wrap;align-items:center;align-self:flex-start;gap:.25em .5em;padding:.3em .75em;border-radius:999px;background:rgba(15,22,20,.66);font-size:clamp(12px,1.1vw,16px);font-weight:500;letter-spacing:.01em;color:rgba(243,239,230,.86);white-space:nowrap}
+  #steps span{transition:color .2s}
+  #steps span+span:before{content:"\2192";display:inline-block;margin-right:.5em;color:rgba(243,239,230,.5);font-weight:400}
+  #steps span.on{color:var(--accl);font-weight:600}
+  #cap p{margin:0}
+  #head{font-family:var(--hf);font-weight:500;font-size:clamp(26px,3.6vw,56px);line-height:1.12;letter-spacing:-.005em;text-shadow:0 2px 12px rgba(0,0,0,.5);text-wrap:balance}
+  #head.long{font-size:clamp(23px,3vw,48px);line-height:1.14}
+  #sup{margin-top:clamp(8px,1.2vh,14px)!important;font-size:clamp(16px,1.6vw,24px);font-weight:400;line-height:1.35;color:rgba(243,239,230,.9);text-shadow:0 1px 8px rgba(0,0,0,.55);text-wrap:pretty}
+  #note{margin:clamp(6px,.9vh,10px) 0 0;font-size:clamp(13px,1.05vw,15px);color:rgba(243,239,230,.78);text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  #note:empty{display:none}
+  /* card slides: an infographic block inside the caption - cards in a row, or a roadmap of stages. Revealed by updateHUD as a pure function of t. */
+  #info{display:none;margin-top:clamp(12px,2vh,22px)}
+  #panel.info{width:min(78vw,1320px)}
+  #panel.info:before{content:"";position:absolute;left:-100vw;right:-100vw;top:-48px;bottom:-240px;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,rgba(15,22,20,0) 0,rgba(15,22,20,.6) 52px,rgba(15,22,20,.84) 130px)}
+  #panel.info #info{display:block}
+  #panel.info #head{font-size:clamp(24px,3vw,48px)}
+  #info h3{margin:0;font-family:var(--hf);font-weight:500;font-size:clamp(18px,1.65vw,28px);line-height:1.14;letter-spacing:-.005em;color:var(--paper)}
+  #info p{font-size:clamp(14px,1.2vw,19px);line-height:1.38;color:rgba(243,239,230,.93);text-wrap:pretty}
+  #info svg{display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  #cards{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:clamp(10px,1.1vw,18px);margin:0;padding:0;list-style:none}
+  .card{box-sizing:border-box;padding:clamp(12px,1.15vw,20px);border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.2);border-top:3px solid rgba(243,239,230,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .card.now{border-color:rgba(243,239,230,.5);border-top-color:var(--paper)}
+  .card .ct{display:flex;align-items:center;gap:.7em;margin:0 0 clamp(7px,.9vh,12px)}
+  .card .ic{flex:0 0 auto;display:grid;place-items:center;width:clamp(38px,3.1vw,52px);height:clamp(38px,3.1vw,52px);border-radius:12px;background:var(--paper);color:#0f1614}
+  .card .ic svg{width:64%;height:64%}
+  #foot{margin-top:clamp(9px,1.4vh,16px)!important;font-size:clamp(12.5px,1.05vw,16px)!important;color:rgba(243,239,230,.86)!important;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  /* roadmap: milestones on a line. A firm stage has a filled node and a solid connector; a conditional stage an outlined node and a dashed connector. */
+  #road{display:grid;grid-template-columns:repeat(var(--n,4),minmax(0,1fr));margin:0;padding:clamp(14px,1.3vw,22px) clamp(14px,1.3vw,22px) clamp(12px,1.2vw,20px);list-style:none;border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.2);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .stage{min-width:0;padding-right:clamp(10px,1.2vw,22px)}
+  .stage:last-child{padding-right:0}
+  .stage .trk{display:flex;align-items:center;margin:0 calc(-1*clamp(10px,1.2vw,22px)) clamp(8px,1vh,12px) 0}
+  .stage:last-child .trk{margin-right:0}
+  .stage .node{flex:0 0 auto;box-sizing:border-box;display:grid;place-items:center;width:clamp(38px,3.1vw,52px);height:clamp(38px,3.1vw,52px);border-radius:50%;background:var(--paper);color:#0f1614;border:2px solid var(--paper)}
+  .stage.cond .node{background:rgba(15,22,20,.55);color:var(--paper);border-style:dashed}
+  .stage .node svg{width:60%;height:60%}
+  .stage .ln{flex:1 1 auto;height:0;border-top:3px solid var(--paper);transform:scaleX(var(--r,0));transform-origin:left center}
+  .stage .ln.dash{border-top-style:dashed;opacity:.85}
+  .stage:last-child .ln{visibility:hidden}
+  .stage p{margin-top:.3em!important}
+  /* step chips: real buttons - each seeks to the start of its step inside the current beat; a thin line links them */
+  #strip{display:none;flex-wrap:wrap;align-items:center;gap:6px 0;margin-top:clamp(10px,1.6vh,18px);font-size:clamp(12px,1.1vw,16px);font-weight:500;pointer-events:auto}
+  #strip button{margin:0;min-height:32px;padding:.4em .95em;border-radius:999px;background:rgba(15,22,20,.6);color:rgba(243,239,230,.82);border:1px solid rgba(243,239,230,.3);font:inherit;cursor:pointer;transition:background .2s,color .2s;-webkit-tap-highlight-color:transparent}
+  #strip button+button{margin-left:16px;position:relative}
+  #strip button+button:before{content:"";position:absolute;right:100%;top:50%;width:16px;height:2px;margin-right:1px;background:rgba(243,239,230,.4);pointer-events:none}
+  #strip button:hover{background:rgba(243,239,230,.2);color:var(--paper);border-color:var(--paper)}
+  #strip button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  #strip button.on{background:var(--acc);color:#0f1614;border-color:var(--acc)}
+  /* playback bar: previous scene, play/pause, next scene, scrubber with scene ticks, keyboard hint, time readout, restart */
+  #bar{position:absolute;left:max(16px,2.4vw);right:max(16px,2.4vw);bottom:max(12px,1.6vh);height:44px;box-sizing:border-box;display:flex;align-items:center;gap:2px;padding:0 4px;border-radius:22px;background:rgba(15,22,20,.66);border:1px solid rgba(243,239,230,.14);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:auto;transition:opacity .35s}
+  #bar button{position:relative;flex:0 0 40px;width:40px;height:40px;margin:0;padding:0;border:0;border-radius:50%;background:transparent;color:var(--paper);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #bar button svg{width:18px;height:18px;fill:currentColor;display:block}
+  #bar button:hover{background:rgba(243,239,230,.14)}
+  #bar button:focus-visible{outline:2px solid var(--paper);outline-offset:-3px}
+  [data-tip]:after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);padding:.35em .7em;border-radius:7px;background:rgba(15,22,20,.94);border:1px solid rgba(243,239,230,.2);color:var(--paper);font:500 12.5px/1.2 var(--bf);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+  [data-tip]:focus-visible:after{opacity:1}
+  @media (hover:hover) and (min-width:641px){[data-tip]:hover:after{opacity:1}}
+  #bprev[data-tip]:after{left:0;transform:none}
+  #brestart[data-tip]:after{left:auto;right:0;transform:none}
+  #rail [data-tip]:after{left:auto;right:calc(100% + 8px);bottom:auto;top:50%;transform:translateY(-50%)}
+  #bplay{background:var(--paper);color:#0f1614}#bar #bplay:hover{background:#fff}
+  #bplay .ic-pause{display:none}#bar.playing #bplay .ic-pause{display:block}#bar.playing #bplay .ic-play{display:none}
+  #prog{position:relative;flex:1 1 60px;min-width:60px;height:40px;margin:0 6px;border-radius:8px;cursor:pointer;touch-action:none}
+  #prog:focus-visible{outline:2px solid var(--paper);outline-offset:-2px}
+  #prog .seg{position:absolute;top:17px;height:6px;border-radius:3px;background:rgba(243,239,230,.22);overflow:hidden}
+  #prog .seg b{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--c)}
+  #prog .tick{position:absolute;top:16px;width:2px;height:8px;margin-left:-1px;background:rgba(15,22,20,.85);pointer-events:none}
+  #prog .knob{position:absolute;top:14px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 2px rgba(15,22,20,.55);pointer-events:none}
+  #hint{flex:0 0 auto;padding:0 6px 0 2px;font-size:12px;font-weight:500;color:rgba(243,239,230,.78);white-space:nowrap}
+  #hint kbd{display:inline-block;min-width:1.3em;padding:.1em .4em;margin:0 .1em;border:1px solid rgba(243,239,230,.35);border-radius:5px;font:inherit;text-align:center;color:var(--paper)}
+  #tm{flex:0 0 auto;padding:0 6px 0 4px;font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(243,239,230,.9);white-space:nowrap}
+  #bar .sep{flex:0 0 1px;width:1px;height:22px;margin:0 3px 0 1px;background:rgba(243,239,230,.22)}
+  /* navigation on the right: at rest a thin rail (one numbered dot per beat and a list button); the full list flies out on hover or focus, or is pinned */
+  #nav{position:absolute;right:calc(max(10px,1vw) + 50px);top:50%;transform:translateY(-50%);width:clamp(184px,14.5vw,208px);max-height:calc(100vh - 150px);overflow:auto;box-sizing:border-box;padding:6px;border-radius:14px;background:rgba(15,22,20,.8);border:1px solid rgba(243,239,230,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;font-size:13.5px;line-height:1.25;display:none;transition:opacity .2s}
+  #nav.open{display:block}
+  #nav ol{list-style:none;margin:0;padding:0}
+  #nav button{display:flex;align-items:center;gap:.45em;width:100%;min-height:28px;margin:0;padding:3px 8px;border:0;border-radius:8px;background:transparent;color:rgba(243,239,230,.92);font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #nav button:hover{color:#fff;background:rgba(243,239,230,.06);text-decoration:underline;text-decoration-color:rgba(243,239,230,.55);text-underline-offset:3px}
+  #nav button:focus-visible{outline:2px solid var(--paper);outline-offset:-2px}
+  #nav .sc>button{min-height:32px;margin-top:4px;font-weight:600;color:var(--paper)}
+  #nav .sc>button b{font-family:var(--hf);font-weight:600;font-size:1.5em;line-height:1;width:.75em;flex:0 0 auto;color:rgba(243,239,230,.6)}
+  #nav .sc.on>button b{color:var(--accl)}
+  #nav .beats{margin:0 0 2px calc(8px + 1.2em);border-left:2px solid rgba(243,239,230,.2);padding-left:3px}
+  #nav .sc.on .beats{border-color:var(--acc)}
+  #nav .beats button{min-height:26px;padding:2px 7px;font-size:.96em}
+  #nav button[aria-current],#nav button[aria-current]:hover{color:#0f1614;font-weight:600;background:var(--acc);text-decoration:none;box-shadow:0 0 0 1px rgba(15,22,20,.35)}
+  #nav button[aria-current] b{color:#0f1614!important}
+  #nav .end>button{min-height:30px}
+  #rail{display:flex;position:absolute;right:max(10px,1vw);top:50%;transform:translateY(-50%);flex-direction:column;gap:6px;pointer-events:auto;transition:opacity .35s}
+  #rail button{position:relative;width:40px;height:40px;margin:0;padding:0;border:1px solid rgba(243,239,230,.22);border-radius:50%;background:rgba(15,22,20,.72);color:rgba(243,239,230,.92);display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent}
+  #rail button:hover{border-color:var(--paper)}
+  #rail .dot{font-family:var(--hf);font-weight:600;font-size:19px;line-height:1}
+  #rail .dot.on{background:var(--acc);color:#0f1614;border-color:var(--acc)}
+  #rail button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  #rail button:focus-visible{outline:2px solid var(--paper);outline-offset:2px}
+  #rail #navtog[aria-expanded="true"]{background:var(--paper);color:#0f1614}
+  @media (hover:hover) and (min-width:901px){
+    #nav{display:block;opacity:0}
+    #ui.navshow #nav,#nav.open,#nav:focus-within{opacity:1}
+  }
+  #ui.idle #bar,#ui.idle #rail{opacity:.35}
+  #paused{position:absolute;left:50%;top:max(18px,2.6vh);transform:translateX(-50%);display:none;align-items:center;gap:.5em;padding:.38em .9em;border-radius:999px;background:rgba(15,22,20,.72);border:1px solid rgba(243,239,230,.22);font-size:clamp(12px,1.05vw,15px);font-weight:600;letter-spacing:.04em;color:var(--paper)}
+  #paused:before{content:"";width:.28em;height:.85em;border-left:.26em solid var(--paper);border-right:.26em solid var(--paper)}
+  #ui.paused #paused{display:flex}
+  #navback{display:none}
+  #fade{position:fixed;inset:0;background:#000;pointer-events:none;opacity:1}
+  #fallback{display:none;max-width:760px;margin:0 auto;padding:40px 24px;font-size:17px;line-height:1.5;color:var(--paper);height:100%;box-sizing:border-box;overflow:auto}
+  #fallback h1{font-family:var(--hf);font-weight:500;font-size:34px;margin:0 0 8px}
+  #fallback ol{padding-left:0;list-style:none}#fallback li{margin:10px 0}#fallback b{display:block;font-weight:600}
+  @media (max-width:1100px){
+    /* the paused pill moves under the setting label, so a long setting never runs into it */
+    #paused{top:calc(max(18px,2.6vh) + 44px);left:max(24px,4vw);transform:none}
+  }
+  @media (max-width:900px){
+    #nav{width:min(230px,calc(100vw - 90px))}
+    #hint{display:none}
+    #panel{box-sizing:border-box;max-width:calc(100vw - max(24px,4vw) - 72px)}
+  }
+  @media (max-width:640px){
+    /* phone: the corner labels stack; the rail is a row under them; the scrubber takes its own row; the indicator shows the current beat in words */
+    #top{flex-direction:column;align-items:flex-start;gap:6px;font-size:12px}
+    #top #sidx{text-align:left}
+    #panel{width:auto;bottom:calc(max(12px,1.6vh) + 88px + 12px)}
+    #steps{white-space:normal;gap:.45em}
+    #steps span{font-size:0;width:7px;height:7px;border-radius:50%;background:rgba(243,239,230,.45)}
+    #steps span+span:before{display:none}
+    #steps span.on{font-size:12.5px;width:auto;height:auto;border-radius:0;background:none}
+    /* phone: chips may wrap, so they sit in a plain row with a gap and no connector lines */
+    #strip{gap:6px}#strip button{padding:.35em .7em}#strip button+button{margin-left:0}#strip button+button:before{display:none}
+    #bar{left:10px;right:10px;height:88px;flex-wrap:wrap;align-content:center;padding:0 6px}
+    #prog{order:-1;flex:1 0 100%;margin:0;height:40px;box-sizing:border-box}
+    #tm{padding:0 6px;font-size:12px;margin-right:auto}
+    #head{font-size:23px;line-height:1.14}#head.long{font-size:20px}
+    #sup{font-size:15px;line-height:1.32}
+    #panel.info #head{font-size:22px}
+    #info{margin-top:10px}
+    #cards{grid-template-columns:1fr;gap:7px}
+    .card{padding:9px 11px;border-radius:12px;border-top-width:1px;border-left:3px solid rgba(243,239,230,.35)}
+    .card.now{border-left-color:var(--paper)}
+    .card .ct{margin-bottom:4px;gap:.55em}.card .ic{width:30px;height:30px;border-radius:8px}
+    #info h3{font-size:17px}#info p{font-size:14px;line-height:1.3}
+    #foot{font-size:12.5px!important;line-height:1.3!important;margin-top:8px!important}
+    #road{grid-template-columns:1fr;padding:11px 12px 4px}
+    .stage{display:grid;grid-template-columns:34px minmax(0,1fr);column-gap:11px;padding:0 0 9px}
+    .stage .trk{grid-column:1;grid-row:1 / span 2;flex-direction:column;margin:0 0 -9px}
+    .stage:last-child .trk{margin:0}
+    .stage .node{width:34px;height:34px}
+    .stage .ln{flex:1 1 auto;width:0;min-height:6px;border-top:0;border-left:3px solid var(--paper);transform:scaleY(var(--r,0));transform-origin:center top}
+    .stage .ln.dash{border-left-style:dashed}
+    .stage h3{grid-column:2;align-self:end;padding-top:5px}.stage p{grid-column:2;margin-top:1px!important}
+    #bnum{font-size:38px}#blab{font-size:13px}
+    #strip{margin-top:8px}
+    #rail{top:calc(max(18px,2.6vh) + 66px);right:10px;transform:none;flex-direction:row}
+    #rail [data-tip]:after{display:none}
+    #nav{top:calc(max(18px,2.6vh) + 114px);right:10px;transform:none;max-height:calc(100vh - max(18px,2.6vh) - 126px);z-index:2}
+    #nav.open~#navback,#navback.on{display:block;position:absolute;inset:0;background:rgba(15,22,20,.7);pointer-events:auto;z-index:1}
+    #rail{z-index:2}
+    #paused{top:calc(max(18px,2.6vh) + 72px);left:max(24px,4vw);transform:none}
+  }
+  @media (prefers-reduced-motion:reduce){#panel,#strip button,#steps span,#bar,#nav,#rail,[data-tip]:after{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="c"></canvas></div>
+<div id="ui">
+  <div id="scrim"></div>
+  <div id="top"><span id="scen"><i></i><span id="sname"></span></span><span id="sidx"></span></div>
+  <div id="panel">
+    <div id="beat"><span id="bnum"></span><div id="bmeta"><span id="blab"></span><div id="steps"></div></div></div>
+    <div id="cap" data-caption><p id="head"></p><p id="sup"></p><div id="info"></div></div>
+    <p id="note"></p>
+    <div id="strip" role="group" aria-label="Steps in this beat"></div>
+  </div>
+  <div id="bar" role="group" aria-label="Playback controls">
+    <button id="bprev" type="button" aria-label="Previous scene" data-tip="Previous scene (Left arrow)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 4h2.2v12H4.5zM15.5 4L8 10l7.5 6z"/></svg></button>
+    <button id="bplay" type="button" aria-label="Pause" data-tip="Play or pause (Space)"><svg class="ic-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6.5 3.5v13l10.5-6.5z"/></svg><svg class="ic-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4h3.6v12H5zM11.4 4H15v12h-3.6z"/></svg></button>
+    <button id="bnext" type="button" aria-label="Next scene" data-tip="Next scene (Right arrow)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.3 4h2.2v12h-2.2zM4.5 4l7.5 6-7.5 6z"/></svg></button>
+    <div id="prog" role="slider" tabindex="0" aria-label="Film position" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
+    <span id="hint" aria-hidden="true"><kbd>Space</kbd> <span id="hintpp">pause</span> &nbsp;<kbd>&larr;</kbd><kbd>&rarr;</kbd> scenes</span>
+    <span id="tm">0:00 / 0:00</span>
+    <i class="sep" aria-hidden="true"></i>
+    <button id="brestart" type="button" aria-label="Restart" data-tip="Restart from the beginning (Home)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.5 10A5.5 5.5 0 1 1 10 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8.6 1.6l4.2 2.9-4.2 2.9z"/></svg></button>
+  </div>
+  <div id="paused" role="status" aria-live="polite">Paused</div>
+  <nav id="nav" aria-label="Scenes"><ol id="navlist"></ol></nav><div id="navback"></div>
+  <div id="rail"><button type="button" id="navtog" aria-label="Scene list" data-tip="All scenes" aria-expanded="false" aria-controls="nav"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5h9M7 10h9M7 15h9"/><circle cx="3.5" cy="5" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="3.5" cy="15" r="1" fill="currentColor" stroke="none"/></svg></button></div>
+</div>
+<div id="fade"></div>
+<div id="fallback"><h1 id="fbtitle"></h1><p>This film needs 3D graphics (WebGL). Your browser could not start it. Here is the film in words.</p><ol id="fblist"></ol></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script>
+(function(){
+'use strict';
+
+/* ==================================================================================================================
+   CONFIG - THE ONLY BLOCK A NEW FILM EDITS
+   ------------------------------------------------------------------------------------------------------------------
+   beats[]   one entry per scene on the timeline, in order, contiguous (start of each = start + dur of the one before).
+             beat: 0 = an open or close card, 1-4 = The situation / The AI at work / What can go wrong / How it is kept safe.
+             A beat may span several consecutive entries (e.g. two seeded faults in beat 3); they share the numeral.
+             Fields: name (scene name: navigation, FILM.scenes, fallback), start, dur (seconds), setting (top-left label:
+             the place and moment), source (small line beside the numeral: where the beat comes from, e.g. "AI Canvas:
+             Business Problem"), head (headline), sup (support line, optional), note (small line, optional, e.g. to mark a
+             staged fault), chips (optional step buttons [{label, at}] at local times), cards / stages (optional
+             infographic [{ic, at, title, text, cond}], with foot and footAt), nav (optional shorter navigation label),
+             cam (camera keys in LOCAL time: [lt, px,py,pz, lx,ly,lz] look-at, or [lt, px,py,pz, sx,sy,sz, nx,ny] aimed
+             so the subject (sx,sy,sz) lands at screen offset (nx,ny) in half-frames, +x right, +y up; a 10th element
+             (any value) keeps the horizon level).
+   build(THREE, scene, kit) -> objects   builds the whole 3D world ONCE, using the props kit. Never add objects later.
+   update(t, objects, ctx)               stages the world at film time t. Must be a pure function of t: the kit
+             restores every object, material, light and screen to its build-time state before each call, so update
+             only sets what differs from that state at time t. ctx = { i, entry, beat, lt (local time), u (0..1 in the
+             entry), kit, camKeys(keys, lt) }. Readable words never go in the 3D world: screens show glyphs, bars, colours.
+   ================================================================================================================== */
+/* ---- film-local glyph painters (canvas only: glyphs, rows, bars and colours, never words). Colour language, as the script sets it:
+   blue = the AI or its data (extracted rows, layout boxes, packets), green = confirmed or safe, amber = held for a person,
+   grey = idle or unread, matte black = what we cannot see into. Red is never painted on a screen: the in-world screens show no
+   warning during a fault; the red rings of shots 1.1, 3.1 and 3.2 are 3D markers for the viewer, not part of any screen. */
+var DI = { ai:'#4a86d8', aiL:'#dbe7f8', ok:'#3fa34d', okL:'#e0f1e2', amber:'#e9a23b', amberL:'#fbecd2', grey:'#8d99a3', ink:'#33414c',
+  dark:'#16222c', paper:'#f3f1ec', slate:'#5b6670', black:'#050505', pale:'#dfe6ec' };
+function diRR(c, x, y, w, h, r){ r = Math.max(0, Math.min(r, w/2, h/2)); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+// one glyph centred at (x, y) with radius r; o.disc draws it white on a filled disc of that colour
+function diG(c, n, x, y, r, col, o){
+  o = o || {}; var PI = Math.PI, q;
+  c.save(); c.translate(x, y); c.lineCap = 'round'; c.lineJoin = 'round'; c.setLineDash([]);
+  if (o.disc) { c.fillStyle = o.disc; c.beginPath(); c.arc(0, 0, r, 0, 2*PI); c.fill(); r *= 0.6; col = col || '#ffffff'; }
+  var lw = Math.max(1.5, r*(o.lw || 0.16));
+  c.strokeStyle = col; c.fillStyle = col; c.lineWidth = lw;
+  function P(pts, close, fill){ c.beginPath(); c.moveTo(pts[0]*r, pts[1]*r); for (var k=2;k<pts.length;k+=2) c.lineTo(pts[k]*r, pts[k+1]*r); if (close) c.closePath(); if (fill) c.fill(); else c.stroke(); }
+  function C(cx, cy, rad, fill){ c.beginPath(); c.arc(cx*r, cy*r, rad*r, 0, 2*PI); if (fill) c.fill(); else c.stroke(); }
+  function R(x0, y0, w, h, rad, fill){ diRR(c, x0*r, y0*r, w*r, h*r, rad*r); if (fill) c.fill(); else c.stroke(); }
+  switch (n) {
+    case 'check': P([-0.55,0.02, -0.15,0.4, 0.6,-0.42]); break;
+    case 'person': C(0,-0.38,0.3,true); c.beginPath(); c.arc(0, 0.75*r, 0.62*r, PI, 2*PI); c.fill(); break;
+    case 'page': P([-0.55,-0.8, 0.25,-0.8, 0.55,-0.5, 0.55,0.8, -0.55,0.8], true); P([-0.3,-0.3, 0.3,-0.3]); P([-0.3,0.05, 0.3,0.05]); P([-0.3,0.4, 0.1,0.4]); break;
+    case 'pen': c.rotate(-PI/4); R(-0.15,-0.85,0.3,1.2,0.06,true); P([-0.15,0.42, 0,0.8, 0.15,0.42], true, true); break;
+    case 'pin': c.beginPath(); c.ellipse(0, 0.62*r, 0.8*r, 0.26*r, 0, 0, 2*PI); c.stroke();
+      C(0,-0.38,0.4,true); P([-0.35,-0.18, 0,0.55, 0.35,-0.18], true, true); c.fillStyle = o.bg || DI.dark; C(0,-0.38,0.15,true); break;
+    case 'gate': c.lineWidth = lw*1.4; P([-0.7,0.85, -0.7,-0.25]); R(-0.7,-0.17,1.6,0.22,0.06,true);
+      c.fillStyle = DI.amber; C(-0.7,-0.52,0.2,true); c.strokeStyle = 'rgba(233,162,59,.55)'; c.lineWidth = lw*0.8; C(-0.7,-0.52,0.33); break;
+    case 'slot': c.setLineDash([r*0.2, r*0.15]); R(-0.75,-0.55,1.5,1.1,0.15); break;
+    case 'hour': P([-0.45,-0.72, 0.45,-0.72, -0.45,0.72, 0.45,0.72], true); P([-0.18,0.52, 0.18,0.52, 0,0.22], true, true); break;
+    case 'folder': P([-0.8,-0.5, -0.3,-0.5, -0.15,-0.3, 0.8,-0.3, 0.8,0.65, -0.8,0.65], true); P([-0.32,0.15, -0.06,0.4, 0.42,-0.08]); break;
+    case 'stack': for (q=2;q>=0;q--){ c.fillStyle = o.bg || DI.dark; R(-0.55 + q*0.16, -0.85 + q*0.16, 0.9, 1.15, 0.06, true); R(-0.55 + q*0.16, -0.85 + q*0.16, 0.9, 1.15, 0.06); }
+      c.lineWidth = lw*1.7; P([-0.9,0.68, -0.12,0.68]); P([0.18,0.68, 0.95,0.68]); break;
+    case 'eyeX': c.beginPath(); c.moveTo(-0.85*r, 0); c.quadraticCurveTo(0, -0.75*r, 0.85*r, 0); c.quadraticCurveTo(0, 0.75*r, -0.85*r, 0); c.stroke();
+      C(0,0,0.22,true); P([-0.75,0.75, 0.75,-0.75]); break;
+    case 'kbX': R(-0.85,-0.45,1.7,0.9,0.12); for (q=0;q<12;q++) C(-0.55 + (q % 4)*0.37, -0.2 + Math.floor(q/4)*0.2, 0.05, true); P([-0.8,0.75, 0.8,-0.75]); break;
+    case 'cube': c.fillStyle = DI.black; R(-0.6,-0.3,1.2,1.0,0.02,true); c.fillStyle = '#23282d'; P([-0.6,-0.3, -0.3,-0.62, 0.9,-0.62, 0.6,-0.3], true, true);
+      c.fillStyle = '#121518'; P([0.6,-0.3, 0.9,-0.62, 0.9,0.4, 0.6,0.7], true, true); c.lineWidth = lw*0.5; R(-0.6,-0.3,1.2,1.0,0.02); break;
+    case 'row': R(-0.9,-0.12,0.35,0.24,0.1,true); R(-0.4,-0.24,1.3,0.48,0.12); R(-0.28,-0.08,0.7,0.16,0.08,true); break;
+    case 'sig': c.beginPath(); for (q=0;q<=20;q++){ var xx = (-0.8 + q*0.08)*r, yy = (0.28*Math.sin(q*0.95) - 0.12*Math.cos(q*1.7))*r; if (q) c.lineTo(xx, yy); else c.moveTo(xx, yy); } c.stroke(); break;
+    default: C(0,0,0.3,true);
+  }
+  c.restore();
+}
+// form rows: one per field in the document type's template, filled or blank (SA11). Row states, one character each:
+// e empty (not keyed yet), n blank (the service returned nothing; looks like an ordinary optional blank), k keyed by hand (ink),
+// b extracted by the service, not yet checked (blue), g confirmed by the checker (green, with a tick), a held and being corrected (amber, with a pen).
+// o.pr / o.pf: the row being typed and how far; o.slip: a keyed row whose two strokes are swapped (a typing slip); o.hl: the row in focus.
+function diRows(c, x0, y0, w, h, rows, o){
+  o = o || {}; var n = rows.length, rh = h/n;
+  for (var r=0;r<n;r++){
+    var s = rows.charAt(r), yc = y0 + (r + 0.5)*rh, bx = x0 + w*0.24, bw = w*0.62, bh = rh*0.64;
+    c.fillStyle = 'rgba(51,65,76,.42)'; diRR(c, x0 + w*0.02, yc - rh*0.09, w*(0.1 + 0.05*(r % 3)), rh*0.18, rh*0.09); c.fill();
+    c.fillStyle = s === 'b' ? DI.aiL : s === 'g' ? DI.okL : s === 'a' ? DI.amberL : '#ffffff'; diRR(c, bx, yc - bh/2, bw, bh, bh*0.2); c.fill();
+    c.lineWidth = s === 'a' || r === o.hl ? Math.max(2, rh*0.08) : Math.max(1, rh*0.04); c.strokeStyle = s === 'a' ? DI.amber : r === o.hl ? DI.ink : 'rgba(51,65,76,.3)'; c.stroke();
+    var col = s === 'b' ? DI.ai : s === 'g' ? DI.ok : s === 'a' ? DI.amber : s === 'k' ? DI.ink : null, f = r === o.pr ? (o.pf || 0) : 1;
+    if (col && f > 0) {
+      var L = 0.32 + 0.5*(((r*37 + 11) % 13)/13), a = L*0.36, b = L*0.64, tmp; if (r === o.slip) { tmp = a; a = b; b = tmp; }
+      var sh = Math.max(2, bh*0.34), sx = bx + bw*0.05, u = bw*0.9, drawn = (a + b + 0.05)*u*f;
+      c.fillStyle = col; var la = Math.min(drawn, a*u); if (la > 0) { diRR(c, sx, yc - sh/2, la, sh, sh/2); c.fill(); }
+      var lb = Math.min(Math.max(0, drawn - (a + 0.05)*u), b*u); if (lb > 0) { diRR(c, sx + (a + 0.05)*u, yc - sh/2, lb, sh, sh/2); c.fill(); }
+    }
+    var gx = bx + bw + w*0.07, gr = Math.min(rh*0.34, w*0.05);
+    if (s === 'g') diG(c, 'check', gx, yc, gr, DI.ok, { lw:0.28 });
+    if (s === 'a') diG(c, 'pen', gx, yc, gr, DI.amber);
+  }
+}
+// one scanned page: strokes in four field groups; the cover carries a person glyph, the last page a signature squiggle;
+// o.boxes draws the service's blue dashed layout boxes round the fields it found (o.hb fills the one in focus)
+function diPage(c, x, y, w, h, o){
+  c.fillStyle = o.grey ? '#d4d8dc' : DI.paper; diRR(c, x, y, w, h, Math.max(2, w*0.03)); c.fill();
+  var ink = o.grey ? 'rgba(51,65,76,.42)' : 'rgba(51,65,76,.62)', pg = o.pg || 0;
+  if (o.cover) diG(c, 'person', x + w*0.2, y + h*0.12, h*0.065, DI.ink);
+  else { c.fillStyle = ink; diRR(c, x + w*0.1, y + h*0.08, w*0.5, h*0.035, h*0.017); c.fill(); }
+  var gy = [0.27, 0.43, 0.59, 0.75];
+  for (var g=0; g<4; g++){ var yy = y + h*gy[g], vw = w*(0.3 + 0.08*((g*3 + pg) % 4));
+    c.fillStyle = ink; diRR(c, x + w*0.1, yy, w*0.18, h*0.03, h*0.015); c.fill(); diRR(c, x + w*0.36, yy - h*0.004, vw, h*0.038, h*0.019); c.fill();
+    if (o.boxes) { var bx = x + w*0.32, by = yy - h*0.035, bw = vw + w*0.08, bh = h*0.11;
+      if (g === o.hb) { c.fillStyle = 'rgba(74,134,216,.3)'; diRR(c, bx, by, bw, bh, 3); c.fill(); }
+      c.save(); c.strokeStyle = DI.ai; c.lineWidth = Math.max(1.5, w*0.014); c.setLineDash([w*0.045, w*0.03]); diRR(c, bx, by, bw, bh, 3); c.stroke(); c.restore(); }
+  }
+  if (pg === o.last) diG(c, 'sig', x + w*0.64, y + h*0.91, w*0.2, DI.ink, { lw:0.1 });
+}
+var DIP = {
+  // the checker's right monitor: the form (rows), or her queue of documents (p.q) with the customer's contract sliding in (p.nt)
+  form: function(c, W, H, p){
+    c.fillStyle = p.off ? '#10161c' : '#eef0f2'; c.fillRect(0, 0, W, H); if (p.off) return;
+    var hh = H*0.12; c.fillStyle = p.hdr || DI.slate; c.fillRect(0, 0, W, hh);
+    c.fillStyle = 'rgba(255,255,255,.85)'; diRR(c, W*0.04, hh*0.36, W*0.18, hh*0.28, hh*0.14); c.fill();
+    if (p.q) {
+      var th = H*0.16, gap = H*0.035, y0 = H*0.18, j, nt = p.nt != null;
+      for (j=0;j<(p.tl || 0);j++){ var ty = y0 + (j + (nt ? 1 : 0))*(th + gap);
+        c.fillStyle = 'rgba(51,65,76,.1)'; diRR(c, W*0.06, ty, W*0.88, th, th*0.2); c.fill();
+        diG(c, 'page', W*0.13, ty + th/2, th*0.36, DI.grey, { lw:0.14 }); c.fillStyle = 'rgba(51,65,76,.35)'; diRR(c, W*0.22, ty + th*0.4, W*0.4, th*0.2, th*0.1); c.fill(); }
+      if (nt) { var nx = W*0.06 + (1 - p.nt)*W;
+        c.fillStyle = DI.aiL; diRR(c, nx, y0, W*0.88, th, th*0.2); c.fill(); c.strokeStyle = DI.ai; c.lineWidth = 2; c.stroke();
+        diG(c, 'person', nx + W*0.07, y0 + th/2, th*0.34, DI.ink); diG(c, 'page', nx + W*0.16, y0 + th/2, th*0.36, DI.ai, { lw:0.14 });
+        c.fillStyle = 'rgba(51,65,76,.45)'; diRR(c, nx + W*0.25, y0 + th*0.4, W*0.45, th*0.2, th*0.1); c.fill(); }
+      return; }
+    diRows(c, W*0.05, H*0.17, W*0.9, H*0.78, p.rows || 'eeeeeeee', { pr:p.pr, pf:p.pf, slip:p.slip, hl:p.hl });
+  },
+  // the checker's left monitor: m 'page' (the scan she keys from, grey), 'scan' (the service's view: layout boxes and a thumbnail strip), 'off'
+  // pg the page shown, n pages, bx boxes, cut the first page the service never read (no boxes from there), tk thumbnails ticked, dim strip unused
+  scan: function(c, W, H, p){
+    c.fillStyle = '#1d2730'; c.fillRect(0, 0, W, H);
+    if (!p.m || p.m === 'off') return;
+    var n = p.n || 0, strip = p.m === 'scan' && n > 0, ph = H*0.86, pw = ph*0.74, py = H*0.07, px = strip ? W*0.2 : (W - pw)/2, pg = p.pg || 0, cut = p.cut == null ? 99 : p.cut;
+    diPage(c, px, py, pw, ph, { pg:pg, last:n ? n - 1 : -1, grey:p.m === 'page', cover:p.m === 'scan' && pg === 0, boxes:p.bx && pg < cut, hb:p.hb });
+    if (!strip) return;
+    var gap = H*0.014, th = (H*0.9 - gap*(n - 1))/n, tw = th*0.74, tx = W*0.78 - tw/2;
+    for (var j=0;j<n;j++){ var ty = H*0.05 + j*(th + gap);
+      c.globalAlpha = p.dim ? 0.5 : 1; c.fillStyle = DI.paper; diRR(c, tx, ty, tw, th, 2); c.fill(); c.globalAlpha = 1;
+      if (j === pg) { c.strokeStyle = '#ffffff'; c.lineWidth = 2.5; diRR(c, tx - 2, ty - 2, tw + 4, th + 4, 3); c.stroke(); }
+      if (j < (p.tk || 0)) diG(c, 'check', tx + tw + th*0.5, ty + th/2, th*0.36, DI.ok, { lw:0.3 }); }
+  },
+  // the back-office wall screen: idle, wait (open: the service sits grey beside the closed pilot gate), walk (the walkthrough's page strip),
+  // tally (the week's fixes as one team total; fields confirmed unchanged; the share; documents saved without rekeying; the black cube), close
+  wall: function(c, W, H, p){
+    c.fillStyle = DI.dark; c.fillRect(0, 0, W, H);
+    var m = p.m || 'idle', j;
+    if (m === 'idle') { for (j=0;j<3;j++){ c.fillStyle = 'rgba(235,240,245,.08)'; diRR(c, W*0.08, H*(0.14 + j*0.26), W*0.84, H*0.18, H*0.04); c.fill();
+      c.fillStyle = 'rgba(141,153,163,.45)'; diRR(c, W*0.11, H*(0.19 + j*0.26), W*0.04, H*0.08, H*0.02); c.fill(); diRR(c, W*0.18, H*(0.21 + j*0.26), W*0.4, H*0.04, H*0.02); c.fill(); } return; }
+    if (m === 'wait' || m === 'close') {
+      if (m === 'wait') diG(c, 'cube', W*0.33, H*0.52, H*0.26, DI.grey);
+      else diG(c, 'slot', W*0.33, H*0.52, H*0.26, 'rgba(235,240,245,.8)', { lw:0.09 });
+      diG(c, 'gate', W*0.67, H*0.56, H*0.3, DI.pale); return; }
+    if (m === 'walk') { var n = 8, tw = W*0.085, gp = W*0.022, x0 = (W - (n*tw + (n - 1)*gp))/2, th = tw*1.32, y0 = H*0.2;
+      for (j=0;j<n;j++){ var x = x0 + j*(tw + gp), lit = j < p.k, cur = j === p.k;
+        c.fillStyle = lit || cur ? DI.paper : 'rgba(243,241,236,.28)'; diRR(c, x, y0, tw, th, 4); c.fill();
+        c.fillStyle = 'rgba(51,65,76,.5)'; for (var s=0;s<3;s++){ diRR(c, x + tw*0.15, y0 + th*(0.25 + s*0.22), tw*0.6, th*0.06, 2); c.fill(); }
+        if (cur) { c.strokeStyle = '#ffffff'; c.lineWidth = 4; diRR(c, x - 4, y0 - 4, tw + 8, th + 8, 6); c.stroke(); }
+        if (lit) diG(c, 'check', x + tw/2, y0 + th + H*0.12, H*0.055, DI.ok, { lw:0.3 }); } return; }
+    if (m === 'tally') {
+      var tok = H*0.052, base = H*0.88, colX = W*0.15, gX = W*0.25, sp = tok*1.12, d = p.d || 0;
+      for (j=0;j<12;j++){ c.fillStyle = DI.ok; c.beginPath(); c.arc(gX, base - sp*(j + 0.5), tok*0.46, 0, 2*Math.PI); c.fill(); }
+      c.strokeStyle = 'rgba(235,240,245,.35)'; c.lineWidth = 2; diRR(c, colX - tok*0.75, base - sp*8.2, tok*1.5, sp*8.2, 6); c.stroke();
+      for (j=0;j<d;j++){ c.fillStyle = DI.amber; c.beginPath(); c.arc(colX, base - sp*(j + 0.5), tok*0.46, 0, 2*Math.PI); c.fill(); }
+      if (p.f > 0 && p.f < 1) { c.fillStyle = DI.amber; c.beginPath(); c.arc(colX, H*0.06 + (base - sp*(d + 0.5) - H*0.06)*p.f, tok*0.46, 0, 2*Math.PI); c.fill(); }
+      c.globalAlpha = 0.32; c.fillStyle = DI.grey; [[-2.6, 0.3], [-2.0, 0.46], [-2.8, 0.62]].forEach(function(g){ c.beginPath(); c.arc(colX + tok*g[0], H*g[1], tok*0.46, 0, 2*Math.PI); c.fill(); }); c.globalAlpha = 1;
+      var bx = W*0.42, bw = W*0.26, bh = H*0.07, share = d/(d + 12);
+      diG(c, 'row', W*0.37, H*0.34, H*0.065, DI.pale);
+      c.fillStyle = 'rgba(235,240,245,.12)'; diRR(c, bx, H*0.34 - bh/2, bw, bh, bh/2); c.fill();
+      c.fillStyle = DI.ok; diRR(c, bx, H*0.34 - bh/2, bw*(1 - share), bh, bh/2); c.fill();
+      if (share > 0) { c.fillStyle = DI.amber; diRR(c, bx + bw*(1 - share), H*0.34 - bh/2, bw*share, bh, bh/2); c.fill(); }
+      diG(c, 'kbX', W*0.37, H*0.6, H*0.065, DI.pale);
+      c.fillStyle = 'rgba(235,240,245,.12)'; diRR(c, bx, H*0.6 - bh/2, bw, bh, bh/2); c.fill();
+      c.fillStyle = DI.ai; diRR(c, bx, H*0.6 - bh/2, bw*(p.kb || 0), bh, bh/2); c.fill();
+      diG(c, 'cube', W*0.84, H*0.4, H*0.18, DI.grey); diG(c, 'eyeX', W*0.84, H*0.76, H*0.09, DI.pale);
+    }
+  },
+  // the test bench wall screen (shot 3.1): the returned form (early-page rows blue, later-page rows blank like ordinary blanks, no warning),
+  // the record's own fields for the same contract laid beside it (p.rec), and the page strip (pages read in blue, pages never read in grey)
+  bench: function(c, W, H, p){
+    c.fillStyle = DI.dark; c.fillRect(0, 0, W, H);
+    c.fillStyle = DI.slate; c.fillRect(0, 0, W, H*0.1);
+    if (!p.on) return;
+    c.fillStyle = '#eef0f2'; diRR(c, W*0.04, H*0.15, W*0.36, H*0.81, 6); c.fill();
+    diRows(c, W*0.055, H*0.19, W*0.33, H*0.75, 'bbbbbnnn', {});
+    if (p.rec > 0) { c.globalAlpha = p.rec; c.fillStyle = '#eef0f2'; diRR(c, W*0.43, H*0.15, W*0.33, H*0.81, 6); c.fill();
+      diRows(c, W*0.44, H*0.19, W*0.31, H*0.75, 'kkkkkkkk', {}); c.globalAlpha = 1; }
+    var n = 8, gap = H*0.014, th = (H*0.8 - gap*(n - 1))/n, tw = th*0.74;
+    for (var j=0;j<n;j++){ var ty = H*0.15 + j*(th + gap), tx = W*0.88 - tw/2;
+      c.fillStyle = j < 4 ? DI.ai : '#59636c'; diRR(c, tx, ty, tw, th, 2); c.fill();
+      c.fillStyle = j < 4 ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.18)'; diRR(c, tx + tw*0.2, ty + th*0.3, tw*0.6, th*0.12, 1); c.fill(); diRR(c, tx + tw*0.2, ty + th*0.58, tw*0.45, th*0.12, 1); c.fill(); }
+  },
+  // the risk office wall screen (shot 4.3): the supplier card (s1 residency pin, s2 the defect logged, s3 the incident closed), the risk card
+  // (r1 under review, r2 the empty treatment slot) and the pilot gate, closed under its amber lamp
+  risk: function(c, W, H, p){
+    c.fillStyle = DI.dark; c.fillRect(0, 0, W, H);
+    var cb = '#26313a';
+    if (p.s1 > 0) { c.globalAlpha = p.s1; c.fillStyle = cb; diRR(c, W*0.04, H*0.14, W*0.42, H*0.72, 12); c.fill(); diG(c, 'pin', W*0.13, H*0.48, H*0.17, DI.ok, { bg:cb }); }
+    if (p.s2 > 0) { c.globalAlpha = p.s2; diG(c, 'stack', W*0.27, H*0.47, H*0.15, DI.pale, { bg:cb }); }
+    if (p.s3 > 0) { c.globalAlpha = p.s3; diG(c, 'folder', W*0.38, H*0.5, H*0.11, DI.ok); }
+    if (p.r1 > 0) { c.globalAlpha = p.r1; c.fillStyle = cb; diRR(c, W*0.49, H*0.14, W*0.26, H*0.72, 12); c.fill(); diG(c, 'hour', W*0.555, H*0.5, H*0.17, DI.amber); }
+    if (p.r2 > 0) { c.globalAlpha = p.r2; diG(c, 'slot', W*0.68, H*0.5, H*0.13, 'rgba(235,240,245,.8)', { lw:0.1 }); }
+    c.globalAlpha = 1; diG(c, 'gate', W*0.88, H*0.56, H*0.17, DI.pale);
+  },
+  // small things in the world: pkt (a blue packet with a page glyph), tag (a drawer tag with the person glyph), sheet (the form going into
+  // the drawer: rows, header, an optional tick), short (the short file a downstream system holds), pgp / pgc / pgs (a plain, cover or signed page)
+  token: function(c, W, H, p){
+    c.clearRect(0, 0, W, H);
+    if (p.k === 'pkt') { c.fillStyle = DI.ai; diRR(c, W*0.06, H*0.06, W*0.88, H*0.88, W*0.18); c.fill(); diG(c, 'page', W/2, H/2, W*0.3, '#ffffff', { lw:0.13 }); }
+    else if (p.k === 'tag') { c.fillStyle = DI.slate; diRR(c, W*0.04, H*0.08, W*0.92, H*0.84, H*0.16); c.fill(); diG(c, 'person', W/2, H/2, H*0.32, '#ffffff'); }
+    else if (p.k === 'short') { c.fillStyle = 'rgba(22,34,44,.9)'; diRR(c, W*0.04, H*0.04, W*0.92, H*0.92, W*0.12); c.fill();
+      c.fillStyle = DI.paper; diRR(c, W*0.28, H*0.12, W*0.44, H*0.76, 4); c.fill(); diRows(c, W*0.3, H*0.18, W*0.4, H*0.66, 'gggnnn', {}); }
+    else if (p.k === 'sheet') { c.fillStyle = DI.paper; diRR(c, 0, 0, W, H, W*0.04); c.fill(); c.fillStyle = p.hdr || DI.slate; c.fillRect(0, 0, W, H*0.09);
+      diRows(c, W*0.06, H*0.13, W*0.88, H*0.84, p.rows || 'kkkkkkkk', { slip:p.slip });
+      if (p.tick) diG(c, 'check', W*0.84, H*0.13, W*0.11, null, { disc:DI.ok }); }
+    else diPage(c, 0, 0, W, H, { pg:p.k === 'pgs' ? 1 : p.k === 'pgc' ? 0 : 2, last:p.k === 'pgs' ? 1 : -1, cover:p.k === 'pgc' });
+  }
+};
+
+var CONFIG = {
+  title: 'Document Intelligence',
+  initiative: 'Document Intelligence',          // top-right label on every scene
+  fallbackTitle: 'A bought service could read our scans.',
+  beatLabels: ['The situation', 'The AI at work', 'What can go wrong', 'How it is kept safe'],
+  // script, Part 1 "Accents": the template defaults (cards neutral, 1 teal, 2 blue, 3 red, 4 green)
+  accent:      { 0:'#e8e6e1', 1:'#2a9d8f', 2:'#4a86d8', 3:'#d84a3a', 4:'#3fa34d' },
+  accentLight: { 0:'#f3efe6', 1:'#7fe3d4', 2:'#a9c8ff', 3:'#ff9d90', 4:'#9be8a4' },
+  // script, Part 1 conventions: indoors >= 1.0 m from every collider and person; in the region set of shot 2.1 every object carries a
+  // collider padded by 1.5 m, so the camera keeps >= 2.5 m from every object there
+  minClearance: 1.0,
+  env: { bg:0xdfe4e6, fogNear:14, fogFar:50, shadowHalf:12, sunDir:[-0.45, 0.85, 0.55], center:[0, 0, -1] },
+  // camera keys use the level aim (10th element): [lt, camera xyz, subject xyz, screen offset nx, ny, level]
+  beats: [
+    { beat:0, name:'Introduction', start:0, dur:4, setting:'Before the pilot',
+      head:'A bought service could read our scans.', sup:'This is the plan, and why it waits.',
+      cam:[[0, 0.4,4.5,9.0, -0.4,1.3,-2.2, 0.2,0.25,1], [4, 0.4,2.8,9.0, -0.4,1.3,-2.2, 0.2,0.25,1]] },
+    { beat:1, name:'The situation — The back office, early morning', nav:'The back office, early morning', start:4, dur:8, setting:'The back office, early morning', source:'AI Canvas: the business problem',
+      head:"Staff type the details of a customer's signed contract by hand.", sup:'It is slow, and typing errors can reach his record.',
+      cam:[[0, -4.1,1.6,-0.3, -4.45,1.0,-2.95, 0.25,0.2,1], [3.5, -4.1,1.6,-0.3, -4.45,1.0,-2.95, 0.25,0.2,1], [6.5, 2.4,1.55,1.4, 1.0,1.1,-1.75, 0.2,0.2,1], [8, 2.3,1.55,1.2, 1.0,1.1,-1.75, 0.2,0.2,1]] },
+    { beat:2, name:'The AI at work — The document pipeline, overnight', nav:'The document pipeline, overnight', start:12, dur:6, setting:'The document pipeline, overnight', source:'AI Canvas: the data strategy',
+      head:'Our pipeline sends the scans to a service we buy.', sup:'It is confirmed to read them in the approved region.',
+      cam:[[0, 65.2,7,10.3, 66.0,1.2,-1, 0.2,0.2,1], [6, 61.2,7,11.0, 66.0,1.2,-1, 0.2,0.2,1]] },
+    { beat:2, name:'The AI at work — The checking desk, morning', nav:'The checking desk, morning', start:18, dur:6, setting:'The checking desk, morning', source:'AI Canvas: the customer value',
+      head:'A checker compares its fields with the scan.', sup:'Nothing is saved until she confirms them.',
+      cam:[[0, 2.45,1.55,1.15, 1.0,1.1,-1.75, 0.2,0.2,1], [6, 2.2,1.55,0.7, 1.0,1.1,-1.75, 0.2,0.2,1]] },
+    { beat:3, name:'What can go wrong — A test before the pilot', nav:'A test before the pilot', start:24, dur:6, setting:'A test before the pilot', source:'Incident log: n3, closed',
+      head:'In a test, long contracts came back with pages unread.', sup:'A vendor page limit cut them short, silently.',
+      cam:[[0, 119.35,1.6,1.45, 120.35,1.35,-1.9, 0.2,0.2,1], [6, 119.45,1.6,0.95, 120.35,1.35,-1.9, 0.2,0.2,1]] },
+    { beat:3, name:'What can go wrong — The checking desk, a long contract', nav:'The checking desk, a long contract', start:30, dur:6, setting:'The checking desk, a long contract', source:'Risk r8, under review',
+      head:'Nothing flags a missing field, so checks can miss it.', sup:'If saved, his record is wrong, and nothing shows it.',
+      cam:[[0, 2.25,1.5,0.75, 1.0,1.1,-1.75, 0.2,0.2,1], [2.5, 2.25,1.5,0.75, 1.0,1.1,-1.75, 0.2,0.2,1], [6, 2.25,1.5,0.75, 3.9,1.35,-4.2, 0.15,0.2,1]] },
+    { beat:4, name:'How it is kept safe — The back office, start of shift', nav:'The back office, start of shift', start:36, dur:5.5, setting:'The back office, start of shift', source:'Change plan: the check-step walkthrough',
+      head:'Checkers learn to check every page, not just the form.', sup:'They fix wrong or missing fields.',
+      cam:[[0, -0.6,2.05,-0.3, -1.4,1.85,-3.9, 0.2,0.12,1], [1.5, -0.65,2.05,-0.5, -1.4,1.85,-3.9, 0.2,0.12,1],
+           [1.501, 2.25,1.5,0.75, 1.0,1.1,-1.75, 0.2,0.2,1], [5.5, 2.25,1.5,0.75, 1.0,1.1,-1.75, 0.2,0.2,1]] },
+    { beat:4, name:'How it is kept safe — The back office, end of the week', nav:'The back office, end of the week', start:41.5, dur:5.5, setting:'The back office, end of the week', source:'AI Canvas: the model training',
+      head:'Each fix is counted, because we cannot see into the model.', sup:'The count shows only the errors that checkers catch.',
+      cam:[[0, -0.95,1.6,-1.25, -1.4,1.85,-3.9, 0.2,0.18,1], [5.5, -1.0,1.6,-1.55, -1.4,1.85,-3.9, 0.2,0.18,1]] },
+    { beat:4, name:'How it is kept safe — The risk office, supplier review', nav:'The risk office, supplier review', start:47, dur:5, setting:'The risk office, supplier review', source:'Supplier record; risk r8',
+      head:'The vendor defect is logged, and the incident is closed.', sup:'Whether errors can still reach our records is under review.',
+      cam:[[0, 161.25,1.5,1.45, 160,1.95,-2.9, 0.2,0.2,1], [5, 161.1,1.5,1.2, 160,1.95,-2.9, 0.2,0.2,1]] },
+    { beat:0, name:'Close', start:52, dur:4, setting:'What comes next',
+      head:'Next gate: the pilot starts only after the error review.', sup:'Until then, staff keep typing by hand.',
+      cam:[[0, -0.3,1.8,6.5, 0.6,1.1,-1.8, 0.2,0.2,1], [4, -0.3,1.8,8.0, 0.6,1.1,-1.8, 0.2,0.2,1]] }
+  ],
+
+  // ---- the world: four sets far apart (fog hides the others); only the current set's group is visible
+  //   K1 the back office, with the scanning room, the checking desk, the record cabinet and the server room next door (x 0)
+  //   K2 the region: the pipeline, the vendor connector and the vendor's black cube inside the green zone (x 60)
+  //   K3 the test bench (x 120) · K4 the risk office (x 160)
+  build: function(THREE, scene, k){
+    var P = k.PAL, PI = Math.PI, o = { sets:{}, cs:[], red:[] }, cur = null;
+    function set(name){ cur = k.grp(0, 0, 0); cur.visible = false; o.sets[name] = cur; return cur; }
+    function A(x){ var g = x && x.isObject3D ? x : (x.group || x.g); cur.add(g); return x; }
+    function lam(c, ei){ return new THREE.MeshLambertMaterial({ color:c, emissive:c, emissiveIntensity:ei == null ? 0 : ei }); }
+    // film-local glyph screens: a canvas texture repainted only when its parameters change (painters above; glyphs only, never words)
+    function cscreen(w, h, res, painter, p0, transparent){
+      var cw = res, ch = Math.max(16, Math.round(res*h/w)), cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+      var tx = new THREE.CanvasTexture(cv); tx.minFilter = THREE.LinearFilter; tx.generateMipmaps = false;
+      var m = new THREE.Mesh(k.UG.plane, new THREE.MeshBasicMaterial({ map:tx, transparent:!!transparent, side:THREE.DoubleSide }));
+      m.scale.set(w, h, 1); if (transparent) m.renderOrder = 3;
+      var s = { mesh:m, c:cv.getContext('2d'), W:cw, H:ch, tx:tx, p0:p0 || {}, want:null, key:'', paint:painter, show:function(p){ s.want = p; } };
+      s.want = s.p0; o.cs.push(s); return s; }
+    function rkey(p){ return JSON.stringify(p, function(kk, v){ return typeof v === 'number' ? Math.round(v*100)/100 : v; }); }
+    o.reset = function(){ for (var i=0;i<o.cs.length;i++) o.cs[i].want = o.cs[i].p0; };
+    o.flush = function(){ for (var i=0;i<o.cs.length;i++){ var s = o.cs[i], kk = rkey(s.want); if (kk !== s.key) { s.paint(s.c, s.W, s.H, JSON.parse(kk)); s.tx.needsUpdate = true; s.key = kk; } } };
+    // a glyph token standing in the world (a transparent plane facing +z, turned by ry)
+    function tok(p, w, h, x, y, z, ry, parent){ var g = k.grp(x, y, z, parent || cur); g.rotation.y = ry || 0; var s = cscreen(w, h, 128, DIP.token, p, true); g.add(s.mesh); g.scr = s; return g; }
+    function mon(x, z, ry, w, h, res, painter, p0){ var g = k.grp(x, 0.75, z, cur); g.rotation.y = ry || 0;
+      k.box(P.dark, 0.22, 0.02, 0.16, 0, 0.01, 0, g); k.box(P.dark, 0.04, 0.16, 0.03, 0, 0.09, -0.02, g); k.box(P.dark, w + 0.03, h + 0.03, 0.03, 0, 0.17 + h/2, 0, g);
+      var s = cscreen(w, h, res, painter, p0); s.mesh.position.set(0, 0.17 + h/2, 0.017); g.add(s.mesh); s.group = g; return s; }
+    function wall(x, y, z, w, h, res, painter, p0){ var g = k.grp(x, y, z, cur); k.box(P.dark, w + 0.08, h + 0.08, 0.05, 0, 0, 0, g);
+      var s = cscreen(w, h, res, painter, p0); s.mesh.position.set(0, 0, 0.028); g.add(s.mesh); s.group = g; return s; }
+    function seat(x, z, ry, look){ var p = A(k.person(look)); A(k.chair({ x:x, z:z, ry:ry, color:look.chair })); k.place(p, x, z, ry); return p; }
+    // a red ring: the film's marker for the viewer where a fault happens (never part of an in-world screen); an ellipse of constant thickness
+    function redRing(rx, ry, tube, x, y, z, parent){ var pts = []; for (var a=0;a<48;a++){ var th = a/48*2*PI; pts.push(new THREE.Vector3(rx*Math.cos(th), ry*Math.sin(th), 0)); }
+      var m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 96, tube, 6, true), new THREE.MeshBasicMaterial({ color:0xd84a3a, transparent:true, opacity:0.95, depthWrite:false }));
+      m.position.set(x, y, z); m.renderOrder = 4; m.visible = false; (parent || cur).add(m); o.red.push(m); return m; }
+
+    // lights and ground at root level, so the light count never changes (intensities set per scene in update)
+    o.Lb = new THREE.PointLight(0xfff1dc, 0, 11, 1.4); o.Lb.position.set(-0.5, 2.6, -1.2); scene.add(o.Lb);
+    o.ground = k.mesh(k.UG.plane, 0, 600, 200, 1, 80, -0.006, 0, { rx:-PI/2, noShadow:true, mat:new THREE.MeshLambertMaterial({ color:0x9a978f }) });
+
+    // ---------------- K1 the back office (x 0): scanning room behind a glass partition, the checking desk, the record cabinet, the wall screen;
+    //                  through a doorway in the back wall, a small server room with two racks (systems that read the record, SA12)
+    set('k1');
+    var WC = 0xE6E3DC;
+    A(k.room({ w:14, d:8, h:3, x:0, z:0, ground:false, back:false, floor:0xC9C3B6, wall:WC }));
+    k.box(WC, 10.5, 3, 0.15, -1.75, 1.5, -4, cur); k.coll(-7, 0, -4.075, 3.5, 3, -3.925, 'wall');
+    k.box(WC, 1.5, 3, 0.15, 6.25, 1.5, -4, cur); k.coll(5.5, 0, -4.075, 7, 3, -3.925, 'wall');
+    k.box(WC, 2.0, 0.8, 0.15, 4.5, 2.6, -4, cur); k.coll(3.5, 2.2, -4.075, 5.5, 3, -3.925, 'wall');
+    k.box(P.trim, 10.5, 0.1, 0.02, -1.75, 0.05, -3.92, cur, { noShadow:true }); k.box(P.trim, 1.5, 0.1, 0.02, 6.25, 0.05, -3.92, cur, { noShadow:true });
+    k.box(P.trim, 2.1, 0.08, 0.2, 4.5, 2.24, -4, cur); k.box(P.trim, 0.06, 2.2, 0.2, 3.5, 1.1, -4, cur); k.box(P.trim, 0.06, 2.2, 0.2, 5.5, 1.1, -4, cur);
+    // the server room next door
+    k.mesh(k.UG.plane, 0x5f666d, 2.8, 2.6, 1, 4.6, 0.003, -5.3, { rx:-PI/2, noShadow:true }, cur);
+    k.box(0xC9CDD1, 3.0, 3, 0.15, 4.6, 1.5, -6.6, cur); k.coll(3.1, 0, -6.675, 6.1, 3, -6.525, 'wall');
+    k.box(0xC9CDD1, 0.15, 3, 2.6, 3.2, 1.5, -5.3, cur); k.coll(3.125, 0, -6.6, 3.275, 3, -4.0, 'wall');
+    k.box(0xC9CDD1, 0.15, 3, 2.6, 6.0, 1.5, -5.3, cur); k.coll(5.925, 0, -6.6, 6.075, 3, -4.0, 'wall');
+    o.rack1 = A(k.rack({ x:4.05, z:-5.6, seed:3 })); o.rack2 = A(k.rack({ x:4.95, z:-5.6, seed:8 }));
+    // the glass partition of the scanning room, open past its end (z > -1.4)
+    k.box(0xB4AC9C, 0.1, 0.9, 2.6, -2.5, 0.45, -2.7, cur); k.box(0, 0.03, 1.5, 2.6, -2.5, 1.65, -2.7, cur, { mat:new THREE.MeshLambertMaterial({ color:0xBFDCE8, transparent:true, opacity:0.28, depthWrite:false }), noShadow:true });
+    k.box(0x8E8778, 0.08, 0.06, 2.6, -2.5, 2.43, -2.7, cur); k.box(0x8E8778, 0.08, 2.46, 0.08, -2.5, 1.23, -1.42, cur);
+    k.coll(-2.56, 0, -4.0, -2.44, 3, -1.38, 'partition');
+    // scanning room: the bench, the sheet-fed scanner, the post crate with opened envelopes, the batch tray
+    A(k.desk({ x:-4.7, z:-2.95, w:2.4, d:0.8, h:0.9, color:0xC9C2B4, label:'bench' }));
+    var sc = k.grp(-4.55, 0.9, -3.05, cur);
+    k.box(0x59626B, 0.62, 0.28, 0.46, 0, 0.14, 0, sc); k.box(0x6E7880, 0.6, 0.04, 0.44, 0, 0.3, -0.01, sc);
+    k.box(0xD0D3D6, 0.4, 0.02, 0.3, 0, 0.42, -0.24, sc, { rx:0.55 }); k.box(0xF2F0EA, 0.3, 0.05, 0.22, 0, 0.45, -0.25, sc, { rx:0.55 });
+    k.box(0xD0D3D6, 0.42, 0.02, 0.26, 0, 0.07, 0.34, sc);
+    o.lampM = lam(0xbfe3ff, 1.3); k.box(0, 0.5, 0.03, 0.02, 0, 0.25, 0.235, sc, { mat:o.lampM, noShadow:true });
+    var crate = k.grp(-5.55, 0.9, -2.95, cur), CR = 0x5F7EA0;
+    k.box(CR, 0.6, 0.03, 0.42, 0, 0.015, 0, crate); k.box(CR, 0.6, 0.28, 0.03, 0, 0.14, -0.2, crate); k.box(CR, 0.6, 0.28, 0.03, 0, 0.14, 0.2, crate);
+    k.box(CR, 0.03, 0.28, 0.42, -0.29, 0.14, 0, crate); k.box(CR, 0.03, 0.28, 0.42, 0.29, 0.14, 0, crate);
+    for (var ev=0; ev<6; ev++) { k.box(0xE6DCC6, 0.02, 0.22, 0.32, -0.2 + ev*0.08, 0.17, 0, crate, { rz:0.18 - ev*0.06 }); k.box(0xD8CCB2, 0.02, 0.08, 0.32, -0.2 + ev*0.08 + 0.03, 0.3, 0, crate, { rz:0.9 }); }
+    k.box(0xE6DCC6, 0.32, 0.01, 0.22, -5.05, 0.905, -2.75, cur, { ry:0.4 }); k.box(0xD8CCB2, 0.32, 0.01, 0.1, -5.05, 0.91, -2.6, cur, { ry:0.4, rx:-0.5 });
+    var tray = k.grp(-3.75, 0.9, -2.9, cur);
+    k.box(0x3A4048, 0.42, 0.03, 0.34, 0, 0.015, 0, tray); k.box(0x3A4048, 0.42, 0.06, 0.02, 0, 0.04, -0.16, tray); k.box(0x3A4048, 0.02, 0.06, 0.34, -0.2, 0.04, 0, tray); k.box(0x3A4048, 0.02, 0.06, 0.34, 0.2, 0.04, 0, tray);
+    k.box(0xF2F0EA, 0.32, 0.16, 0.25, 0, 0.11, 0, tray);
+    // the last pages of the customer's contract (cover with the person glyph; last page with the signature), lying flat
+    o.pages = ['pgp', 'pgs', 'pgp', 'pgc'].map(function(kind){ var g = tok({ k:kind }, 0.24, 0.32, -4.55, 1.0, -2.75, 0); g.rotation.x = -PI/2; g.visible = false; return g; });
+    A(k.windowPane({ x:-6.92, y:1.7, z:-1.6, w:2.2, h:1.3, ry:PI/2 }));
+    A(k.door({ x:-6.93, z:1.9, ry:PI/2 }));
+    A(k.shelf({ x:-6.75, z:0.4, ry:PI/2, w:1.4, seed:3 }));
+    // the checking desk: two monitors (scan left, form right), keyboard, in-tray; the checker (a woman, role only)
+    A(k.desk({ x:1.0, z:-1.5, w:1.8, d:0.8 }));
+    o.scan = mon(0.62, -1.72, 0.06, 0.56, 0.36, 384, DIP.scan, { m:'off' });
+    o.form = mon(1.38, -1.72, -0.06, 0.56, 0.36, 384, DIP.form, { rows:'eeeeeeee', hdr:DI.slate });
+    k.box(0x2B3440, 0.45, 0.02, 0.15, 1.0, 0.76, -1.32, cur); k.box(0x2B3440, 0.07, 0.02, 0.1, 1.38, 0.76, -1.3, cur);
+    k.box(0x3A4048, 0.34, 0.03, 0.4, 0.28, 0.765, -1.4, cur); o.inStack = k.box(0xF2F0EA, 0.28, 0.24, 0.32, 0.28, 0.9, -1.4, cur);
+    o.chk = seat(1.0, -0.62, PI, { shirt:P.shirt.staff2, trousers:P.trousers.dark, skin:P.skin[3], hair:P.hair[0], longHair:true, chair:0x2B3440 });
+    o.c2 = A(k.person({ shirt:P.shirt.staff, trousers:P.trousers.navy, skin:P.skin[1], hair:P.hair[2] })); o.c2.visible = false;
+    o.c3 = A(k.person({ shirt:P.shirt.grey, trousers:P.trousers.khaki, skin:P.skin[4], hair:P.hair[5], longHair:true })); o.c3.visible = false;
+    // a second desk, empty at this hour
+    A(k.desk({ x:4.4, z:0.4 })); A(k.monitor({ x:4.4, z:0.15 })); A(k.chair({ x:4.4, z:1.25, ry:PI }));
+    A(k.plant({ x:6.3, z:-3.3 })); A(k.plant({ x:6.3, z:2.6, s:0.9 }));
+    // the record cabinet (it stands for the electronic system of record, SA12): four drawers; the third is tagged with the person glyph
+    var cab = k.grp(2.7, 0, -3.55, cur); k.box(0x7D8A96, 1.0, 2.0, 0.7, 0, 1.0, 0, cab);
+    o.drawers = [0.3, 0.75, 1.2, 1.65].map(function(y){ var d = k.grp(0, y, 0, cab); k.box(0x6C7884, 0.9, 0.34, 0.6, 0, 0, 0.02, d); k.box(0x93A0AB, 0.94, 0.4, 0.04, 0, 0, 0.37, d); k.box(0x3A4048, 0.24, 0.03, 0.03, 0, 0.1, 0.4, d); return d; });
+    o.drawer = o.drawers[2]; tok({ k:'tag' }, 0.16, 0.11, 0.3, 0.0, 0.395, 0, o.drawer);
+    k.coll(2.2, 0, -3.9, 3.2, 2.0, -2.8, 'cabinet');
+    // the form on its way to the drawer, with the red ring that travels with it in shot 3.2
+    o.sheet = tok({ k:'sheet', rows:'kkkkkkkk' }, 0.26, 0.34, 1.38, 1.1, -1.6, 0); o.sheet.visible = false;
+    o.sheetRing = redRing(0.2, 0.24, 0.012, 0, 0, 0.01, o.sheet);
+    o.rDrawer = redRing(0.55, 0.3, 0.014, 2.7, 1.2, -3.08);
+    // the slip in shot 1.1: a small ring round the last row of the right monitor (row 8 of 8 in the form layout)
+    o.rSlip = redRing(0.2, 0.034, 0.006, 0.026, 0.17 + 0.36 - (0.17 + 0.78*7.5/8)*0.36, 0.035, o.form.group);
+    // the copy to the systems that read the record: two blue links through the doorway, and the short file each one lights
+    o.lk1 = A(k.link({ from:[3.25, 1.25, -3.1], to:[4.05, 1.55, -5.13], lift:0.35, n:6 }));
+    o.lk2 = A(k.link({ from:[3.25, 1.25, -3.1], to:[4.95, 1.55, -5.13], lift:0.45, n:6 }));
+    o.rt = [tok({ k:'short' }, 0.32, 0.28, 4.05, 1.92, -5.05, 0), tok({ k:'short' }, 0.32, 0.28, 4.95, 1.92, -5.05, 0)]; o.rt.forEach(function(g){ g.visible = false; });
+    // the team wall screen; ceiling light panels
+    o.wall = wall(-1.4, 1.85, -3.9, 2.0, 1.15, 512, DIP.wall, { m:'idle' });
+    o.panelM = lam(0xfff6e0, 0.9);
+    [[-4.6, -2.3], [0.6, -1.6], [0.6, 1.4], [4.4, -0.6]].forEach(function(p){ k.box(0, 1.3, 0.04, 0.5, p[0], 2.86, p[1], cur, { mat:o.panelM, noShadow:true }); k.box(0x8E8778, 0.02, 0.12, 0.02, p[0], 2.95, p[1], cur); });
+
+    // ---------------- K2 the region (x 60, abstract exterior): the green zone and its edge line, the operations building, the pipe, the
+    //                  vendor connector's ring clamp, the vendor's building with the matte black cube, the map pin. Colliders padded by 1.5 m.
+    set('reg');
+    var pad = 1.5; function padColl(x0, y0, z0, x1, y1, z1, label){ k.coll(x0 - pad, 0, z0 - pad, x1 + pad, y1 + pad, z1 + pad, label); }
+    o.zoneM = new THREE.MeshLambertMaterial({ color:0x86b98c });
+    k.mesh(k.UG.plane, 0, 21, 12, 1, 61.5, 0.01, -2.5, { rx:-PI/2, noShadow:true, mat:o.zoneM }, cur);
+    o.edgeM = lam(0x3fa34d, 0.7);
+    [[61.5, 3.5, 21.1, 0.14], [61.5, -8.5, 21.1, 0.14]].forEach(function(e){ k.box(0, e[2], 0.03, e[3], e[0], 0.025, e[1], cur, { mat:o.edgeM, noShadow:true }); });
+    [[51.0, -2.5], [72.0, -2.5]].forEach(function(e){ k.box(0, 0.14, 0.03, 12.1, e[0], 0.025, e[1], cur, { mat:o.edgeM, noShadow:true }); });
+    k.box(0xCDD2D6, 3.0, 2.8, 2.6, 56.5, 1.4, -1, cur); k.box(0xAEB5BB, 3.2, 0.12, 2.8, 56.5, 2.86, -1, cur);
+    for (var wi=0; wi<3; wi++) k.box(0x3A4652, 0.55, 0.5, 0.02, 55.6 + wi*0.9, 1.9, 0.31, cur, { noShadow:true });
+    k.box(0x3A4652, 0.8, 1.1, 0.02, 56.5, 0.55, 0.31, cur, { noShadow:true });
+    padColl(55.0, 0, -2.3, 58.0, 2.92, 0.3, 'operations building');
+    k.cyl(0x8E98A2, 0.2, 7.5, 61.75, 0.6, -1, cur, { rz:PI/2 }); padColl(58.0, 0, -1.2, 65.5, 0.8, -0.8, 'pipe');
+    for (var sp=0; sp<4; sp++) k.box(0x6E757C, 0.12, 0.42, 0.3, 59 + sp*2, 0.21, -1, cur);
+    var clamp = k.mesh(new THREE.TorusGeometry(0.34, 0.08, 10, 36), 0x3A4048, 1, 1, 1, 63.6, 0.6, -1, { ry:PI/2 }, cur);
+    k.box(0x3A4048, 0.14, 0.24, 0.14, 63.6, 1.02, -1, cur); padColl(63.4, 0.2, -1.4, 63.8, 1.14, -0.6, 'connector');
+    k.box(0x6E757C, 3.4, 0.3, 3.4, 66.8, 0.15, -1, cur);
+    [[-1.55, -1.55], [1.55, -1.55], [-1.55, 1.55], [1.55, 1.55]].forEach(function(q){ k.box(0x6E757C, 0.15, 2.6, 0.15, 66.8 + q[0], 1.6, -1 + q[1], cur); });
+    k.box(0x6E757C, 3.6, 0.15, 3.6, 66.8, 2.95, -1, cur);
+    o.cube = k.box(0, 1.6, 1.6, 1.6, 66.8, 1.1, -1, cur, { mat:new THREE.MeshBasicMaterial({ color:0x050505 }) });
+    padColl(65.1, 0, -2.7, 68.5, 3.03, 0.7, "vendor's building");
+    var pin = k.grp(66.8, 4.3, -1, cur);
+    o.pinM = lam(0x8d99a3, 0.05);
+    k.sph(0, 0.28, 0, 0.42, 0, pin, { mat:o.pinM }); k.mesh(k.UG.cone, 0, 0.5, 0.55, 0.5, 0, 0.08, 0, { mat:o.pinM, rx:PI }, pin);
+    k.mesh(new THREE.TorusGeometry(0.6, 0.05, 8, 40), 0, 1, 1, 1, 0, -0.32, 0, { mat:o.pinM, rx:PI/2 }, pin);
+    padColl(66.1, 3.9, -1.7, 67.5, 5.0, -0.3, 'map pin');
+    o.pk = []; for (var pq=0; pq<8; pq++){ var pkt = tok({ k:'pkt' }, 0.55, 0.55, 58.0, 1.18, -1, 0.12); pkt.visible = false; o.pk.push(pkt); }
+
+    // ---------------- K3 the test bench (x 120): the sample stack, a feed tray, the pipe stub with the vendor connector's ring clamp,
+    //                  the bar inside it, the tray behind it, the wall screen with the returned form and the page strip; the initiative owner
+    set('bench');
+    A(k.room({ w:8, d:6, h:3, x:120, z:0, ground:false, floor:0xBFC3C6, wall:0xE4E6E3 }));
+    A(k.windowPane({ x:116.08, y:1.7, z:-0.4, w:2.0, h:1.3, ry:PI/2 }));
+    A(k.desk({ x:120, z:-1.25, w:3.2, d:0.8, label:'bench' }));
+    for (var st=0; st<6; st++) k.box(st % 2 ? 0xEDEAE2 : 0xF4F2EC, 0.3, 0.1, 0.24, 118.7 + (st % 3)*0.006, 0.8 + st*0.1, -1.3, cur);
+    k.box(0x9AA3AB, 0.55, 0.15, 0.36, 119.55, 0.825, -1.25, cur);
+    k.cyl(0x8E98A2, 0.07, 1.4, 120.7, 1.0, -1.25, cur, { rz:PI/2 }); k.cyl(0x8E98A2, 0.07, 1.65, 121.4, 1.0, -2.1, cur, { rx:PI/2 }); k.sph(0x8E98A2, 0.07, 121.4, 1.0, -1.25, cur);
+    k.box(0x6E757C, 0.08, 0.25, 0.12, 120.9, 0.875, -1.25, cur);
+    k.mesh(new THREE.TorusGeometry(0.16, 0.035, 10, 36), 0x3A4048, 1, 1, 1, 120.0, 1.0, -1.25, { ry:PI/2 }, cur);
+    k.box(0x3A4048, 0.06, 0.1, 0.06, 120.0, 1.2, -1.25, cur); k.cyl(0x22272c, 0.012, 0.12, 120.0, 1.31, -1.25, cur);
+    o.bar = k.box(0x2B3138, 0.025, 0.2, 0.24, 120.04, 1.3, -1.25, cur); o.bar.visible = false;
+    var btray = k.grp(120.05, 0.75, -1.72, cur);
+    k.box(0x3A4048, 0.36, 0.03, 0.32, 0, 0.015, 0, btray); k.box(0x3A4048, 0.36, 0.06, 0.02, 0, 0.04, -0.15, btray); k.box(0x3A4048, 0.02, 0.06, 0.32, -0.17, 0.04, 0, btray); k.box(0x3A4048, 0.02, 0.06, 0.32, 0.17, 0.04, 0, btray);
+    // the thick sample contract: eight pages, each with its own material so it can turn blue (read) or grey (never read)
+    o.cp = []; for (var cpj=0; cpj<8; cpj++){ var cpm = lam(0xF2F0EA, 0); o.cp.push(k.box(0, 0.22, 0.012, 0.3, 119.35, 0.906 + (7 - cpj)*0.013, -1.25, cur, { mat:cpm })); }
+    o.bscr = wall(120.4, 1.85, -2.9, 1.9, 1.05, 512, DIP.bench, { on:0, rec:0 });
+    o.rClamp = redRing(0.27, 0.27, 0.016, 120.0, 1.0, -1.25); o.rClamp.rotation.y = PI/2;
+    o.rRows = redRing(0.27, 0.17, 0.014, 120.4 + (0.055 + 0.33*0.55 - 0.5)*1.9, 1.85 + (0.5 - (0.19 + 0.75*13/16))*1.05, -2.84);
+    o.leah = A(k.person({ shirt:0x6B4C7A, trousers:P.trousers.dark, skin:P.skin[1], hair:P.hair[1], longHair:true, badge:'#4a86d8' }));
+    k.place(o.leah, 118.05, -2.2, PI/2);   // behind the bench, at the stack, facing the clamp and the screen
+    A(k.shelf({ x:123.75, z:-0.6, ry:-PI/2, w:1.4, seed:6 })); A(k.plant({ x:123.3, z:-2.4 }));
+
+    // ---------------- K4 the risk office (x 160): a desk, the wall screen, the initiative owner and a supplier-risk reviewer
+    set('risk');
+    A(k.room({ w:8, d:6, h:3, x:160, z:0, ground:false, floor:0xB9B2A6, wall:0xE6E2DA }));
+    A(k.windowPane({ x:163.92, y:1.7, z:-0.6, w:2.0, h:1.3, ry:-PI/2 }));
+    A(k.desk({ x:160, z:-1.1, w:1.8, d:0.9 }));
+    k.box(0xF2F0EA, 0.3, 0.01, 0.22, 159.6, 0.755, -1.0, cur, { ry:0.2 }); k.box(0xF2F0EA, 0.3, 0.01, 0.22, 160.45, 0.755, -1.1, cur, { ry:-0.15 });
+    o.rscr = wall(160, 1.95, -2.9, 2.4, 1.3, 512, DIP.risk, { s1:0, s2:0, s3:0, r1:0, r2:0 });
+    o.owner = seat(158.7, -1.1, PI/2, { shirt:0x6B4C7A, trousers:P.trousers.dark, skin:P.skin[1], hair:P.hair[1], longHair:true, badge:'#4a86d8', chair:0x2B3440 });
+    o.rev = seat(160.55, -0.25, PI, { shirt:P.shirt.staff, trousers:P.trousers.navy, skin:P.skin[3], hair:P.hair[4], badge:'#3fa34d', chair:0x2B3440 });
+    A(k.shelf({ x:156.25, z:-1.4, ry:PI/2, w:1.4, seed:4 })); A(k.plant({ x:163.3, z:-2.4 }));
+
+    window.FILM_DOCAI = o;   // read-only debug hook for test/document-intelligence_test.py (world handles; never written by the page)
+    return o;
+  },
+
+  // ---- staging: a pure function of t (the template restores the build-time state before every call)
+  update: function(t, o, c){
+    var k = c.kit, i = c.i, lt = c.lt, PI = Math.PI, L = k.lights, sc = k.scene;
+    var ramp = k.ramp, lin = k.lin, tri = k.tri, frac = k.frac, j, r;
+    o.reset();
+    var SET = ['k1', 'k1', 'reg', 'k1', 'bench', 'k1', 'k1', 'k1', 'risk', 'k1'][i];
+    o.sets[SET].visible = true;
+    // light and air per scene: [background, fog near, fog far, hemi, sun, fill, ground, set centre x, z, ceiling light]
+    var E = [[0xb7b4bb, 18, 60, 0.3, 0.2, 0.08, 0x8d8a86, 0, -1, 0],     // open: dawn, before the shift
+             [0xd9dfe2, 16, 55, 0.6, 0.55, 0.12, 0x9a978f, 0, -1, 1],     // 1.1 early morning
+             [0x1c2734, 26, 90, 0.55, 0.35, 0.18, 0x55595e, 61.5, -1, 0], // 2.1 overnight, the region
+             [0xe3e8ea, 16, 55, 0.68, 0.72, 0.12, 0x9a978f, 0, -1, 1],    // 2.2 morning
+             [0xdfe3e6, 12, 40, 0.68, 0.7, 0.12, 0x9a978f, 120, -1, 0],   // 3.1 the test bench
+             [0xe3e8ea, 16, 55, 0.68, 0.72, 0.12, 0x9a978f, 0, -1, 1],    // 3.2
+             [0xe6eaec, 16, 55, 0.7, 0.72, 0.12, 0x9a978f, 0, -1, 1],     // 4.1 start of shift
+             [0xe6dccd, 16, 55, 0.62, 0.6, 0.12, 0x9a8f80, 0, -1, 1],     // 4.2 end of the week
+             [0xe2e3e0, 12, 40, 0.68, 0.7, 0.12, 0x9a978f, 160, -1, 0],   // 4.3 the risk office
+             [0xe3e8ea, 18, 60, 0.7, 0.75, 0.12, 0x9a978f, 0, -1, 1]][i]; // close: morning
+    sc.background.setHex(E[0]); sc.fog.color.setHex(E[0]); sc.fog.near = E[1]; sc.fog.far = E[2];
+    L.hemi.intensity = E[3]; L.sun.intensity = E[4]; L.fill.intensity = E[5]; o.ground.material.color.setHex(E[6]);
+    L.sun.position.set(E[7] - 0.406*40, 0.767*40, E[8] + 0.496*40); L.sun.target.position.set(E[7], 0, E[8]);
+    o.Lb.intensity = 0.9*E[9];
+    function pulse(a, b){ return ramp(lt, a, a + 0.3)*(b == null ? 1 : 1 - ramp(lt, b - 0.3, b))*(0.55 + 0.45*tri(lt*1.2)); }   // a red ring, pulsing while it is up
+    function ringUp(m, v){ m.visible = v > 0.01; m.material.opacity = 0.95*v; }
+    function bez(u, a, b, lift){ var q = 1 - u, m = [(a[0] + b[0])/2, Math.max(a[1], b[1]) + lift, (a[2] + b[2])/2]; return [q*q*a[0] + 2*q*u*m[0] + u*u*b[0], q*q*a[1] + 2*q*u*m[1] + u*u*b[1], q*q*a[2] + 2*q*u*m[2] + u*u*b[2]]; }
+    // the form leaving the right monitor for the tagged drawer between a and b (local time); the drawer opens before and closes after
+    function toDrawer(a, b, sheet){
+      var od = ramp(lt, a - 0.25, a)*(1 - ramp(lt, b, b + 0.25)); o.drawer.position.z = 0.35*od;
+      if (lt >= a && lt < b) { var u = lin(lt, a, b), p = bez(u, [1.38, 1.1, -1.6], [2.7, 1.3, -3.0], 0.35);
+        o.sheet.visible = true; o.sheet.position.set(p[0], p[1], p[2]); o.sheet.rotation.y = -0.5*u; o.sheet.scale.setScalar(Math.max(0.001, 1 - 0.7*ramp(u, 0.75, 1))); o.sheet.scr.show(sheet); }
+      return od; }
+    function stand(p, x, z, ry){ k.place(p, x, z, ry); p.rotation.set(0, ry, 0); }
+    function seatChk(kt){ k.sit(o.chk, 1); k.typing(o.chk, t, kt); k.look(o.chk, 0.2*Math.sin(t*1.7), 0.12); }
+
+    // ---------------- K1 the back office
+    if (SET === 'k1') {
+      o.rack1.set(t, 1); o.rack2.set(t, 1);
+      if (i === 0) {
+        // open, dawn: the lights come on; the service waits (the black cube, grey) beside the closed pilot gate
+        var on = ramp(lt, 0.4, 1.6);
+        o.panelM.emissiveIntensity = 0.05 + 0.95*on; o.Lb.intensity = 0.9*on; L.hemi.intensity = 0.3 + 0.32*on; L.fill.intensity = 0.08 + 0.05*on;
+        o.chk.visible = false; o.lampM.emissiveIntensity = 0.05; o.lampM.color.setHex(0x8d99a3); o.lampM.emissive.setHex(0x8d99a3);
+        o.wall.show({ m:'wait' }); o.scan.show({ m:'off' }); o.form.show({ off:1 });
+      } else if (i === 1) {
+        // 1.1: the night's batch is done; the last pages of the contract drop onto the tray as the lamp goes off (0-3.5 s);
+        // the checker keys the fields by hand, slowly; a typing slip at 6.5 s (a red ring blinks once; the screen shows nothing)
+        var lampK = 1 - ramp(lt, 3.0, 3.5); o.lampM.emissiveIntensity = 0.05 + 1.25*lampK;
+        if (lampK < 0.5) { o.lampM.color.setHex(0x8d99a3); o.lampM.emissive.setHex(0x8d99a3); }
+        [0.3, 1.0, 1.7, 2.4].forEach(function(t0, n){ if (lt < t0) return; var u = lin(lt, t0, t0 + 0.7), g = o.pages[n], p = bez(u, [-4.55, 1.0, -2.74], [-3.75, 1.075 + n*0.004, -2.9], 0.14);
+          g.visible = true; g.position.set(p[0], p[1], p[2]); g.rotation.z = 0.3*(1 - u) + n*0.05; });
+        seatChk(lt >= 3.5 ? 1 : 0.4);
+        o.scan.show({ m:'page' });
+        if (lt < 7.0) { var rs = '', pr = -1, pf = 0; for (r=0;r<8;r++){ var t0 = 3.55 + r*0.36, t1 = t0 + 0.32; if (lt >= t1) rs += 'k'; else if (lt >= t0) { rs += 'k'; pr = r; pf = lin(lt, t0, t1); } else rs += 'e'; }
+          o.form.show({ rows:rs, hdr:DI.slate, pr:pr, pf:pf, slip:7 }); }
+        else o.form.show({ rows:'eeeeeeee', hdr:DI.slate });
+        ringUp(o.rSlip, lt >= 6.5 && lt < 7.1 ? Math.sin(PI*lin(lt, 6.5, 7.1)) : 0);
+        toDrawer(7.0, 7.75, { k:'sheet', rows:'kkkkkkkk', slip:7, hdr:DI.slate });
+      } else if (i === 3) {
+        // 2.2: the contract arrives as a tile (0-0.8 s); every row already filled in blue by the overnight run (SA14), no confidence marks
+        // (SA15); she confirms row by row (1.5-4.5 s); one row does not match its box: amber, retyped from the scan, green (3.0-4.0 s);
+        // at 5.0 s the all-green form goes into the drawer with a tick
+        seatChk(lt >= 1.5 && lt < 4.6 ? 0.8 : 0.3);
+        if (lt < 0.8) { o.form.show({ q:1, tl:3, nt:ramp(lt, 0.1, 0.6), hdr:DI.ai }); o.scan.show({ m:'off' }); }
+        else if (lt < 5.0) {
+          var times = [1.5, 1.875, 2.25, 2.625, 4.0, 4.0, 4.25, 4.5], s = '', hl = -1, apr = -1, apf = 0;
+          for (r=0;r<8;r++){ if (r === 4) { s += lt < 3.0 ? 'b' : lt < 3.8 ? 'a' : 'g'; if (lt >= 3.25 && lt < 3.8) { apr = 4; apf = lin(lt, 3.25, 3.75); } }
+            else s += lt >= times[r] ? 'g' : 'b'; if (hl < 0 && s.charAt(r) !== 'g') hl = r; }
+          o.form.show({ rows:s, hdr:s === 'gggggggg' ? DI.ok : DI.ai, hl:lt >= 1.3 ? hl : -1, pr:apr, pf:apf });
+          o.scan.show({ m:'scan', n:8, pg:0, bx:1, hb:lt >= 1.3 && hl >= 0 ? hl % 4 : -1 });
+        } else { o.form.show({ q:1, tl:3, hdr:DI.ai }); o.scan.show({ m:'off' }); }
+        toDrawer(5.0, 5.7, { k:'sheet', rows:'gggggggg', hdr:DI.ok, tick:1 });
+      } else if (i === 5) {
+        // 3.2 (staged as a possibility, SA13): the extraction comes back cut short; she ticks the filled rows against page one and never steps
+        // past it; the blank rows stay blank; the form goes into the drawer with a red ring and is copied to the two racks next door
+        seatChk(lt < 2.4 ? 0.7 : 0.25);
+        var s2 = ''; for (r=0;r<8;r++) s2 += r >= 5 ? 'n' : lt >= 0.3 + 0.4*r ? 'g' : 'b';
+        var hl2 = s2.indexOf('b');
+        o.form.show(lt < 2.6 ? { rows:s2, hdr:hl2 < 0 ? DI.ok : DI.ai, hl:hl2 } : { q:1, tl:3, hdr:DI.ai });
+        o.scan.show({ m:'scan', n:8, pg:0, bx:1, cut:4, dim:1, hb:hl2 >= 0 ? hl2 % 4 : -1 });
+        toDrawer(2.6, 3.5, { k:'sheet', rows:'gggggnnn', hdr:DI.ok });
+        ringUp(o.sheetRing, lt >= 2.6 && lt < 3.5 ? 0.6 + 0.4*tri(lt*1.2) : 0);
+        ringUp(o.rDrawer, pulse(3.5));
+        var lk = ramp(lt, 3.8, 4.1); if (lk > 0.01) { o.lk1.set(t, lk, false, DI.ai); o.lk2.set(t, lk, false, DI.ai); }
+        o.rt.forEach(function(g, n){ var v = ramp(lt, 4.4 + 0.2*n, 4.8 + 0.2*n); g.visible = v > 0.01; g.scale.setScalar(Math.max(0.001, v)); });
+      } else if (i === 6) {
+        // 4.1: the walkthrough at the wall screen (0-1.5 s), then the same cut-short extraction: she steps through every page, the later
+        // pages have no blue boxes though they hold fields; she holds the document, types the blank rows from the scan, then saves it
+        if (lt < 1.5) {
+          [[o.chk, -1.5, -3.2], [o.c2, -2.2, -3.05], [o.c3, -0.75, -3.15]].forEach(function(q, n){ q[0].visible = true; stand(q[0], q[1], q[2], PI + (n - 1)*0.12); k.look(q[0], 0, -0.12); });
+          k.sit(o.chk, 0); o.wall.show({ m:'walk', k:Math.min(8, Math.floor(lt/0.17)) });
+        } else {
+          var steps = lin(lt, 1.6, 3.4)*8, pgN = Math.min(7, Math.floor(steps)), tk = Math.min(8, Math.floor(steps + 0.0001));
+          seatChk(lt >= 3.8 && lt < 4.7 ? 1 : 0.5);
+          o.scan.show({ m:'scan', n:8, pg:pgN, bx:1, cut:4, tk:tk });
+          var pof = [0, 0, 1, 2, 3], s3 = '', tp = -1, tpf = 0;
+          for (r=0;r<8;r++){ if (r < 5) s3 += tk > pof[r] ? 'g' : 'b';
+            else { var a0 = 3.8 + (r - 5)*0.3; s3 += lt < 3.5 ? 'n' : lt < a0 + 0.3 ? 'a' : 'g'; if (lt >= a0 && lt < a0 + 0.3) { tp = r; tpf = lin(lt, a0, a0 + 0.28); } } }
+          o.form.show(lt < 4.8 ? { rows:s3, hdr:lt < 3.5 ? DI.ai : lt < 4.7 ? DI.amber : DI.ok, pr:tp, pf:tpf } : { q:1, tl:3, hdr:DI.ai });
+          o.wall.show({ m:'walk', k:8 });
+          toDrawer(4.8, 5.3, { k:'sheet', rows:'gggggggg', hdr:DI.ok, tick:1 });
+        }
+      } else if (i === 7) {
+        // 4.2: the week's fixes drop into the tally column as one team total (0-3 s); the bar for documents saved without rekeying grows
+        // slowly (3-5 s); faint grey tokens (errors no one caught) hang outside the column and never drop
+        seatChk(0.4);
+        var dropped = 0, fall = 0; for (j=0;j<6;j++){ var d0 = 0.3 + 0.42*j; if (lt >= d0 + 0.35) dropped++; else if (lt >= d0) fall = lin(lt, d0, d0 + 0.35); }
+        o.wall.show({ m:'tally', d:dropped, f:Math.round(fall*20)/20, kb:0.12 + 0.3*ramp(lt, 3.0, 5.0) });
+        o.scan.show({ m:'page' }); o.form.show({ q:1, tl:3, hdr:DI.ai });
+      } else {
+        // close, morning: the checker keys a scan by hand again, rows filling slowly; the gate stays closed beside an empty decision slot
+        seatChk(1);
+        o.scan.show({ m:'page' });
+        var rc = '', cpr = -1, cpf = 0; for (r=0;r<8;r++){ var c0 = 0.3 + r*0.6, c1 = c0 + 0.5; if (lt >= c1) rc += 'k'; else if (lt >= c0) { rc += 'k'; cpr = r; cpf = lin(lt, c0, c1); } else rc += 'e'; }
+        o.form.show({ rows:rc, hdr:DI.slate, pr:cpr, pf:cpf });
+        o.wall.show({ m:'close' });
+      }
+    }
+
+    // ---------------- K2 the region, overnight: blue packets leave the operations building along the pipe, pass the vendor connector
+    // and enter the black cube; the whole route lies inside the green zone; the map pin lights green at 3.5 s
+    if (SET === 'reg') {
+      o.edgeM.emissiveIntensity = 0.9;
+      for (j=0;j<8;j++){ var u2 = lin(lt, j*0.4, j*0.4 + 2.4), pk = o.pk[j];
+        if (u2 > 0 && u2 < 1) { pk.visible = true; pk.position.x = 58.1 + (65.6 - 58.1)*u2; pk.scale.setScalar(Math.max(0.001, Math.min(1, u2*14, (1 - u2)*14))); } }
+      var g2 = ramp(lt, 3.5, 3.8);
+      if (g2 > 0) { o.pinM.color.setHex(0x3fa34d); o.pinM.emissive.setHex(0x3fa34d); o.pinM.emissiveIntensity = 0.7*g2; }
+    }
+
+    // ---------------- K3 the test bench (stylised batch run, SA4): the contract feeds into the clamp; its first pages pass as blue packets;
+    // the bar drops shut with no lamp and no badge; the remaining pages stay grey and fall into the tray, unread; the returned form looks tidy;
+    // the record's fields laid beside it show the later rows filled; red rings pulse round the bar and the blank rows (4.0-6.0 s)
+    if (SET === 'bench') {
+      var le = o.leah; k.look(le, 0.35, -0.1); k.point(le, ramp(lt, 3.8, 4.3)*(1 - ramp(lt, 5.4, 5.9)));
+      var sx = 119.35 + 0.5*ramp(lt, 0, 1.0);
+      for (j=0;j<8;j++){ var pgm = o.cp[j], by = 0.906 + (7 - j)*0.013;
+        if (j < 4) { var b0 = 1.0 + 0.16*j, ub = lin(lt, b0, b0 + 0.5);
+          if (lt >= b0) { pgm.material.color.setHex(0x4a86d8); pgm.material.emissive.setHex(0x4a86d8); pgm.material.emissiveIntensity = 0.45;
+            pgm.position.set(120.0 + 1.3*ub, by + (1.11 - by)*Math.min(1, ub*4), -1.25); if (ub >= 1) pgm.visible = false; }
+          else pgm.position.x = sx; }
+        else { var g0 = 1.85 + 0.1*(j - 4), ug = lin(lt, g0, g0 + 0.35);   // the last one lands at 2.5 s
+          if (lt >= 1.75) { pgm.material.color.setHex(0x9aa3ab); }
+          if (lt >= g0) { var pp = bez(ug, [sx + 0.1, by, -1.25], [120.05, 0.79 + (j - 4)*0.013, -1.72], 0.12); pgm.position.set(pp[0], pp[1], pp[2]); pgm.rotation.y = 0.25*ug; }
+          else pgm.position.x = sx; } }
+      if (lt >= 1.4) { o.bar.visible = true; o.bar.position.y = 1.3 - 0.3*ramp(lt, 1.65, 1.8); }
+      o.bscr.show({ on:lt >= 3.0 ? 1 : 0, rec:ramp(lt, 4.0, 4.5) });
+      ringUp(o.rClamp, pulse(4.0)); ringUp(o.rRows, pulse(4.0));
+    }
+
+    // ---------------- K4 the risk office, supplier review: the supplier card (1.0-2.5 s), the risk card (2.5-4.0 s), the gate closed
+    if (SET === 'risk') {
+      k.sit(o.owner, 1); k.sit(o.rev, 1);
+      k.look(o.owner, 0.85, 0.15); k.look(o.rev, 0.5*ramp(lt, 3.6, 4.2), 0.15);
+      k.gesture(o.rev, ramp(lt, 1.2, 1.6)*(1 - ramp(lt, 2.2, 2.6)), t);
+      k.point(o.owner, ramp(lt, 2.7, 3.1)*(1 - ramp(lt, 3.8, 4.2)));
+      o.rscr.show({ s1:ramp(lt, 1.0, 1.3), s2:ramp(lt, 1.5, 1.8), s3:ramp(lt, 2.0, 2.3), r1:ramp(lt, 2.5, 2.8), r2:ramp(lt, 3.2, 3.5) });
+    }
+    o.flush();
+  }
+};
+/* ================================================== END OF CONFIG ================================================= */
+
+// ---------------------------------------------------------------- timeline (derived from CONFIG.beats)
+var B = CONFIG.beats, NB = B.length, DUR = B[NB-1].start + B[NB-1].dur;
+(function validate(){
+  var errs = [], at = 0;
+  B.forEach(function(s, i){
+    if (Math.abs(s.start - at) > 1e-6) errs.push('beats[' + i + '] "' + s.name + '" starts at ' + s.start + ', expected ' + at);
+    if (!(s.dur > 0)) errs.push('beats[' + i + '] has no positive dur');
+    if ([0,1,2,3,4].indexOf(s.beat) < 0) errs.push('beats[' + i + '].beat must be 0-4');
+    if (!s.name || !s.head) errs.push('beats[' + i + '] needs a name and a head');
+    at = s.start + s.dur;
+  });
+  if (errs.length) console.error('FILM CONFIG: ' + errs.join('; '));
+})();
+document.title = CONFIG.title;
+// a JSON-safe copy of the text and timing of CONFIG, for tests and tools (no functions, no camera keys)
+window.FILM_CONFIG = JSON.parse(JSON.stringify({ title:CONFIG.title, initiative:CONFIG.initiative, fallbackTitle:CONFIG.fallbackTitle, beatLabels:CONFIG.beatLabels,
+  accent:CONFIG.accent, minClearance:CONFIG.minClearance, duration:DUR,
+  beats:B.map(function(s){ var c = {}; for (var key in s) if (key !== 'cam') c[key] = s[key]; return c; }) }));
+
+// ---------------------------------------------------------------- FILM api
+var state = { t:0, playing:false, base:0, p0:0 };
+var FILM = window.FILM = {
+  ready:false, duration:DUR, version:'initiative-template-1',
+  scenes: B.map(function(s){ return { name:s.name, start:s.start, dur:s.dur, beat:s.beat }; }),
+  seek:function(){}, play:function(){}, pause:function(){}, time:function(){ return state.t; },
+  next:function(){}, prev:function(){}, restart:function(){}, mode:'starting'
+};
+
+// ---------------------------------------------------------------- fallback (the film in words)
+function infoText(s){ var it = s.cards || s.stages, out = '.'; if (!it) return ''; for (var k=0;k<it.length;k++) out += ' ' + it[k].title + (it[k].cond ? ' (conditional)' : '') + ': ' + it[k].text; return out + (s.foot ? ' ' + s.foot : ''); }
+function showFallback(){
+  var fb = document.getElementById('fallback'), list = document.getElementById('fblist');
+  document.getElementById('fbtitle').textContent = CONFIG.fallbackTitle;
+  list.textContent = '';
+  B.forEach(function(s){
+    var li = document.createElement('li'), b = document.createElement('b'), p = document.createElement('span');
+    b.textContent = s.beat ? s.beat + ' ' + s.name : s.name;
+    p.textContent = s.head + (s.sup ? ' — ' + s.sup : '') + (s.note ? ' ' + s.note : '') + infoText(s);
+    li.appendChild(b); li.appendChild(p); list.appendChild(li);
+  });
+  document.getElementById('stage').style.display = 'none';
+  document.getElementById('ui').style.display = 'none';
+  document.getElementById('fade').style.display = 'none';
+  document.body.style.overflow = 'auto';
+  fb.style.display = 'block';
+  FILM.mode = 'fallback'; FILM.ready = true;
+}
+if (typeof THREE === 'undefined' || !window.WebGLRenderingContext) { showFallback(); return; }
+
+// ---------------------------------------------------------------- maths
+var PI = Math.PI;
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function lerp(a,b,u){ return a + (b - a) * u; }
+function smooth(u){ u = clamp(u,0,1); return u*u*(3-2*u); }
+function ease(u){ u = clamp(u,0,1); return u*u*u*(u*(u*6 - 15) + 10); } // quintic ease-in-out for camera keys
+function ramp(t,a,b){ return smooth((t - a) / (b - a)); }
+function lin(t,a,b){ return clamp((t - a) / (b - a), 0, 1); }
+function frac(x){ return x - Math.floor(x); }
+function tri(x){ return 1 - Math.abs(frac(x)*2 - 1); }
+function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function V(x,y,z){ return new THREE.Vector3(x,y,z); }
+
+// ---------------------------------------------------------------- renderer / scene / light
+var canvas = document.getElementById('c');
+var renderer = null;
+var ENV = CONFIG.env || {};
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(ENV.bg != null ? ENV.bg : 0xDCE3E6);
+scene.fog = new THREE.Fog(scene.background.clone(), ENV.fogNear || 26, ENV.fogFar || 80);
+var camera = new THREE.PerspectiveCamera(48, 16/9, 0.1, 400);
+var hemi = new THREE.HemisphereLight(0xF2F4F6, 0xB9AE98, 0.62); scene.add(hemi);
+var fill = new THREE.AmbientLight(0xFFFFFF, 0.12); scene.add(fill);
+var sun = new THREE.DirectionalLight(0xFFF6EA, 0.72);
+(function(){ var d = ENV.sunDir || [-0.45, 0.85, 0.55], c = ENV.center || [0,0,0], h = ENV.shadowHalf || 12, dir = V(d[0], d[1], d[2]).normalize();
+  sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -h; sun.shadow.camera.right = h; sun.shadow.camera.top = h; sun.shadow.camera.bottom = -h; sun.shadow.camera.near = 1; sun.shadow.camera.far = 120;
+  sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04;
+  sun.position.set(c[0] + dir.x*40, c[1] + dir.y*40, c[2] + dir.z*40); sun.target.position.set(c[0], c[1], c[2]); })();
+scene.add(sun); scene.add(sun.target);
+
+// ---------------------------------------------------------------- PROPS KIT: geometry helpers
+var UG = { box:new THREE.BoxGeometry(1,1,1), cyl:new THREE.CylinderGeometry(0.5,0.5,1,14), sph:new THREE.SphereGeometry(0.5,14,10),
+  cone:new THREE.ConeGeometry(0.5,1,12), plane:new THREE.PlaneGeometry(1,1), disc:new THREE.CircleGeometry(0.5,24) };
+var MATS = {};
+function mat(color, opt){ var key = color + '|' + JSON.stringify(opt||{}); if (!MATS[key]) { var o = { color:color }; if (opt) for (var k in opt) o[k] = opt[k]; MATS[key] = new THREE.MeshLambertMaterial(o); } return MATS[key]; }
+function emis(color, i){ return new THREE.MeshLambertMaterial({ color:color, emissive:color, emissiveIntensity:i == null ? 0.8 : i }); }
+function mesh(geo, color, sx, sy, sz, x, y, z, opt, parent){
+  var m = new THREE.Mesh(geo, opt && opt.mat ? opt.mat : mat(color, opt && opt.m));
+  m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = !(opt && opt.noShadow); m.receiveShadow = true;
+  if (opt && opt.ry) m.rotation.y = opt.ry; if (opt && opt.rx) m.rotation.x = opt.rx; if (opt && opt.rz) m.rotation.z = opt.rz;
+  (parent || scene).add(m); return m;
+}
+function box(c, sx, sy, sz, x, y, z, p, o){ return mesh(UG.box, c, sx, sy, sz, x, y, z, o, p); }
+function cyl(c, r, h, x, y, z, p, o){ return mesh(UG.cyl, c, r*2, h, r*2, x, y, z, o, p); }
+function sph(c, r, x, y, z, p, o){ return mesh(UG.sph, c, r*2, r*2, r*2, x, y, z, o, p); }
+function grp(x, y, z, p){ var g = new THREE.Group(); g.position.set(x||0, y||0, z||0); (p || scene).add(g); return g; }
+// camera clearance colliders (axis-aligned boxes, world space)
+var COLL = [];
+function coll(x0,y0,z0,x1,y1,z1,label){ COLL.push({min:V(Math.min(x0,x1),Math.min(y0,y1),Math.min(z0,z1)), max:V(Math.max(x0,x1),Math.max(y0,y1),Math.max(z0,z1)), label:label}); }
+function collBox(x, z, w, d, h, ry, label){ var c = Math.abs(Math.cos(ry||0)), s = Math.abs(Math.sin(ry||0)), ex = c*w/2 + s*d/2, ez = s*w/2 + c*d/2; coll(x-ex, 0, z-ez, x+ex, h, z+ez, label); }
+
+// ---------------------------------------------------------------- PROPS KIT: palette and status colours
+var PAL = { ground:0xB9B4AA, floor:0xCFC8BA, carpet:0x7A8794, wall:0xEAE6DD, wallAlt:0xD6DDE1, trim:0xB4AC9C, wood:0x9C7A57, woodDark:0x6B5038,
+  desk:0xDCD5C6, metal:0x9AA0A6, dark:0x1E262C, glass:0xBFDCE8, plant:0x3E8A3A, plantL:0x7FB45A, pot:0xB0724F, paper:0xF5F3EE,
+  skin:[0xF1C9A5, 0xE2B48F, 0xC98E6A, 0x9C6B4E, 0x6B4632], hair:[0x2B1E16, 0x5A3A22, 0x8C6A43, 0xC9A66B, 0x9A9A9A, 0x111111],
+  shirt:{ staff:0x2F5D8C, staff2:0x3E7C6B, customer:0xC75B39, visitor:0x8E5BA8, white:0xF2F0EA, grey:0x7D8790 },
+  trousers:{ navy:0x26324A, dark:0x2B2B2E, khaki:0x9C8E6E, denim:0x3D5A80 } };
+// one colour language for every film: green = passed / safe, amber = held for a person, red = fault / risk, blue = the AI or its data, grey = idle
+var STATUS = { ok:'#3fa34d', warn:'#e9a23b', fault:'#d84a3a', ai:'#4a86d8', idle:'#8d99a3' };
+
+// ---------------------------------------------------------------- PROPS KIT: rooms and furniture
+function room(o){ o = o || {}; var w = o.w || 12, d = o.d || 9, h = o.h || 3, x = o.x || 0, z = o.z || 0, th = 0.15, wc = o.wall != null ? o.wall : PAL.wall;
+  var g = grp(x, 0, z), r = { g:g };
+  if (o.ground !== false) mesh(UG.plane, PAL.ground, 160, 160, 1, 0, -0.005, 0, { rx:-PI/2, noShadow:true }, g);
+  r.floor = mesh(UG.plane, o.floor != null ? o.floor : PAL.floor, w, d, 1, 0, 0.002, 0, { rx:-PI/2, noShadow:true }, g);
+  if (o.back !== false) { r.back = box(wc, w + th, h, th, 0, h/2, -d/2, g); box(PAL.trim, w, 0.1, 0.02, 0, 0.05, -d/2 + th/2 + 0.01, g, { noShadow:true }); coll(x - w/2, 0, z - d/2 - th/2, x + w/2, h, z - d/2 + th/2, 'wall'); }
+  if (o.left !== false) { r.left = box(wc, th, h, d, -w/2, h/2, 0, g); coll(x - w/2 - th/2, 0, z - d/2, x - w/2 + th/2, h, z + d/2, 'wall'); }
+  if (o.right !== false) { r.right = box(wc, th, h, d, w/2, h/2, 0, g); coll(x + w/2 - th/2, 0, z - d/2, x + w/2 + th/2, h, z + d/2, 'wall'); }
+  return r; }
+function windowPane(o){ var g = grp(o.x, o.y, o.z); g.rotation.y = o.ry || 0; var w = o.w || 2, h = o.h || 1.4;
+  mesh(UG.plane, 0, w, h, 1, 0, 0, 0, { mat:emis(o.color || 0xDDEFF6, 0.75), noShadow:true }, g);
+  box(PAL.trim, w + 0.1, 0.08, 0.06, 0, h/2, 0, g); box(PAL.trim, w + 0.1, 0.08, 0.06, 0, -h/2, 0, g); box(PAL.trim, 0.08, h, 0.06, -w/2, 0, 0, g); box(PAL.trim, 0.08, h, 0.06, w/2, 0, 0, g); box(PAL.trim, 0.05, h, 0.05, 0, 0, 0, g);
+  return g; }
+function door(o){ var g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0; var w = o.w || 1.0, h = o.h || 2.1;
+  box(o.color || 0x5E6B75, w, h, 0.04, 0, h/2, 0, g); box(PAL.trim, w + 0.12, 0.08, 0.06, 0, h + 0.04, 0, g); box(PAL.trim, 0.06, h, 0.06, -w/2 - 0.03, h/2, 0, g); box(PAL.trim, 0.06, h, 0.06, w/2 + 0.03, h/2, 0, g);
+  sph(PAL.metal, 0.03, w*0.38, 1.0, 0.04, g); return g; }
+function desk(o){ o = o || {}; var w = o.w || 1.6, d = o.d || 0.8, h = o.h || 0.75, top = o.color || PAL.desk, leg = o.legs || PAL.metal;
+  var g = grp(o.x || 0, 0, o.z || 0); g.rotation.y = o.ry || 0;
+  box(top, w, 0.04, d, 0, h - 0.02, 0, g);
+  [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(p){ box(leg, 0.05, h - 0.04, 0.05, p[0]*(w/2 - 0.06), (h - 0.04)/2, p[1]*(d/2 - 0.06), g); });
+  box(leg, w - 0.12, 0.35, 0.02, 0, h - 0.25, -d/2 + 0.06, g);
+  collBox(o.x || 0, o.z || 0, w, d, h, o.ry || 0, o.label || 'desk'); return g; }
+function counter(o){ var w = o.w || 2.4, d = o.d || 0.7, h = o.h || 1.05, g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0;
+  box(o.color || 0x8E9AA4, w, h - 0.05, d, 0, (h - 0.05)/2, 0, g); box(o.top || PAL.desk, w + 0.06, 0.05, d + 0.08, 0, h - 0.025, 0, g);
+  collBox(o.x, o.z, w, d, h, o.ry || 0, 'counter'); return g; }
+function chair(o){ var g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0; var c = o.color || 0x2B3440;
+  cyl(PAL.metal, 0.03, 0.4, 0, 0.22, 0, g); box(PAL.dark, 0.5, 0.03, 0.06, 0, 0.03, 0, g); box(PAL.dark, 0.06, 0.03, 0.5, 0, 0.03, 0, g);
+  box(c, 0.46, 0.07, 0.44, 0, 0.45, 0, g); box(c, 0.44, 0.5, 0.06, 0, 0.78, -0.22, g);
+  collBox(o.x, o.z, 0.5, 0.5, 1.05, o.ry || 0, 'chair'); return g; }
+function shelf(o){ var w = o.w || 1.8, h = o.h || 1.9, d = 0.38, g = grp(o.x, 0, o.z), r = rng(o.seed || 7); g.rotation.y = o.ry || 0;
+  box(o.color || PAL.woodDark, w, 0.04, d, 0, h, 0, g); box(o.color || PAL.woodDark, 0.04, h, d, -w/2, h/2, 0, g); box(o.color || PAL.woodDark, 0.04, h, d, w/2, h/2, 0, g); box(o.color || PAL.woodDark, w, h, 0.03, 0, h/2, -d/2, g);
+  var cols = [0x3E6FB0, 0xC75B39, 0x3FA34D, 0xE9A23B, 0x7D8790, 0xF2F0EA];
+  for (var s=0;s<4;s++){ var y = 0.05 + s*h/4; box(o.color || PAL.woodDark, w, 0.03, d, 0, y, 0, g); var x = -w/2 + 0.08;
+    while (x < w/2 - 0.12) { var bw = 0.05 + r()*0.06, bh = h/4*(0.55 + r()*0.3); box(cols[Math.floor(r()*cols.length)], bw, bh, d*0.75, x + bw/2, y + 0.015 + bh/2, 0.02, g); x += bw + 0.01 + (r() < 0.12 ? 0.12 : 0); } }
+  collBox(o.x, o.z, w, d, h, o.ry || 0, 'shelf'); return g; }
+function plant(o){ var s = o.s || 1, g = grp(o.x, 0, o.z);
+  cyl(PAL.pot, 0.2*s, 0.4*s, 0, 0.2*s, 0, g); sph(PAL.plant, 0.36*s, 0, 0.72*s, 0, g); sph(PAL.plantL, 0.26*s, 0.14*s, 0.95*s, 0.06*s, g); sph(PAL.plant, 0.22*s, -0.16*s, 1.05*s, -0.05*s, g);
+  coll(o.x - 0.4*s, 0, o.z - 0.4*s, o.x + 0.4*s, 1.3*s, o.z + 0.4*s, 'plant'); return g; }
+// a server rack with blinking status lights (the AI service); call rack.set(t, on) from update()
+function rack(o){ var g = grp(o.x, 0, o.z); g.rotation.y = o.ry || 0; var w = 0.7, h = 2.0, d = 0.9, leds = [], r = rng(o.seed || 11);
+  box(PAL.dark, w, h, d, 0, h/2, 0, g); box(0x2C3640, w - 0.08, h - 0.12, 0.02, 0, h/2, d/2 + 0.005, g);
+  for (var i=0;i<8;i++) for (var j=0;j<3;j++){ var m = emis(j === 2 ? 0x4A86D8 : 0x3FA34D, 0.2); leds.push({ m:mesh(UG.box, 0, 0.05, 0.03, 0.01, -0.18 + j*0.08, 0.35 + i*0.2, d/2 + 0.02, { mat:m, noShadow:true }, g), rate:0.6 + r()*1.8, ph:r() }); }
+  coll(o.x - 0.5, 0, o.z - 0.5, o.x + 0.5, h, o.z + 0.5, 'rack');
+  return { g:g, leds:leds, set:function(t, on){ for (var i=0;i<leds.length;i++){ var L = leds[i]; L.m.material.emissiveIntensity = on ? (frac(t*L.rate + L.ph) < 0.55 ? 1.1 : 0.15) : 0.05; } } }; }
+// a coloured plate that labels a prop by colour (never by words)
+function tag(o){ return box(o.color || 0x4A86D8, o.w || 0.12, o.h || 0.08, 0.01, o.x, o.y, o.z, o.parent, { m:{ emissive:new THREE.Color(o.color || 0x4A86D8), emissiveIntensity:0.35 }, noShadow:true }); }
+// a status ring on the floor; ring.pulse(t, colour, k, steady) shows it
+function ring(o){ var m = new THREE.Mesh(new THREE.RingGeometry((o.r || 1.5) - 0.07, o.r || 1.5, 64), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.9, depthWrite:false }));
+  m.rotation.x = -PI/2; m.position.set(o.x || 0, 0.012, o.z || 0); m.visible = false; m.renderOrder = 2; scene.add(m);
+  m.pulse = function(t, color, k, steady){ m.visible = k > 0.01; m.material.color.set(color); m.material.opacity = 0.9*k; m.scale.setScalar(steady ? 1 : 1 + 0.06*tri(t*1.2)); };
+  return m; }
+// a data link: a thin arc between two points with packets travelling along it; link.set(t, k, reverse, colour)
+function link(o){ var a = V(o.from[0], o.from[1], o.from[2]), b = V(o.to[0], o.to[1], o.to[2]), c = a.clone().add(b).multiplyScalar(0.5); c.y += o.lift || 1;
+  var curve = new THREE.QuadraticBezierCurve3(a, c, b), g = grp(0,0,0); g.visible = false;
+  var tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 32, 0.012, 6, false), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.55, depthWrite:false })); g.add(tube);
+  var pm = new THREE.MeshBasicMaterial({ color:0xffffff }), pk = [], n = o.n || 7, p = V();
+  for (var i=0;i<n;i++){ var s = new THREE.Mesh(UG.sph, pm); s.scale.setScalar(0.07); g.add(s); pk.push(s); }
+  return { g:g, set:function(t, k, reverse, color){ g.visible = k > 0.01; tube.material.color.set(color); pm.color.set(color); tube.material.opacity = 0.55*k;
+    for (var i=0;i<n;i++){ var u = frac(t*0.55 + i/n); curve.getPoint(reverse ? 1 - u : u, p); pk[i].position.copy(p); pk[i].scale.setScalar(0.075*k); } } }; }
+
+// ---------------------------------------------------------------- PROPS KIT: glyph screens (canvas textures; glyphs, bars and colours only, never words)
+// spec fields (all optional): bg, header (colour of the app bar), rows (n text-like strokes), lit (how many of them are filled in),
+// mark {row, color} (one row highlighted), tiles [colours] (a queue of cards instead of rows), bars [0..1], barColor, threshold (0..1, dashed),
+// over (colour of bars above the threshold), line [0..1], lineColor, progress (0..1), progressColor, badge {glyph, color}, off (screen dark)
+var SCREENS = [];
+function rr(c, x, y, w, h, r){ r = Math.max(0, Math.min(r, w/2, h/2)); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); c.fill(); }
+function glyph(c, name, cx, cy, r, color){
+  c.fillStyle = color; c.beginPath(); c.arc(cx, cy, r, 0, 2*PI); c.fill();
+  c.strokeStyle = '#ffffff'; c.fillStyle = '#ffffff'; c.lineWidth = Math.max(2, r*0.17); c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath();
+  if (name === 'check') { c.moveTo(cx - r*0.42, cy + r*0.02); c.lineTo(cx - r*0.1, cy + r*0.34); c.lineTo(cx + r*0.45, cy - r*0.3); c.stroke(); }
+  else if (name === 'cross') { c.moveTo(cx - r*0.35, cy - r*0.35); c.lineTo(cx + r*0.35, cy + r*0.35); c.moveTo(cx + r*0.35, cy - r*0.35); c.lineTo(cx - r*0.35, cy + r*0.35); c.stroke(); }
+  else if (name === 'warn') { c.moveTo(cx, cy - r*0.5); c.lineTo(cx, cy + r*0.12); c.stroke(); c.beginPath(); c.arc(cx, cy + r*0.42, r*0.1, 0, 2*PI); c.fill(); }
+  else if (name === 'clock') { c.arc(cx, cy, r*0.55, 0, 2*PI); c.moveTo(cx, cy - r*0.32); c.lineTo(cx, cy); c.lineTo(cx + r*0.24, cy + r*0.16); c.stroke(); }
+  else if (name === 'loop') { c.arc(cx, cy, r*0.5, -PI*0.35, PI*1.25); c.stroke(); c.beginPath(); var ax = cx + r*0.5*Math.cos(-PI*0.35), ay = cy + r*0.5*Math.sin(-PI*0.35); c.moveTo(ax - r*0.28, ay - r*0.05); c.lineTo(ax, ay); c.lineTo(ax + r*0.04, ay - r*0.3); c.stroke(); }
+  else if (name === 'person') { c.arc(cx, cy - r*0.22, r*0.22, 0, 2*PI); c.fill(); c.beginPath(); c.arc(cx, cy + r*0.55, r*0.42, PI, 2*PI); c.fill(); }
+  else if (name === 'shield') { c.moveTo(cx, cy - r*0.55); c.lineTo(cx + r*0.42, cy - r*0.35); c.lineTo(cx + r*0.38, cy + r*0.15); c.quadraticCurveTo(cx + r*0.25, cy + r*0.45, cx, cy + r*0.58); c.quadraticCurveTo(cx - r*0.25, cy + r*0.45, cx - r*0.38, cy + r*0.15); c.lineTo(cx - r*0.42, cy - r*0.35); c.closePath(); c.stroke(); }
+  else if (name === 'lock') { c.arc(cx, cy - r*0.12, r*0.24, PI, 2*PI); c.stroke(); rr(c, cx - r*0.36, cy - r*0.12, r*0.72, r*0.56, r*0.08); }
+  else { c.arc(cx, cy, r*0.3, 0, 2*PI); c.fill(); } // 'dot'
+}
+function paintScreen(c, W, H, s){
+  c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.setLineDash([]);
+  c.fillStyle = s.bg || '#16222c'; c.fillRect(0, 0, W, H);
+  if (s.off) return;
+  var portrait = H > W, pad = Math.round(Math.min(W, H)*0.07), y0 = pad, light = /^#(f|e|d)/i.test(s.bg || '');
+  var ink = light ? '30,40,48' : '235,240,245';
+  if (s.header) { var hh = Math.round(H*(portrait ? 0.1 : 0.15)); c.fillStyle = s.header; c.fillRect(0, 0, W, hh); c.fillStyle = 'rgba(255,255,255,.85)'; rr(c, pad, hh*0.38, W*0.26, hh*0.26, hh*0.13); c.beginPath(); c.arc(W - pad - hh*0.22, hh*0.5, hh*0.2, 0, 2*PI); c.fill(); y0 = hh + pad; }
+  var side = !portrait && (s.bars || s.line || s.badge), colX = pad, colW = side ? W*0.5 : W - 2*pad, sideX = colX + colW + pad, sideW = W - sideX - pad, bottom = H - pad - (s.progress != null ? H*0.1 : 0);
+  var by0 = y0, bcx, bcy, br;
+  if (s.badge) { if (portrait) { br = W*0.17; bcx = W/2; bcy = y0 + br; y0 = bcy + br + pad; } else { br = Math.min(sideW*0.24, (bottom - y0)*0.2); bcx = sideX + sideW/2; bcy = by0 + br; by0 = bcy + br + pad*0.7; } glyph(c, s.badge.glyph, bcx, bcy, br, s.badge.color); }
+  // rows (text-like strokes) or tiles (queue cards) in the main column
+  var rowsBottom = portrait && (s.bars || s.line) ? y0 + (bottom - y0)*0.55 : bottom;
+  if (s.tiles) { var nt = s.tiles.length, th = Math.min((rowsBottom - y0)/Math.max(nt, 1) - pad*0.4, H*0.2);
+    for (var q=0;q<nt;q++){ var ty = y0 + q*(th + pad*0.4); c.fillStyle = 'rgba(' + ink + ',.12)'; rr(c, colX, ty, colW, th, th*0.18); c.fillStyle = s.tiles[q]; rr(c, colX, ty, th*0.22, th, th*0.11); c.fillStyle = 'rgba(' + ink + ',.55)'; rr(c, colX + th*0.45, ty + th*0.3, colW*0.5, th*0.14, th*0.07); c.fillStyle = 'rgba(' + ink + ',.3)'; rr(c, colX + th*0.45, ty + th*0.58, colW*0.32, th*0.12, th*0.06); } }
+  else if (s.rows) { var n = s.rows, rh = (rowsBottom - y0)/n, lit = s.lit == null ? n : s.lit;
+    for (var r=0;r<n;r++){ var len = 0.42 + 0.5*(((r*37 + 11) % 13)/13), yy = y0 + r*rh + rh*0.3, hh2 = Math.max(3, rh*0.36);
+      var on = r < lit, mk = s.mark && s.mark.row === r;
+      c.fillStyle = 'rgba(' + ink + ',' + (on ? '.18' : '.08') + ')'; rr(c, colX, yy - rh*0.08, colW, hh2 + rh*0.16, rh*0.12);
+      c.fillStyle = mk ? s.mark.color : 'rgba(' + ink + ',' + (on ? '.82' : '.2') + ')'; rr(c, colX + rh*0.15, yy, colW*len*0.9, hh2, hh2/2); } }
+  // bars or a line chart: the side column (landscape) or the lower part (portrait)
+  var ax = portrait ? pad : sideX, aw = portrait ? W - 2*pad : sideW, ay0 = portrait ? rowsBottom + pad*0.6 : by0, ay1 = bottom, ah = Math.max(4, ay1 - ay0);
+  if (s.bars) { var nb = s.bars.length, gap = aw*0.12/Math.max(nb, 1), bw = (aw - gap*(nb + 1))/nb;
+    c.fillStyle = 'rgba(' + ink + ',.15)'; c.fillRect(ax, ay1 - 2, aw, 2);
+    for (var bi=0;bi<nb;bi++){ var v = clamp(s.bars[bi], 0, 1), over = s.threshold != null && v > s.threshold; c.fillStyle = over ? (s.over || STATUS.fault) : (s.barColor || STATUS.ai); rr(c, ax + gap + bi*(bw + gap), ay1 - 2 - v*(ah - 4), bw, v*(ah - 4), Math.min(6, bw*0.15)); }
+    if (s.threshold != null) { c.strokeStyle = 'rgba(' + ink + ',.75)'; c.lineWidth = Math.max(1.5, H*0.008); c.setLineDash([H*0.025, H*0.02]); c.beginPath(); var ty2 = ay1 - 2 - s.threshold*(ah - 4); c.moveTo(ax, ty2); c.lineTo(ax + aw, ty2); c.stroke(); c.setLineDash([]); } }
+  else if (s.line) { var nl = s.line.length; c.strokeStyle = s.lineColor || STATUS.ai; c.lineWidth = Math.max(2, H*0.018); c.lineJoin = 'round'; c.beginPath();
+    for (var li=0;li<nl;li++){ var lx = ax + aw*li/Math.max(nl - 1, 1), ly = ay1 - clamp(s.line[li], 0, 1)*ah; if (li) c.lineTo(lx, ly); else c.moveTo(lx, ly); } c.stroke();
+    c.fillStyle = 'rgba(' + ink + ',.15)'; c.fillRect(ax, ay1, aw, 2); }
+  if (s.progress != null) { var py = H - pad - H*0.05; c.fillStyle = 'rgba(' + ink + ',.15)'; rr(c, pad, py, W - 2*pad, H*0.04, H*0.02); c.fillStyle = s.progressColor || s.barColor || STATUS.ai; rr(c, pad, py, (W - 2*pad)*clamp(s.progress, 0, 1), H*0.04, H*0.02); }
+}
+function specKey(sp){ return JSON.stringify(sp || {}, function(k, v){ return typeof v === 'number' ? Math.round(v*100)/100 : v; }); }
+function glyphScreen(w, h, opt){ opt = opt || {}; var cw = opt.res || 256, ch = Math.max(16, Math.round(cw*h/w)), cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+  var tx = new THREE.CanvasTexture(cv); tx.minFilter = THREE.LinearFilter; tx.generateMipmaps = false;
+  var m = new THREE.Mesh(UG.plane, new THREE.MeshBasicMaterial({ map:tx })); m.scale.set(w, h, 1);
+  var s = { mesh:m, cv:cv, c:cv.getContext('2d'), tx:tx, spec0:opt.spec || { header:'#3a4856', rows:5, lit:0 }, want:null, key:'', show:function(sp){ s.want = sp; } };
+  s.want = s.spec0; SCREENS.push(s); return s; }
+function flushScreens(){ for (var i=0;i<SCREENS.length;i++){ var s = SCREENS[i], k = specKey(s.want); if (k !== s.key) { paintScreen(s.c, s.cv.width, s.cv.height, JSON.parse(k)); s.tx.needsUpdate = true; s.key = k; } } }
+// a desk monitor facing +z (rotate with ry); returns the screen with .group
+function monitor(o){ var w = o.w || 0.62, h = o.h || 0.38, g = grp(o.x, o.deskH || 0.75, o.z); g.rotation.y = o.ry || 0;
+  box(PAL.dark, 0.22, 0.02, 0.16, 0, 0.01, 0, g); box(PAL.dark, 0.04, 0.16, 0.03, 0, 0.09, -0.02, g); box(PAL.dark, w + 0.03, h + 0.03, 0.03, 0, 0.17 + h/2, 0, g);
+  var s = glyphScreen(w, h, o); s.mesh.position.set(0, 0.17 + h/2, 0.017); g.add(s.mesh); s.group = g; return s; }
+// a large display on a wall, facing +z (rotate with ry)
+function wallScreen(o){ var w = o.w || 2, h = o.h || 1.15, g = grp(o.x, o.y, o.z); g.rotation.y = o.ry || 0;
+  box(PAL.dark, w + 0.08, h + 0.08, 0.05, 0, 0, 0, g); var s = glyphScreen(w, h, { res:o.res || 384, spec:o.spec }); s.mesh.position.set(0, 0, 0.028); g.add(s.mesh); s.group = g; return s; }
+// a phone; attach to a hand anchor (person.userData.handR) or place it with x, y, z; the screen faces local +z
+function phone(o){ var g = o.parent ? grp(0, -0.02, 0.03, o.parent) : grp(o.x, o.y, o.z); if (!o.parent) g.rotation.set(o.rx || 0, o.ry || 0, 0);
+  box(PAL.dark, 0.075, 0.15, 0.01, 0, 0, 0, g); var s = glyphScreen(0.066, 0.136, { res:96, spec:o.spec || { bg:'#f3f1ec', header:STATUS.ai, rows:4, lit:2 } }); s.mesh.position.set(0, 0, 0.0055); g.add(s.mesh); s.group = g; return s; }
+
+// ---------------------------------------------------------------- PROPS KIT: people (simple articulated figures; they face +z)
+var AGENTS = [];
+function person(o){ o = o || {};
+  var skin = o.skin != null ? o.skin : PAL.skin[1], shirt = o.shirt != null ? o.shirt : PAL.shirt.grey, legC = o.trousers != null ? o.trousers : PAL.trousers.navy, hair = o.hair != null ? o.hair : PAL.hair[0];
+  var g = grp(0, 0, 0), body = grp(0, 0, 0, g);
+  box(legC, 0.36, 0.16, 0.22, 0, 0.9, 0, body);                         // hips
+  box(shirt, 0.42, 0.56, 0.24, 0, 1.24, 0, body);                       // torso
+  if (o.badge) box(new THREE.Color(o.badge).getHex(), 0.07, 0.05, 0.01, 0.1, 1.36, 0.125, body, { noShadow:true });
+  cyl(skin, 0.05, 0.08, 0, 1.56, 0, body);                              // neck
+  var head = grp(0, 1.6, 0, body);
+  sph(skin, 0.115, 0, 0.12, 0, head); box(skin, 0.03, 0.04, 0.03, 0, 0.1, 0.115, head);
+  sph(0x1E262C, 0.014, -0.04, 0.14, 0.1, head, { noShadow:true }); sph(0x1E262C, 0.014, 0.04, 0.14, 0.1, head, { noShadow:true });
+  mesh(UG.sph, hair, 0.25, 0.15, 0.255, 0, 0.18, -0.012, {}, head); if (o.longHair) box(hair, 0.22, 0.26, 0.08, 0, 0.04, -0.09, head);
+  if (o.headset) { box(PAL.dark, 0.26, 0.025, 0.04, 0, 0.245, 0, head); sph(PAL.dark, 0.045, -0.12, 0.12, 0, head); sph(PAL.dark, 0.045, 0.12, 0.12, 0, head); box(PAL.dark, 0.014, 0.014, 0.13, 0.1, 0.05, 0.065, head, { ry:-0.5 }); }
+  function arm(side){ var sh = grp(side*0.265, 1.48, 0, body); cyl(shirt, 0.055, 0.32, 0, -0.16, 0, sh); var el = grp(0, -0.32, 0, sh); cyl(o.sleeves === false ? skin : shirt, 0.047, 0.27, 0, -0.135, 0, el); sph(skin, 0.05, 0, -0.29, 0, el); var hand = grp(0, -0.3, 0, el); return { sh:sh, el:el, hand:hand }; }
+  function leg(side){ var hp = grp(side*0.1, 0.88, 0, body); box(legC, 0.15, 0.44, 0.17, 0, -0.22, 0, hp); var kn = grp(0, -0.44, 0, hp); box(legC, 0.13, 0.4, 0.15, 0, -0.2, 0, kn); box(o.shoes || 0x2A2522, 0.12, 0.07, 0.25, 0, -0.42, 0.045, kn); return { hp:hp, kn:kn }; }
+  var L = arm(1), R = arm(-1), LL = leg(1), RL = leg(-1);   // the figure faces +z, so its right side is -x
+  g.userData = { kind:'person', body:body, head:head, la:L.sh, ra:R.sh, le:L.el, re:R.el, handL:L.hand, handR:R.hand, ll:LL.hp, rl:RL.hp, lk:LL.kn, rk:RL.kn };
+  AGENTS.push(g); return g; }
+function place(a, x, z, ry){ a.position.set(x, 0, z); a.rotation.y = ry || 0; }
+function polyAt(pts, u){ var L = [], tot = 0, i; for (i=1;i<pts.length;i++){ var d = Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]); L.push(d); tot += d; }
+  var s = clamp(u,0,1) * tot; for (i=0;i<L.length;i++){ if (s <= L[i] || i === L.length-1){ var f = L[i] > 0 ? clamp(s / L[i], 0, 1) : 0, a = pts[i], b = pts[i+1];
+    return { x:lerp(a[0], b[0], f), z:lerp(a[1], b[1], f), ry:Math.atan2(b[0]-a[0], b[1]-a[1]), moving: u > 0 && u < 1 }; } s -= L[i]; } }
+function gait(a, t){ var d = a.userData, s = Math.sin(t*6.5);
+  d.ll.rotation.x = s*0.45; d.rl.rotation.x = -s*0.45; d.lk.rotation.x = 0.55*Math.max(0, -Math.sin(t*6.5 + 0.9)); d.rk.rotation.x = 0.55*Math.max(0, Math.sin(t*6.5 + 0.9));
+  d.la.rotation.x = -s*0.35; d.ra.rotation.x = s*0.35; d.le.rotation.x = d.re.rotation.x = -0.25; d.body.position.y = 0.02*Math.abs(Math.sin(t*6.5)); }
+function walk(a, pts, u, t){ var p = polyAt(pts, u); place(a, p.x, p.z, p.ry); if (p.moving) gait(a, t); return p; }
+function sit(a, k){ var d = a.userData; d.body.position.y = -0.38*k; d.ll.rotation.x = d.rl.rotation.x = -PI/2*k; d.lk.rotation.x = d.rk.rotation.x = PI/2*k; }
+function typing(a, t, k){ var d = a.userData; k = k == null ? 1 : k; d.la.rotation.x = d.ra.rotation.x = -0.55; d.le.rotation.x = -0.9 - 0.06*k*Math.sin(t*14); d.re.rotation.x = -0.9 - 0.06*k*Math.sin(t*14 + 2); }
+function holdPhone(a, k){ var d = a.userData; d.ra.rotation.x = -0.4*k; d.re.rotation.x = -1.7*k; }
+function point(a, k){ var d = a.userData; d.ra.rotation.x = -1.35*k; d.re.rotation.x = -0.1*k; }
+function gesture(a, k, t){ var d = a.userData; d.la.rotation.x = -k*(0.9 + 0.15*Math.sin(t*5)); d.le.rotation.x = -0.9*k; }
+function look(a, yaw, pitch){ a.userData.head.rotation.set(pitch || 0, yaw || 0, 0); }
+
+// ---------------------------------------------------------------- camera helpers (pure)
+var _p = V(), _l = V();
+// place the camera and put the subject at normalised screen position (nx, ny): +nx right of centre, +ny above centre, in half-frames
+function camAim(px,py,pz, sx,sy,sz, nx,ny){
+  camera.position.set(px,py,pz); _l.set(sx,sy,sz); camera.lookAt(_l);
+  if (camera.aspect < 1) { nx *= 0.15; ny += 0.25; } /* portrait: the caption sits under the picture, so the subject is centred and lifted */
+  var vh = Math.tan(camera.fov*PI/360), hh = vh*camera.aspect;
+  camera.rotateY(Math.atan(nx*hh)); camera.rotateX(-Math.atan(ny*vh));
+}
+// the same aim with the horizon kept level (no roll): verticals stay upright even with a large offset and a steep pitch
+function camAimLevel(px,py,pz, sx,sy,sz, nx,ny){
+  if (camera.aspect < 1) { nx *= 0.15; ny = 0.5; px = sx + (px - sx)*1.5; pz = sz + (pz - sz)*1.5; }
+  var vh = Math.tan(camera.fov*PI/360), hh = vh*camera.aspect, cx = nx*hh, cy = ny*vh, cz = -1, n = Math.hypot(cx, cy, cz); cx /= n; cy /= n; cz /= n;
+  var dx = sx - px, dy = sy - py, dz = sz - pz, dn = Math.hypot(dx, dy, dz); dx /= dn; dy /= dn; dz /= dn;
+  var th = Math.asin(clamp(dy / Math.hypot(cy, cz), -1, 1)) - Math.atan2(cy, -cz), zp = cy*Math.sin(th) + cz*Math.cos(th);
+  camera.position.set(px,py,pz); camera.rotation.set(th, Math.atan2(dx, dz) - Math.atan2(cx, zp), 0, 'YXZ');
+}
+function camKeys(keys, lt){ // keys: [t, px,py,pz, lx,ly,lz] or [t, px,py,pz, sx,sy,sz, nx,ny] (aimed); a tenth element selects the level aim
+  var a = keys[0], b = keys[keys.length-1];
+  for (var i=0;i<keys.length-1;i++) if (lt >= keys[i][0] && lt <= keys[i+1][0]) { a = keys[i]; b = keys[i+1]; break; }
+  if (lt < keys[0][0]) { a = b = keys[0]; } if (lt > keys[keys.length-1][0]) { a = b = keys[keys.length-1]; }
+  var u = a === b ? 0 : ease((lt - a[0]) / (b[0] - a[0]));
+  if (a.length >= 9) { (a.length >= 10 ? camAimLevel : camAim)(lerp(a[1],b[1],u), lerp(a[2],b[2],u), lerp(a[3],b[3],u), lerp(a[4],b[4],u), lerp(a[5],b[5],u), lerp(a[6],b[6],u), lerp(a[7],b[7],u), lerp(a[8],b[8],u)); return; }
+  _p.set(lerp(a[1],b[1],u), lerp(a[2],b[2],u), lerp(a[3],b[3],u)); _l.set(lerp(a[4],b[4],u), lerp(a[5],b[5],u), lerp(a[6],b[6],u));
+  camera.position.copy(_p); camera.lookAt(_l);
+}
+function camOrbit(cx, cy, cz, r, h0, h1, a0, a1, u, ly){ var a = lerp(a0, a1, ease(u)); camera.position.set(cx + r*Math.cos(a), lerp(h0, h1, ease(u)), cz + r*Math.sin(a)); camera.lookAt(cx, ly == null ? cy : ly, cz); }
+
+// ---------------------------------------------------------------- the kit object handed to build() and update()
+var kit = { THREE:THREE, scene:scene, camera:camera, PI:PI, PAL:PAL, STATUS:STATUS, lights:{ hemi:hemi, sun:sun, fill:fill },
+  clamp:clamp, lerp:lerp, smooth:smooth, ease:ease, ramp:ramp, lin:lin, frac:frac, tri:tri, rng:rng, V:V,
+  mat:mat, emis:emis, mesh:mesh, box:box, cyl:cyl, sph:sph, grp:grp, coll:coll, collBox:collBox, UG:UG,
+  room:room, windowPane:windowPane, door:door, desk:desk, counter:counter, chair:chair, shelf:shelf, plant:plant, rack:rack, tag:tag, ring:ring, link:link,
+  glyphScreen:glyphScreen, monitor:monitor, wallScreen:wallScreen, phone:phone,
+  person:person, place:place, polyAt:polyAt, gait:gait, walk:walk, sit:sit, typing:typing, holdPhone:holdPhone, point:point, gesture:gesture, look:look,
+  camAim:camAim, camAimLevel:camAimLevel, camKeys:camKeys, camOrbit:camOrbit };
+
+// ---------------------------------------------------------------- build the world, then snapshot it (the rest state every frame starts from)
+var OBJ = CONFIG.build(THREE, scene, kit) || {};
+var SNAP = { o:[], m:[], bg:scene.background.clone(), fog:scene.fog ? [scene.fog.color.clone(), scene.fog.near, scene.fog.far] : null };
+scene.traverse(function(o){
+  SNAP.o.push({ o:o, p:o.position.clone(), q:o.quaternion.clone(), s:o.scale.clone(), v:o.visible, li:o.isLight ? { i:o.intensity, c:o.color.clone() } : null });
+  var ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+  ms.forEach(function(m){ if (m.userData.snap) return; m.userData.snap = true; SNAP.m.push({ m:m, c:m.color ? m.color.clone() : null, e:m.emissive ? m.emissive.clone() : null, ei:m.emissiveIntensity, op:m.opacity, v:m.visible }); });
+});
+function restore(){
+  var i, r;
+  for (i=0;i<SNAP.o.length;i++){ r = SNAP.o[i]; r.o.position.copy(r.p); r.o.quaternion.copy(r.q); r.o.scale.copy(r.s); r.o.visible = r.v; if (r.li) { r.o.intensity = r.li.i; r.o.color.copy(r.li.c); } }
+  for (i=0;i<SNAP.m.length;i++){ r = SNAP.m[i]; if (r.c) r.m.color.copy(r.c); if (r.e) r.m.emissive.copy(r.e); if (r.ei != null) r.m.emissiveIntensity = r.ei; r.m.opacity = r.op; r.m.visible = r.v; }
+  for (i=0;i<SCREENS.length;i++) SCREENS[i].want = SCREENS[i].spec0;
+  scene.background.copy(SNAP.bg); if (SNAP.fog) { scene.fog.color.copy(SNAP.fog[0]); scene.fog.near = SNAP.fog[1]; scene.fog.far = SNAP.fog[2]; }
+}
+
+// ---------------------------------------------------------------- the frame at time t (pure function of t)
+function sceneAt(t){ for (var i=NB-1;i>=0;i--) if (t >= B[i].start) return i; return 0; }
+function update(t){
+  var i = sceneAt(t), s = B[i], lt = t - s.start, u = clamp(lt / s.dur, 0, 1);
+  restore();
+  if (s.cam) camKeys(s.cam, lt);
+  CONFIG.update(t, OBJ, { i:i, entry:s, beat:s.beat, lt:lt, u:u, t:t, kit:kit, camKeys:camKeys });
+  return i;
+}
+// verification API: distance from the camera to the nearest collider and the nearest visible person at time t
+FILM.clearance = function(t){ update(t); scene.updateMatrixWorld(true); var p = camera.position, best = 1e9, who = '';
+  for (var i=0;i<COLL.length;i++){ var c = COLL[i], dx = Math.max(c.min.x - p.x, 0, p.x - c.max.x), dy = Math.max(c.min.y - p.y, 0, p.y - c.max.y), dz = Math.max(c.min.z - p.z, 0, p.z - c.max.z); var d = Math.sqrt(dx*dx+dy*dy+dz*dz); if (d < best) { best = d; who = c.label; } }
+  var wp = V(); for (i=0;i<AGENTS.length;i++){ var a = AGENTS[i], vis = a.visible, q = a.parent; while (vis && q) { vis = q.visible; q = q.parent; } if (!vis) continue; a.getWorldPosition(wp); wp.y += 0.9; var d2 = wp.distanceTo(p) - 0.6; if (d2 < best) { best = d2; who = 'person'; } }
+  return { t:t, d:best, who:who, cam:[p.x, p.y, p.z] }; };
+// the closest the camera comes to anything over the whole film, sampled every `step` seconds
+FILM.minClearance = function(step){ step = step || 0.1; var worst = null, n = Math.ceil(DUR/step);
+  for (var k=0;k<n;k++){ var c = FILM.clearance(k*step); if (!worst || c.d < worst.d) worst = c; }
+  if (renderer && !state.playing) render(state.t); return worst; };
+// a fingerprint of the world at time t (camera, every object's transform and visibility, material colours, screen contents);
+// the same t must always give the same fingerprint, whatever was shown before
+FILM.signature = function(t){ update(t); flushScreens(); var parts = [], i, r, f = function(x){ return (Math.round(x*1e4)/1e4).toString(); };
+  parts.push(f(camera.position.x), f(camera.position.y), f(camera.position.z), f(camera.quaternion.x), f(camera.quaternion.y), f(camera.quaternion.z), f(camera.quaternion.w));
+  for (i=0;i<SNAP.o.length;i++){ r = SNAP.o[i].o; parts.push(r.visible ? 1 : 0, f(r.position.x), f(r.position.y), f(r.position.z), f(r.quaternion.x), f(r.quaternion.y), f(r.quaternion.z), f(r.scale.x), f(r.scale.y)); if (r.isLight) parts.push(f(r.intensity)); }
+  for (i=0;i<SNAP.m.length;i++){ r = SNAP.m[i].m; if (r.color) parts.push(r.color.getHexString()); if (r.emissive) parts.push(r.emissive.getHexString(), f(r.emissiveIntensity)); parts.push(f(r.opacity)); }
+  for (i=0;i<SCREENS.length;i++) parts.push(SCREENS[i].key);
+  var str = parts.join('|'), h = 2166136261; for (i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  if (renderer && !state.playing) render(state.t);
+  return { t:t, hash:(h >>> 0).toString(16), n:parts.length, cam:[camera.position.x, camera.position.y, camera.position.z] }; };
+
+// ---------------------------------------------------------------- overlay (HTML; the only readable text in the film)
+var el = {}; ['ui','sname','sidx','bnum','blab','steps','head','sup','note','strip','panel','beat','fade','prog','scen','bar','bplay','brestart','bprev','bnext','tm','nav','navlist','rail','navtog','hintpp','navback','info'].forEach(function(id){ el[id] = document.getElementById(id); });
+CONFIG.beatLabels.forEach(function(l){ var s = document.createElement('span'); s.textContent = l; el.steps.appendChild(s); });
+var steps = el.steps.children, curScene = -1, segFills = [];
+el.prog.setAttribute('aria-valuemax', String(Math.round(DUR)));
+// groups: consecutive entries of the same beat form one group (one scrubber segment, one rail dot, one navigation heading); each card is its own group
+var GROUPS = [];
+B.forEach(function(s, i){ var g = GROUPS[GROUPS.length-1]; if (g && s.beat > 0 && g.beat === s.beat) { g.items.push(i); g.dur += s.dur; } else GROUPS.push({ beat:s.beat, start:s.start, dur:s.dur, items:[i] }); });
+function groupOf(i){ for (var k=0;k<GROUPS.length;k++) if (GROUPS[k].items.indexOf(i) >= 0) return k; return 0; }
+GROUPS.forEach(function(g){ var d = document.createElement('div'); d.className = 'seg'; d.style.left = 'calc(' + (g.start/DUR*100) + '% + 1.5px)'; d.style.width = 'calc(' + (g.dur/DUR*100) + '% - 3px)'; d.style.setProperty('--c', CONFIG.accent[g.beat]); var b = document.createElement('b'); d.appendChild(b); el.prog.appendChild(d); segFills.push(b); });
+B.forEach(function(s, i){ var g = GROUPS[groupOf(i)]; if (g.items[0] === i) return; var tk = document.createElement('i'); tk.className = 'tick'; tk.style.left = (s.start/DUR*100) + '%'; el.prog.appendChild(tk); });
+var knob = document.createElement('i'); knob.className = 'knob'; el.prog.appendChild(knob);
+// navigation: cards by name; each beat as numeral + beat label (seeks to its first entry), with its entries under it when it has more than one
+var navBtns = [], navGroups = [], railDots = [];
+function jump(t){ var was = state.playing; FILM.seek(t); if (was) FILM.play(); } // seek that keeps the current play state
+function closeNav(){ el.nav.classList.remove('open'); el.navtog.setAttribute('aria-expanded', 'false'); }
+(function(){
+  function btn(label, t, num){ var b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-t', String(t));
+    if (num) { var bb = document.createElement('b'); bb.textContent = num; b.appendChild(bb); }
+    b.appendChild(document.createTextNode(label)); b.addEventListener('click', function(e){ jump(t); closeNav(); if (e.detail) b.blur(); }); return b; }
+  function li(cls){ var l = document.createElement('li'); l.className = cls; el.navlist.appendChild(l); return l; }
+  GROUPS.forEach(function(g, gi){
+    if (g.beat === 0) { g.items.forEach(function(i){ var l = li('end'), b = btn(B[i].nav || B[i].name, B[i].start); l.appendChild(b); navBtns[i] = b; navGroups[gi] = l; }); return; }
+    var l = li('sc'), hb = btn(CONFIG.beatLabels[g.beat - 1], g.start, String(g.beat)); l.appendChild(hb); navGroups[gi] = l;
+    if (g.items.length === 1) navBtns[g.items[0]] = hb;
+    else { var ol = document.createElement('ol'); ol.className = 'beats'; g.items.forEach(function(i){ var bl = document.createElement('li'), bb = btn(B[i].nav || B[i].name, B[i].start); bl.appendChild(bb); ol.appendChild(bl); navBtns[i] = bb; }); l.appendChild(ol); }
+    var dot = document.createElement('button'); dot.type = 'button'; dot.className = 'dot'; dot.setAttribute('data-t', String(g.start)); dot.setAttribute('data-group', String(gi));
+    dot.setAttribute('aria-label', 'Beat ' + g.beat + ' ' + CONFIG.beatLabels[g.beat - 1]); dot.setAttribute('data-tip', g.beat + ' ' + CONFIG.beatLabels[g.beat - 1]); dot.textContent = String(g.beat);
+    el.rail.insertBefore(dot, el.navtog); railDots.push(dot);
+  });
+})();
+// card slides: inline-SVG icons (24 px grid, stroked), the card / roadmap builder and the reveal (a pure function of local time)
+var ICON = {
+  shield:'<path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  doc:'<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 15.5h5M10 9h2"/>',
+  gate:'<path d="M6 21V4M6 4h11l-2.5 3.5L17 11H6"/>',
+  people:'<circle cx="8.5" cy="7.6" r="2.5"/><path d="M3.4 20c0-3.6 2.2-6 5.1-6s5.1 2.4 5.1 6"/><circle cx="16.6" cy="8.6" r="2"/><path d="M15.2 14.3c.5-.2.9-.3 1.4-.3 2.3 0 4 2 4 5"/>',
+  data:'<ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6"/><path d="M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/>',
+  check:'<circle cx="12" cy="12" r="8.5"/><path d="M8 12.4l2.7 2.7L16.2 9.4"/>',
+  alert:'<path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17.4v.2"/>',
+  loop:'<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.8 4.2v3.6h-3.6"/>',
+  chart:'<path d="M4 20h16M7 17v-5M11.5 17V8M16 17v-8"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  person:'<circle cx="12" cy="8" r="3.2"/><path d="M5.5 20c0-3.9 2.9-6.4 6.5-6.4s6.5 2.5 6.5 6.4"/>'
+};
+var infoEls = [], infoLns = [], footEl = null;
+function mk(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; }
+function buildInfo(s){
+  el.info.textContent = ''; infoEls = []; infoLns = []; footEl = null;
+  var it = s.cards || s.stages; if (!it) return;
+  el.info.appendChild(document.createTextNode(' '));
+  var list = mk('ol'); list.id = s.cards ? 'cards' : 'road'; list.style.setProperty('--n', String(it.length));
+  it.forEach(function(c, k){
+    var li, ic = mk('span', s.cards ? 'ic' : 'node'); ic.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICON[c.ic] || ICON.check) + '</svg>';
+    if (s.cards) { li = mk('li', 'card'); var ct = mk('div', 'ct'); ct.appendChild(ic); ct.appendChild(mk('h3', '', c.title)); li.appendChild(ct); }
+    else { li = mk('li', 'stage' + (c.cond ? ' cond' : '')); var trk = mk('div', 'trk'), ln = mk('i', 'ln' + (it[k+1] && it[k+1].cond ? ' dash' : '')); trk.appendChild(ic); trk.appendChild(ln); li.appendChild(trk); li.appendChild(mk('h3', '', c.title)); infoLns[k] = ln; }
+    li.appendChild(document.createTextNode(' ')); li.appendChild(mk('p', '', c.text)); list.appendChild(li); list.appendChild(document.createTextNode(' ')); infoEls.push(li); });
+  el.info.appendChild(list);
+  if (s.foot) { footEl = mk('p', '', s.foot); footEl.id = 'foot'; el.info.appendChild(footEl); }
+}
+function revealInfo(s, lt){
+  var it = s.cards || s.stages, last = 0, k, r; if (!it) return;
+  for (k=0;k<it.length;k++){ r = ramp(lt, it[k].at, it[k].at + 0.6); var n = infoEls[k]; n.style.opacity = r.toFixed(3); n.style.transform = r < 1 ? 'translateY(' + ((1 - r)*14).toFixed(1) + 'px)' : 'none'; n.setAttribute('data-on', r >= 0.5 ? '1' : '0'); if (r > 0) last = k;
+    if (infoLns[k]) infoLns[k].style.setProperty('--r', it[k+1] ? ramp(lt, it[k+1].at - 0.5, it[k+1].at + 0.2).toFixed(3) : '0'); }
+  for (k=0;k<it.length;k++) infoEls[k].classList.toggle('now', k === last);
+  if (footEl) { r = ramp(lt, s.footAt || 0, (s.footAt || 0) + 0.6); footEl.style.opacity = r.toFixed(3); footEl.setAttribute('data-on', r >= 0.5 ? '1' : '0'); }
+}
+// step chips: rebuilt per entry; each seeks to its step; the active one is lit (a pure function of t)
+var chips = [];
+function buildChips(s){ el.strip.textContent = ''; chips = [];
+  (s.chips || []).forEach(function(c){ var b = document.createElement('button'); b.type = 'button'; b.textContent = c.label; b.title = 'Go to ' + c.label;
+    b.addEventListener('click', function(e){ jump(s.start + c.at); if (e.detail) b.blur(); }); el.strip.appendChild(b); chips.push(b); });
+  el.strip.style.display = chips.length ? 'flex' : 'none'; }
+var lastSec = -1;
+function fmt(t){ t = Math.floor(t); return Math.floor(t/60) + ':' + ('0' + (t % 60)).slice(-2); }
+function updateHUD(t){
+  var i = sceneAt(t), s = B[i], lt = t - s.start, end = s.start + s.dur, k;
+  if (i !== curScene) {
+    curScene = i;
+    document.documentElement.style.setProperty('--acc', CONFIG.accent[s.beat]); document.documentElement.style.setProperty('--accl', CONFIG.accentLight[s.beat]);
+    el.sname.textContent = s.setting || ''; el.sidx.textContent = CONFIG.initiative || '';
+    el.bnum.textContent = s.beat ? String(s.beat) : ''; el.blab.textContent = s.beat ? (s.source || '') : ''; el.beat.style.display = s.beat ? 'flex' : 'none';
+    for (var b=0;b<steps.length;b++) steps[b].classList.toggle('on', s.beat === b + 1);
+    el.head.textContent = s.head; el.head.classList.toggle('long', s.head.length > 78);
+    el.sup.textContent = s.sup || ''; el.sup.style.display = s.sup ? 'block' : 'none';
+    el.note.textContent = s.note || '';
+    var inf = !!(s.cards || s.stages); el.panel.classList.toggle('info', inf); el.ui.classList.toggle('info', inf); buildInfo(s); buildChips(s);
+    for (var q=0;q<navBtns.length;q++) if (navBtns[q]) navBtns[q].removeAttribute('aria-current');
+    if (navBtns[i]) navBtns[i].setAttribute('aria-current', 'true');
+    var gi = groupOf(i); for (q=0;q<navGroups.length;q++) if (navGroups[q]) navGroups[q].classList.toggle('on', q === gi);
+    for (q=0;q<railDots.length;q++) railDots[q].classList.toggle('on', +railDots[q].getAttribute('data-group') === gi);
+  }
+  revealInfo(s, lt);
+  if (chips.length) { var on = 0; for (k=0;k<chips.length;k++) if (lt >= s.chips[k].at) on = k; for (k=0;k<chips.length;k++) chips[k].classList.toggle('on', k === on); }
+  // the caption fades with the picture while playing; a paused or stepped frame shows the scene fully, caption and all
+  var live = state.playing;
+  var op = live ? Math.min(ramp(lt, 0, 0.3), ramp(end - t, 0, 0.25)) : 1; if (i === NB - 1) op = live ? ramp(lt, 0, 0.3) : 1;
+  el.panel.style.opacity = op; el.scen.style.opacity = op;
+  for (k=0;k<GROUPS.length;k++) segFills[k].style.width = (clamp((t - GROUPS[k].start) / GROUPS[k].dur, 0, 1) * 100) + '%';
+  knob.style.left = (t/DUR*100) + '%';
+  var sec = Math.floor(t); if (sec !== lastSec) { lastSec = sec; el.tm.textContent = fmt(sec) + ' / ' + fmt(DUR); el.prog.setAttribute('aria-valuenow', String(sec)); el.prog.setAttribute('aria-valuetext', fmt(sec) + ' of ' + fmt(DUR) + ', ' + s.name); }
+  var f = t > DUR - 0.7 ? (t - (DUR - 0.7)) / 0.7 : (t < 0.5 && live ? 1 - t / 0.5 : 0);
+  if (live) for (k=1;k<NB;k++){ var d = 1 - Math.abs(t - B[k].start) / 0.14; if (d > f) f = d; }
+  el.fade.style.opacity = clamp(f, 0, 1);
+}
+
+// ---------------------------------------------------------------- presentation, render loop, FILM
+// On a software GL driver the compositor's per-frame readback of a visible WebGL canvas stalls; there the frame is read back
+// through a pixel-pack buffer + fence and shown through a 2D canvas. On hardware GL the WebGL canvas is shown directly.
+var present = { mode:'direct', gl:null, c2d:null, ctx:null, pbo:null, fence:null, pending:null, dirty:false, pix:null, flip:null, gen:0, onFirst:null };
+function createRenderer(){
+  var r = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:false, powerPreference:'high-performance' });
+  r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+  var gl = r.getContext(), info = '';
+  try { var ext = gl.getExtension('WEBGL_debug_renderer_info'); info = (gl.getParameter(gl.RENDERER) || '') + ' ' + (ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : ''); } catch (e) { info = ''; }
+  var software = /swiftshader|llvmpipe|software|mesa offscreen/i.test(info) || /present=2d/.test(location.search);
+  if (software && r.capabilities.isWebGL2) {
+    present.mode = '2d'; present.gl = gl; r.setPixelRatio(1);
+    canvas.style.display = 'none';
+    present.c2d = document.createElement('canvas'); present.c2d.style.cssText = 'display:block;width:100%;height:100%';
+    document.getElementById('stage').appendChild(present.c2d); present.ctx = present.c2d.getContext('2d');
+  }
+  canvas.addEventListener('webglcontextlost', function(){ present.gen++; present.pending = null; present.fence = null; }, false);
+  canvas.addEventListener('webglcontextrestored', function(){ render(state.t); }, false);
+  return r;
+}
+function queueReadback(){
+  var gl = present.gl; if (!gl || gl.isContextLost()) return;
+  if (present.pending) { present.dirty = true; return; }
+  var w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+  present.pbo = gl.createBuffer(); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, present.pbo);
+  gl.bufferData(gl.PIXEL_PACK_BUFFER, w*h*4, gl.STREAM_READ);
+  gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, 0); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  present.fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush();
+  present.pending = { w:w, h:h, gen:present.gen }; pollReadback();
+}
+function pollReadback(){
+  var gl = present.gl, p = present.pending; if (!p) return;
+  if (p.gen !== present.gen || gl.isContextLost()) { present.pending = null; return; }
+  if (gl.getSyncParameter(present.fence, gl.SYNC_STATUS) !== gl.SIGNALED) { setTimeout(pollReadback, 4); return; }
+  gl.deleteSync(present.fence); present.fence = null;
+  var w = p.w, h = p.h, n = w*h*4;
+  if (!present.pix || present.pix.length !== n) { present.pix = new Uint8Array(n); present.flip = new Uint8ClampedArray(n); }
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, present.pbo); gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, present.pix); gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+  gl.deleteBuffer(present.pbo); present.pbo = null;
+  var row = w*4, pix = present.pix, flip = present.flip;
+  for (var y=0;y<h;y++) flip.set(pix.subarray(y*row, y*row+row), (h-1-y)*row);
+  if (present.c2d.width !== w || present.c2d.height !== h) { present.c2d.width = w; present.c2d.height = h; }
+  present.ctx.putImageData(new ImageData(flip, w, h), 0, 0);
+  present.pending = null;
+  if (present.onFirst) { var f = present.onFirst; present.onFirst = null; f(); }
+  if (present.dirty) { present.dirty = false; render(state.t); }
+}
+FILM.present = function(){ return { mode:present.mode, pending:!!present.pending, dirty:present.dirty, gen:present.gen }; };
+function resize(){ var w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w/h; camera.fov = w/h < 0.8 ? 64 : 48; camera.updateProjectionMatrix(); }
+function render(t){ if (present.mode === '2d' && present.pending) { updateHUD(t); present.dirty = true; return; } update(t); flushScreens(); updateHUD(t); renderer.render(scene, camera); if (present.mode === '2d') queueReadback(); }
+function norm(t){ return ((t % DUR) + DUR) % DUR; }
+function now(){ return performance.now()/1000; }
+function currentTime(){ return state.playing ? norm(state.base + (now() - state.p0)) : state.t; }
+FILM.time = function(){ return currentTime(); };
+FILM.seek = function(t){ t = norm(+t || 0); state.playing = false; state.t = t; state.base = t; render(t); syncPlay(); };
+FILM.play = function(){ if (state.playing) return; state.base = state.t; state.p0 = now(); state.playing = true; syncPlay(); wake(); };
+FILM.pause = function(){ if (!state.playing) return; state.t = currentTime(); state.playing = false; render(state.t); syncPlay(); wake(); };
+// scene stepping: next() goes to the next scene start (the first after the last), prev() to the current scene start when more than
+// 1.5 s into it, else to the previous scene start; both keep the current play state. restart() goes to 0 and plays.
+FILM.next = function(){ var i = sceneAt(currentTime()); jump(i >= NB - 1 ? 0 : B[i+1].start); };
+FILM.prev = function(){ var t = currentTime(), i = sceneAt(t); jump(t - B[i].start > 1.5 || i === 0 ? B[i].start : B[i-1].start); };
+FILM.restart = function(){ FILM.seek(0); FILM.play(); };
+Object.defineProperty(FILM, 'playing', { get:function(){ return state.playing; }, enumerable:true });
+var drag = null;
+function syncPlay(){ el.bar.classList.toggle('playing', state.playing); el.bplay.setAttribute('aria-label', state.playing ? 'Pause' : 'Play');
+  el.hintpp.textContent = state.playing ? 'pause' : 'play'; el.ui.classList.toggle('paused', !state.playing && FILM.ready && !drag); }
+// idle fade: the bar and rail drop to low opacity 2.5 s after the last input while playing; never while paused
+var idleTimer = null;
+function wake(){ el.ui.classList.remove('idle'); clearTimeout(idleTimer); idleTimer = setTimeout(function(){ if (state.playing) { el.ui.classList.add('idle'); closeNav(); el.ui.classList.remove('navshow'); } }, 2500); }
+['mousemove','pointerdown','touchstart','keydown'].forEach(function(ev){ window.addEventListener(ev, wake, { passive:true }); });
+function loop(){ requestAnimationFrame(loop); if (!state.playing) return; state.t = currentTime(); render(state.t); }
+window.addEventListener('resize', function(){ if (!renderer) return; resize(); if (!state.playing) render(state.t); });
+el.bplay.addEventListener('click', function(){ state.playing ? FILM.pause() : FILM.play(); });
+el.brestart.addEventListener('click', function(){ FILM.restart(); });
+el.bprev.addEventListener('click', function(){ FILM.prev(); });
+el.bnext.addEventListener('click', function(){ FILM.next(); });
+// scrubber: click seeks; press-and-drag scrubs; play resumes on release if it was playing; arrow keys on the focused slider step 5 s
+function progT(e){ var r = el.prog.getBoundingClientRect(); return Math.min(clamp((e.clientX - r.left)/r.width, 0, 1)*DUR, DUR - 0.05); }
+el.prog.addEventListener('pointerdown', function(e){ e.preventDefault(); drag = { was:state.playing }; try { el.prog.setPointerCapture(e.pointerId); } catch (x) {} FILM.seek(progT(e)); });
+el.prog.addEventListener('pointermove', function(e){ if (drag) FILM.seek(progT(e)); });
+function endDrag(e){ if (!drag) return; if (e && e.type === 'pointerup') FILM.seek(progT(e)); var was = drag.was; drag = null; if (was) FILM.play(); else syncPlay(); }
+el.prog.addEventListener('pointerup', endDrag); el.prog.addEventListener('pointercancel', endDrag); el.prog.addEventListener('lostpointercapture', endDrag);
+var navHide = null;
+function navShow(on){ clearTimeout(navHide); if (on) el.ui.classList.add('navshow'); else navHide = setTimeout(function(){ el.ui.classList.remove('navshow'); }, 350); }
+[el.rail, el.nav].forEach(function(n){ n.addEventListener('mouseenter', function(){ navShow(true); }); n.addEventListener('mouseleave', function(){ navShow(false); }); });
+railDots.forEach(function(d){ d.addEventListener('click', function(){ jump(+d.getAttribute('data-t')); closeNav(); }); });
+el.navback.addEventListener('click', closeNav);
+el.navtog.addEventListener('click', function(){ var open = !el.nav.classList.contains('open'); el.nav.classList.toggle('open', open); el.navtog.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+// keyboard: Space play/pause, Left/Right previous/next scene, Home restart, Escape closes the scene list. Space on a focused button is left to the button.
+window.addEventListener('keydown', function(e){
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  var k = e.key, onBtn = e.target && e.target.tagName === 'BUTTON';
+  if (k === ' ' || k === 'Spacebar') { if (onBtn) return; e.preventDefault(); state.playing ? FILM.pause() : FILM.play(); }
+  else if (k === 'ArrowRight') { e.preventDefault(); FILM.next(); }
+  else if (k === 'ArrowLeft') { e.preventDefault(); FILM.prev(); }
+  else if (k === 'Home') { e.preventDefault(); FILM.restart(); }
+  else if (k === 'Escape') closeNav();
+});
+function start(){
+  try { renderer = createRenderer(); } catch (e) { showFallback(); return; }
+  resize();
+  FILM.mode = present.mode;
+  if (present.mode === '2d') { present.onFirst = function(){ FILM.ready = true; syncPlay(); FILM.play(); }; FILM.seek(0); }
+  else { FILM.seek(0); FILM.ready = true; FILM.play(); }
+  loop();
+}
+// The title card shows at once; the GL context is created once the fonts are in and the page has been up for about 2.4 s.
+updateHUD(0);
+var started = false, fontsIn = false;
+function go(){ if (started || !fontsIn) return; var wait = Math.max(0, 2400 - performance.now()); started = true; setTimeout(start, wait); }
+function fontsReady(){ fontsIn = true; go(); }
+if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fontsReady, fontsReady); setTimeout(fontsReady, 2500); } else { fontsReady(); }
+})();
+</script>
+</body>
+</html>

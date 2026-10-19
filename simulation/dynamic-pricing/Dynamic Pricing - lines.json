@@ -1,0 +1,350 @@
+{
+  "film": "Dynamic Pricing.html",
+  "script": "Dynamic Pricing - Script and Protocols.md",
+  "rules": {
+    "words": "whitespace tokens containing a letter or digit",
+    "fk": "0.39*words/sentences + 11.8*syllables/words - 15.59; syllables = [aeiouy]+ groups, min 1; sentences at . ! ?",
+    "limits": {
+      "headline": 14,
+      "support": 18,
+      "note": 10,
+      "source": 10,
+      "fk_max": 8.0,
+      "pace_max_wps": 5.5,
+      "film_budget": 220
+    },
+    "note": "source lines are record citations, counted apart from the caption budget and reported, not enforced, on grade (script Open points 8 and 9)"
+  },
+  "lines": [
+    {
+      "shot": "0",
+      "element": "headline",
+      "text": "Dynamic Pricing is a plan. Nothing is built yet.",
+      "words": 9,
+      "limit": 14,
+      "fk": 3.2
+    },
+    {
+      "shot": "1.1",
+      "element": "headline",
+      "text": "Staff review prices by hand, too rarely to follow demand.",
+      "words": 10,
+      "limit": 14,
+      "fk": 7.2
+    },
+    {
+      "shot": "1.1",
+      "element": "support",
+      "text": "Demand moves between reviews, but the price waits.",
+      "words": 8,
+      "limit": 18,
+      "fk": 6.7
+    },
+    {
+      "shot": "1.2",
+      "element": "headline",
+      "text": "The team wants prices that follow demand, to earn more margin.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9
+    },
+    {
+      "shot": "1.2",
+      "element": "support",
+      "text": "Its value is not worked out yet.",
+      "words": 7,
+      "limit": 18,
+      "fk": 2.3
+    },
+    {
+      "shot": "2.1",
+      "element": "headline",
+      "text": "As planned, a model would predict the margin at each price.",
+      "words": 11,
+      "limit": 14,
+      "fk": 5.9
+    },
+    {
+      "shot": "2.1",
+      "element": "support",
+      "text": "Which demand data it would use is still open.",
+      "words": 9,
+      "limit": 18,
+      "fk": 5.0
+    },
+    {
+      "shot": "2.2",
+      "element": "headline",
+      "text": "Would it set prices itself, or suggest them to a person?",
+      "words": 11,
+      "limit": 14,
+      "fk": 4.8
+    },
+    {
+      "shot": "2.2",
+      "element": "support",
+      "text": "That is the first design question.",
+      "words": 6,
+      "limit": 18,
+      "fk": 2.5
+    },
+    {
+      "shot": "3.1",
+      "element": "headline",
+      "text": "Could two customers be charged more or less for who they are?",
+      "words": 12,
+      "limit": 14,
+      "fk": 5.8
+    },
+    {
+      "shot": "3.1",
+      "element": "support",
+      "text": "Data that points to who they are could do that.",
+      "words": 10,
+      "limit": 18,
+      "fk": 2.5
+    },
+    {
+      "shot": "3.1",
+      "element": "note",
+      "text": "Staged what-ifs. None of this has happened.",
+      "words": 7,
+      "limit": 10,
+      "fk": 6.0
+    },
+    {
+      "shot": "3.2",
+      "element": "headline",
+      "text": "Could staff tell a buyer why a price went up?",
+      "words": 10,
+      "limit": 14,
+      "fk": 1.3
+    },
+    {
+      "shot": "3.2",
+      "element": "support",
+      "text": "A price must stay easy to explain.",
+      "words": 7,
+      "limit": 18,
+      "fk": 4.0
+    },
+    {
+      "shot": "3.3",
+      "element": "headline",
+      "text": "Could a pricing tool rivals also use pull our prices into line?",
+      "words": 12,
+      "limit": 14,
+      "fk": 7.8
+    },
+    {
+      "shot": "3.3",
+      "element": "support",
+      "text": "Buyers could then find no cheaper choice.",
+      "words": 7,
+      "limit": 18,
+      "fk": 2.3
+    },
+    {
+      "shot": "4.1",
+      "element": "headline",
+      "text": "Intake must name the products, the data and who sets prices.",
+      "words": 11,
+      "limit": 14,
+      "fk": 6.9
+    },
+    {
+      "shot": "4.1",
+      "element": "support",
+      "text": "A person, not the form, decides which rules apply.",
+      "words": 9,
+      "limit": 18,
+      "fk": 6.3
+    },
+    {
+      "shot": "4.2",
+      "element": "headline",
+      "text": "Then a risk screen tests each question and logs its findings.",
+      "words": 11,
+      "limit": 14,
+      "fk": 2.6
+    },
+    {
+      "shot": "4.2",
+      "element": "support",
+      "text": "No screen has run yet.",
+      "words": 5,
+      "limit": 18,
+      "fk": -1.8
+    },
+    {
+      "shot": "4.3",
+      "element": "headline",
+      "text": "As planned, a pricing owner approves each new price.",
+      "words": 9,
+      "limit": 14,
+      "fk": 7.6
+    },
+    {
+      "shot": "4.3",
+      "element": "support",
+      "text": "The gate decides if that holds before the model learns.",
+      "words": 10,
+      "limit": 18,
+      "fk": 7.2
+    },
+    {
+      "shot": "C",
+      "element": "headline",
+      "text": "Next come intake and a first risk screen.",
+      "words": 8,
+      "limit": 14,
+      "fk": 3.8
+    },
+    {
+      "shot": "C",
+      "element": "support",
+      "text": "Then the gate decides if the work goes on.",
+      "words": 9,
+      "limit": 18,
+      "fk": 3.7
+    }
+  ],
+  "pace": [
+    {
+      "shot": "0",
+      "dur": 4.0,
+      "wordsPerSecond": 2.25
+    },
+    {
+      "shot": "1.1",
+      "dur": 5.0,
+      "wordsPerSecond": 3.6
+    },
+    {
+      "shot": "1.2",
+      "dur": 5.0,
+      "wordsPerSecond": 3.6
+    },
+    {
+      "shot": "2.1",
+      "dur": 6.0,
+      "wordsPerSecond": 3.33
+    },
+    {
+      "shot": "2.2",
+      "dur": 5.0,
+      "wordsPerSecond": 3.4
+    },
+    {
+      "shot": "3.1",
+      "dur": 5.0,
+      "wordsPerSecond": 4.4
+    },
+    {
+      "shot": "3.2",
+      "dur": 5.0,
+      "wordsPerSecond": 3.4
+    },
+    {
+      "shot": "3.3",
+      "dur": 5.0,
+      "wordsPerSecond": 3.8
+    },
+    {
+      "shot": "4.1",
+      "dur": 5.0,
+      "wordsPerSecond": 4.0
+    },
+    {
+      "shot": "4.2",
+      "dur": 5.0,
+      "wordsPerSecond": 3.2
+    },
+    {
+      "shot": "4.3",
+      "dur": 5.0,
+      "wordsPerSecond": 3.8
+    },
+    {
+      "shot": "C",
+      "dur": 4.0,
+      "wordsPerSecond": 4.25
+    }
+  ],
+  "total_words": 219,
+  "max_fk": 7.8,
+  "max_pace": 4.4,
+  "source_lines": [
+    {
+      "shot": "1.1",
+      "text": "AI Canvas: Business Problem",
+      "words": 4,
+      "limit": 10,
+      "fk": 9.6
+    },
+    {
+      "shot": "1.2",
+      "text": "AI Canvas: Business Value; initiative summary",
+      "words": 6,
+      "limit": 10,
+      "fk": 18.2
+    },
+    {
+      "shot": "2.1",
+      "text": "AI Canvas: Objective Function, Data Strategy",
+      "words": 6,
+      "limit": 10,
+      "fk": 14.3
+    },
+    {
+      "shot": "2.2",
+      "text": "AI Canvas: Modeling Approach",
+      "words": 4,
+      "limit": 10,
+      "fk": 9.6
+    },
+    {
+      "shot": "3.1",
+      "text": "AI Canvas: Customer Value, Data Strategy",
+      "words": 6,
+      "limit": 10,
+      "fk": 12.3
+    },
+    {
+      "shot": "3.2",
+      "text": "AI Canvas: Customer Value",
+      "words": 4,
+      "limit": 10,
+      "fk": 9.6
+    },
+    {
+      "shot": "3.3",
+      "text": "AI Canvas: Data Strategy; sourcing record",
+      "words": 6,
+      "limit": 10,
+      "fk": 10.4
+    },
+    {
+      "shot": "4.1",
+      "text": "Initiative record: tier Needs review; intake classifier signals",
+      "words": 8,
+      "limit": 10,
+      "fk": 15.6
+    },
+    {
+      "shot": "4.2",
+      "text": "Initiative summary: awaiting a first risk screen",
+      "words": 7,
+      "limit": 10,
+      "fk": 12.4
+    },
+    {
+      "shot": "4.3",
+      "text": "AI Canvas: Model Training; wave three objective",
+      "words": 7,
+      "limit": 10,
+      "fk": 10.7
+    }
+  ],
+  "source_words": 58
+}

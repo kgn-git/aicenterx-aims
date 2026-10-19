@@ -1,0 +1,260 @@
+{
+  "film": "Document Intelligence.html",
+  "script": "Document Intelligence - Script and Protocols.md",
+  "totalWords": 219,
+  "limit": 220,
+  "lines": [
+    {
+      "shot": "Open",
+      "line": "headline",
+      "text": "A bought service could read our scans.",
+      "words": 7,
+      "limit": 14,
+      "grade": 2.3,
+      "wordsPerSecond": 3.75
+    },
+    {
+      "shot": "Open",
+      "line": "support",
+      "text": "This is the plan, and why it waits.",
+      "words": 8,
+      "limit": 18,
+      "grade": -0.7,
+      "wordsPerSecond": 3.75
+    },
+    {
+      "shot": "1.1",
+      "line": "source",
+      "text": "AI Canvas: the business problem",
+      "words": 5,
+      "limit": 10,
+      "grade": 7.6,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "1.1",
+      "line": "headline",
+      "text": "Staff type the details of a customer's signed contract by hand.",
+      "words": 11,
+      "limit": 14,
+      "grade": 6.9,
+      "wordsPerSecond": 2.62
+    },
+    {
+      "shot": "1.1",
+      "line": "support",
+      "text": "It is slow, and typing errors can reach his record.",
+      "words": 10,
+      "limit": 18,
+      "grade": 3.7,
+      "wordsPerSecond": 2.62
+    },
+    {
+      "shot": "2.1",
+      "line": "source",
+      "text": "AI Canvas: the data strategy",
+      "words": 5,
+      "limit": 10,
+      "grade": 7.6,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "2.1",
+      "line": "headline",
+      "text": "Our pipeline sends the scans to a service we buy.",
+      "words": 10,
+      "limit": 14,
+      "grade": 6.0,
+      "wordsPerSecond": 3.33
+    },
+    {
+      "shot": "2.1",
+      "line": "support",
+      "text": "It is confirmed to read them in the approved region.",
+      "words": 10,
+      "limit": 18,
+      "grade": 6.0,
+      "wordsPerSecond": 3.33
+    },
+    {
+      "shot": "2.2",
+      "line": "source",
+      "text": "AI Canvas: the customer value",
+      "words": 5,
+      "limit": 10,
+      "grade": 7.6,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "2.2",
+      "line": "headline",
+      "text": "A checker compares its fields with the scan.",
+      "words": 8,
+      "limit": 14,
+      "grade": 3.8,
+      "wordsPerSecond": 2.5
+    },
+    {
+      "shot": "2.2",
+      "line": "support",
+      "text": "Nothing is saved until she confirms them.",
+      "words": 7,
+      "limit": 18,
+      "grade": 5.7,
+      "wordsPerSecond": 2.5
+    },
+    {
+      "shot": "3.1",
+      "line": "source",
+      "text": "Incident log: n3, closed",
+      "words": 4,
+      "limit": 10,
+      "grade": 6.6,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "3.1",
+      "line": "headline",
+      "text": "In a test, long contracts came back with pages unread.",
+      "words": 10,
+      "limit": 14,
+      "grade": 4.8,
+      "wordsPerSecond": 3.0
+    },
+    {
+      "shot": "3.1",
+      "line": "support",
+      "text": "A vendor page limit cut them short, silently.",
+      "words": 8,
+      "limit": 18,
+      "grade": 6.7,
+      "wordsPerSecond": 3.0
+    },
+    {
+      "shot": "3.2",
+      "line": "source",
+      "text": "Risk r8, under review",
+      "words": 4,
+      "limit": 10,
+      "grade": 3.7,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "3.2",
+      "line": "headline",
+      "text": "Nothing flags a missing field, so checks can miss it.",
+      "words": 10,
+      "limit": 14,
+      "grade": 2.5,
+      "wordsPerSecond": 3.33
+    },
+    {
+      "shot": "3.2",
+      "line": "support",
+      "text": "If saved, his record is wrong, and nothing shows it.",
+      "words": 10,
+      "limit": 18,
+      "grade": 3.7,
+      "wordsPerSecond": 3.33
+    },
+    {
+      "shot": "4.1",
+      "line": "source",
+      "text": "Change plan: the check-step walkthrough",
+      "words": 5,
+      "limit": 10,
+      "grade": 5.2,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "4.1",
+      "line": "headline",
+      "text": "Checkers learn to check every page, not just the form.",
+      "words": 10,
+      "limit": 14,
+      "grade": 4.8,
+      "wordsPerSecond": 2.91
+    },
+    {
+      "shot": "4.1",
+      "line": "support",
+      "text": "They fix wrong or missing fields.",
+      "words": 6,
+      "limit": 18,
+      "grade": 0.5,
+      "wordsPerSecond": 2.91
+    },
+    {
+      "shot": "4.2",
+      "line": "source",
+      "text": "AI Canvas: the model training",
+      "words": 5,
+      "limit": 10,
+      "grade": 5.2,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "4.2",
+      "line": "headline",
+      "text": "Each fix is counted, because we cannot see into the model.",
+      "words": 11,
+      "limit": 14,
+      "grade": 6.9,
+      "wordsPerSecond": 3.64
+    },
+    {
+      "shot": "4.2",
+      "line": "support",
+      "text": "The count shows only the errors that checkers catch.",
+      "words": 9,
+      "limit": 18,
+      "grade": 3.7,
+      "wordsPerSecond": 3.64
+    },
+    {
+      "shot": "4.3",
+      "line": "source",
+      "text": "Supplier record; risk r8",
+      "words": 4,
+      "limit": 10,
+      "grade": 3.7,
+      "wordsPerSecond": null
+    },
+    {
+      "shot": "4.3",
+      "line": "headline",
+      "text": "The vendor defect is logged, and the incident is closed.",
+      "words": 10,
+      "limit": 14,
+      "grade": 7.2,
+      "wordsPerSecond": 4.0
+    },
+    {
+      "shot": "4.3",
+      "line": "support",
+      "text": "Whether errors can still reach our records is under review.",
+      "words": 10,
+      "limit": 18,
+      "grade": 6.0,
+      "wordsPerSecond": 4.0
+    },
+    {
+      "shot": "Close",
+      "line": "headline",
+      "text": "Next gate: the pilot starts only after the error review.",
+      "words": 10,
+      "limit": 14,
+      "grade": 7.2,
+      "wordsPerSecond": 4.25
+    },
+    {
+      "shot": "Close",
+      "line": "support",
+      "text": "Until then, staff keep typing by hand.",
+      "words": 7,
+      "limit": 18,
+      "grade": 2.3,
+      "wordsPerSecond": 4.25
+    }
+  ]
+}
