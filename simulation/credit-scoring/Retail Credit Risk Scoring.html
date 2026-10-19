@@ -311,7 +311,7 @@ function rcChip(c, x, y, w, h, icon, wgt, empty, light){
 function rcHeader(c, W, H, col, light){ var hh = H*0.11; c.fillStyle = col; c.fillRect(0, 0, W, hh); c.fillStyle = 'rgba(255,255,255,.8)'; rcRR(c, W*0.04, hh*0.36, W*0.18, hh*0.28, hh*0.14); c.fill(); c.beginPath(); c.arc(W - W*0.05, hh*0.5, hh*0.22, 0, 2*Math.PI); c.fill(); }
 function rcRows(c, x, y, w, n, gap, light){ var ink = light ? '30,40,48' : '235,240,245'; for (var r=0;r<n;r++){ c.fillStyle = 'rgba(' + ink + ',.45)'; rcRR(c, x, y + r*gap, w*(0.5 + 0.45*(((r*37 + 11) % 13)/13)), gap*0.36, gap*0.18); c.fill(); } }
 var RCP = {
-  // Nadia's banking app. p.mode: form (car, loan-size slider, term ring, submit), spin, decl (declined + call us), off
+  // Nadia's banking app. p.mode: form (car, loan-size slider, term ring, submit), spin, decl (declined + the bureau searched + call us; no reasons), off
   phone: function(c, W, H, p){
     c.fillStyle = p.mode === 'off' ? '#07090c' : RC.paper; c.fillRect(0, 0, W, H); if (p.mode === 'off') return;
     rcHeader(c, W, H*0.8, RC.blue, true);
@@ -329,21 +329,27 @@ var RCP = {
       c.strokeStyle = RC.blue; c.lineCap = 'round'; c.beginPath(); c.arc(W*0.5, H*0.45, W*0.2, p.a, p.a + 1.7); c.stroke();
     } else {
       rcG(c, 'bar', W*0.5, H*0.37, W*0.25, null, { disc:RC.slate });
-      rcG(c, 'handset', W*0.5, H*0.7, W*0.15, null, { disc:RC.blue });
+      rcG(c, 'bureau', W*0.3, H*0.7, W*0.13, '#33414c', { bg:RC.paper });
+      rcG(c, 'handset', W*0.7, H*0.7, W*0.15, null, { disc:RC.blue });
     }
   },
-  // the underwriter's monitor: probability dial, three reason chips, confirm, and the amber override handle (untouched)
+  // the underwriter's monitor: the application summary (a form with rows), the probability dial, three reason chips,
+  // and two live controls, a green approve tick and a slate decline bar; p.dec = the underwriter has taken the decline
   uw: function(c, W, H, p){
     c.fillStyle = RC.dark; c.fillRect(0, 0, W, H); rcHeader(c, W, H, '#2c3f55');
-    var cx = W*0.23, cy = H*0.66, r = H*0.36; c.lineCap = 'butt';
-    c.lineWidth = H*0.07; c.strokeStyle = 'rgba(235,240,245,.15)'; c.beginPath(); c.arc(cx, cy, r, Math.PI, 2*Math.PI); c.stroke();
+    c.fillStyle = 'rgba(235,240,245,.08)'; rcRR(c, W*0.03, H*0.15, W*0.4, H*0.3, H*0.04); c.fill();
+    rcRows(c, W*0.06, H*0.19, W*0.34, 4, H*0.062);
+    var cx = W*0.23, cy = H*0.86, r = H*0.27; c.lineCap = 'butt';
+    c.lineWidth = H*0.06; c.strokeStyle = 'rgba(235,240,245,.15)'; c.beginPath(); c.arc(cx, cy, r, Math.PI, 2*Math.PI); c.stroke();
     c.strokeStyle = RC.blue; c.beginPath(); c.arc(cx, cy, r, Math.PI, Math.PI*(1 + p.v)); c.stroke();
-    c.strokeStyle = '#ffffff'; c.lineWidth = H*0.025; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(Math.PI*(1 + p.v))*r*0.92, cy + Math.sin(Math.PI*(1 + p.v))*r*0.92); c.stroke();
+    c.strokeStyle = '#ffffff'; c.lineWidth = H*0.022; c.lineCap = 'round'; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(Math.PI*(1 + p.v))*r*0.92, cy + Math.sin(Math.PI*(1 + p.v))*r*0.92); c.stroke();
     var ic = ['wallet','bureau','cardw'], wg = [0.85, 0.6, 0.38];
     for (var k=0;k<3;k++) rcChip(c, W*0.47, H*(0.17 + k*0.2), W*0.49, H*0.16, ic[k], wg[k], false);
-    c.fillStyle = p.ok ? RC.ok : 'rgba(235,240,245,.12)'; rcRR(c, W*0.47, H*0.8, W*0.24, H*0.13, H*0.06); c.fill();
-    rcG(c, 'check', W*0.59, H*0.865, H*0.05, p.ok ? '#ffffff' : 'rgba(235,240,245,.6)');
-    c.fillStyle = RC.amber; rcRR(c, W*0.8, H*0.835, W*0.14, H*0.06, H*0.03); c.fill(); c.beginPath(); c.arc(W*0.83, H*0.865, H*0.055, 0, 2*Math.PI); c.fill();
+    c.save(); c.globalAlpha = p.dec ? 0.35 : 1; c.fillStyle = RC.ok; rcRR(c, W*0.47, H*0.8, W*0.22, H*0.13, H*0.06); c.fill();
+    rcG(c, 'check', W*0.58, H*0.865, H*0.05, '#ffffff'); c.restore();
+    c.fillStyle = RC.slate; rcRR(c, W*0.74, H*0.8, W*0.22, H*0.13, H*0.06); c.fill();
+    rcG(c, 'bar', W*0.85, H*0.865, H*0.05, '#ffffff');
+    if (p.dec) { c.strokeStyle = '#ffffff'; c.lineWidth = H*0.018; rcRR(c, W*0.735, H*0.79, W*0.23, H*0.15, H*0.07); c.stroke(); }
   },
   // the servicing agent's screen: the decision record (declined) and three reason slots, empty (dashed) or filled
   agent: function(c, W, H, p){
@@ -395,6 +401,8 @@ var RCP = {
     for (k=0;k<3;k++){ rcG(c, 'tree', W*(0.18 + k*0.08), H*0.36, H*0.11, RC.blue); }
     c.save(); c.globalAlpha = 0.5; c.setLineDash([4, 4]); for (k=0;k<3;k++){ rcG(c, 'tree', W*(0.62 + k*0.08), H*0.36, H*0.11, '#dfe8ee', { hollow:true }); } c.restore();
     c.save(); c.globalAlpha = 0.55; c.strokeStyle = '#dfe8ee'; c.lineWidth = 2; c.setLineDash([6, 5]); rcRR(c, W*0.6, H*0.58, W*0.22, H*0.1, 4); c.stroke(); c.restore();
+    // the empty sign-off box: a challenger is promoted only once model risk signs it off (shot 11)
+    if (p.so > 0) { c.save(); c.globalAlpha = p.so; c.strokeStyle = '#ffffff'; c.lineWidth = H*0.014; rcRR(c, W*0.86, H*0.555, H*0.15, H*0.15, 3); c.stroke(); c.restore(); }
     c.fillStyle = RC.ok; rcRR(c, W*0.16, H*0.58, W*0.2, H*0.1, 4); c.fill();
     if (p.k > 0) for (i=0;i<4;i++){ var u = (p.ph + i/4) % 1; c.fillStyle = RC.ice; c.globalAlpha = p.k; c.beginPath(); c.arc(W*0.5, H*(0.06 + u*0.2), H*0.025, 0, 2*Math.PI); c.fill();
       c.beginPath(); c.arc(W*(0.26 + 0.0*u), H*(0.48 + u*0.08), H*0.02, 0, 2*Math.PI); c.fill(); c.globalAlpha = 0.5*p.k; c.beginPath(); c.arc(W*0.7, H*(0.48 + u*0.08), H*0.02, 0, 2*Math.PI); c.fill(); c.globalAlpha = 1; }
@@ -417,6 +425,10 @@ var RCP = {
   // a static glyph token (transparent background)
   token: function(c, W, H, p){ c.clearRect(0, 0, W, H); if (p.bg) { c.fillStyle = p.bg; rcRR(c, W*0.04, H*0.04, W*0.92, H*0.92, W*0.16); c.fill(); }
     rcG(c, p.g, W/2, H/2, W*(p.r || 0.36), p.col, { disc:p.disc, hollow:p.hollow, bg:p.bg || RC.dark }); },
+  // the month-end figures sheet: rows of figures and a bar per month, the last bar short (shot 8)
+  sheet: function(c, W, H){ c.fillStyle = RC.paper; c.fillRect(0, 0, W, H); rcRows(c, W*0.12, H*0.08, W*0.76, 3, H*0.08, true);
+    var h = [0.5, 0.52, 0.49, 0.51, 0.5, 0.37]; for (var i=0;i<6;i++){ c.fillStyle = '#5f7fa6'; c.fillRect(W*(0.1 + i*0.135), H*(0.92 - h[i]), W*0.1, H*h[i]); }
+    c.fillStyle = '#33414c'; c.fillRect(W*0.08, H*0.925, W*0.84, 3); },
   // board papers: a fairness-bar sheet and a model-card sheet
   paperBars: function(c, W, H){ c.fillStyle = RC.paper; c.fillRect(0, 0, W, H); var h = [0.7, 0.64, 0.46], col = [RC.ok, RC.ok, RC.amber];
     for (var i=0;i<3;i++){ c.fillStyle = col[i]; c.fillRect(W*(0.15 + i*0.25), H*(0.85 - h[i]*0.8), W*0.17, H*h[i]*0.8); } c.fillStyle = '#33414c'; c.fillRect(W*0.1, H*0.86, W*0.8, 3); },
@@ -441,37 +453,37 @@ var CONFIG = {
       head:'A loan can be decided in minutes, with checks around it.', sup:'We follow one loan from a phone to the board room.',
       cam:[[0, 1.7,2.6,8.4, -0.15,1.05,0.85, 0.2,0.2,1], [2.0, 1.4,2.3,7.4, -0.15,1.05,0.85, 0.2,0.2,1], [4, 0.8,1.7,4.4, -0.15,1.05,0.85, 0.2,0.2,1]] },
     { beat:1, name:'The situation — At home, in the banking app', nav:'At home, in the banking app', start:4, dur:4, setting:'At home, in the banking app', source:'AI Canvas: Business Problem',
-      head:'Nadia needs a small loan to replace her broken-down car.', sup:'She applies in her banking app after a late shift.',
-      cam:[[0, -0.55,1.95,-0.45, -0.28,0.98,0.86, 0.25,0.2,1], [4, -0.45,1.85,-0.2, -0.28,0.98,0.86, 0.25,0.2,1]] },
+      head:'Nadia needs a small loan to replace her broken-down car.', sup:'She applies in her banking app one evening after work.',
+      cam:[[0, -0.72,1.32,-0.62, -0.28,0.98,0.86, 0.25,0.2,1], [4, -0.63,1.3,-0.47, -0.28,0.98,0.86, 0.25,0.2,1]] },
     { beat:1, name:'The situation — The old way: by hand', nav:'The old way: by hand', start:8, dur:4, setting:'The old way: by hand', source:'AI Canvas: Business Problem',
       head:'Checking loans by hand takes days.', sup:'Some applicants give up, and two staff can judge one file in two ways.',
       cam:[[0, 38.3,1.5,1.05, 39.3,0.95,-1.3, 0.2,0.08,1], [4, 39.8,1.5,1.05, 40.8,0.95,-1.3, 0.2,0.08,1]] },
     { beat:2, name:'The AI at work — Inside the scoring system', nav:'Inside the scoring system: the data', start:12, dur:4, setting:'Inside the scoring system', source:'AI Canvas: Data Strategy, Objective Function',
-      head:'The model reads her credit file and how she uses her account.', sup:'It never uses data on health, religion or race.',
+      head:'The model reads her credit file and how she uses her account.', sup:'It is never given data on health, religion or race.',
       cam:[[0, 77.2,2.2,3.3, 79.6,1.1,-1.0, 0.2,0.15,1], [4, 78.6,2.2,2.9, 80.0,1.1,-1.0, 0.2,0.15,1]] },
     { beat:2, name:'The AI at work — Inside the scoring system', nav:'Inside the scoring system: the score', start:16, dur:5, setting:'Inside the scoring system', source:'AI Canvas: Objective Function, Modeling Approach',
       head:'It estimates how likely she is to fall 90 days behind on her loan.', sup:'If she can afford less, her risk score can never go down.',
       cam:[[0, 81.69,1.8,2.38, 83.7,1.2,-1.0, 0.12,0.15,1], [2.5, 82.6,1.8,2.5, 83.7,1.2,-1.0, 0.12,0.15,1], [5, 83.51,1.8,2.38, 83.9,1.2,-1.0, 0.12,0.15,1]] },
-    { beat:2, name:'The AI at work — The underwriting desk', nav:'The underwriting desk', start:21, dur:5, setting:'The underwriting desk', source:'AI Canvas: Customer Value',
-      head:'Then an underwriter checks the score and the three main reasons for it.', sup:"That evening, Nadia's app tells her the answer is no.",
-      cam:[[0, 124.6,1.85,-0.3, 123.5,1.08,-2.85, 0.2,0.18,1], [1.2, 124.4,1.7,-0.75, 123.65,1.02,-2.8, 0.25,0.15,1], [5, 124.4,1.7,-0.75, 123.65,1.02,-2.8, 0.25,0.15,1]] },
+    { beat:2, name:'The AI at work — The underwriting desk', nav:'The underwriting desk', start:21, dur:5, setting:'The underwriting desk', source:'AI Canvas: Customer Value; system card oversight',
+      head:'A clear yes goes out at once; anything else goes to an underwriter.', sup:'The underwriter checks the three main reasons, and her app says no.',
+      cam:[[0, 124.8,1.85,-0.15, 123.4,1.05,-2.85, 0.12,0.15,1], [1.2, 124.55,1.7,-0.62, 123.75,1.02,-2.8, 0.25,0.15,1], [5, 124.55,1.7,-0.62, 123.75,1.02,-2.8, 0.25,0.15,1]] },
     { beat:3, name:'What can go wrong — The contact centre', nav:'The contact centre', start:26, dur:5, setting:'The contact centre', source:'Incident log: a decline with no reasons',
       head:'Next morning Nadia calls to ask why, but the agent sees no reasons.', sup:"The reasons stayed in the scoring system and never reached the agent's screen.",
       cam:[[0, 121.0,1.7,3.8, 119.2,1.1,0.3, 0.25,0.2,1], [3.2, 119.85,1.6,2.25, 119.2,1.1,0.3, 0.25,0.2,1], [5, 119.85,1.6,2.25, 119.2,1.1,0.3, 0.25,0.2,1]] },
     { beat:3, name:'What can go wrong — The model risk desk', nav:'The model risk desk', start:31, dur:4, setting:'The model risk desk', source:'Incident log and risk register: model drift',
-      head:'After the June rate change, approvals drift by four points.', sup:'Between quarterly retrains, a shift like this can go unseen.',
+      head:'After the June rate change, approvals drift by four points.', sup:'No alert fires; model risk finds it later in the monthly figures.',
       cam:[[0, 160.0,1.5,-1.15, 158.4,1.75,-3.42, 0.2,0.18,1], [4, 159.9,1.5,-1.28, 158.4,1.75,-3.42, 0.2,0.18,1]] },
     { beat:3, name:'What can go wrong — The fair-lending test', nav:'The fair-lending test', start:35, dur:5, setting:'The fair-lending test', source:'Risk register and fair-lending test',
-      head:'A fairness test flags one group of applicants for a closer look.', sup:"Its approval rate is below four-fifths of the highest group's rate.",
+      head:'A fairness test flags one group of applicants for a closer look.', sup:"Its approval rate is below four-fifths of the top group's rate.",
       cam:[[0, 159.9,1.5,-1.28, 158.9,1.75,-3.42, 0.2,0.18,1], [2, 160.1,1.5,-1.4, 161.1,1.75,-3.42, 0.22,0.18,1], [5, 160.15,1.5,-1.45, 161.1,1.75,-3.42, 0.22,0.18,1]] },
-    { beat:4, name:'How it is kept safe — The contact centre', nav:'The contact centre', start:40, dur:5, setting:'The contact centre', source:'Controls: reasons on screen, human review',
+    { beat:4, name:'How it is kept safe — The contact centre', nav:'The contact centre', start:40, dur:5, setting:'The contact centre', source:'AI Canvas: Customer Value; system card oversight',
       head:"The agent's screen must show the reasons, so they can be read back.", sup:'Nadia can ask an underwriter to look at her case again.',
-      cam:[[0, 121.0,1.7,3.8, 119.2,1.1,0.3, 0.25,0.2,1], [2.2, 119.85,1.6,2.25, 119.2,1.1,0.3, 0.25,0.2,1], [3.0, 119.85,1.6,2.25, 119.2,1.1,0.3, 0.25,0.2,1], [4.5, 119.85,1.6,2.25, 122.9,0.95,-2.35, 0.2,0.2,1], [5, 119.85,1.6,2.25, 122.9,0.95,-2.35, 0.2,0.2,1]] },
+      cam:[[0, 121.0,1.7,3.8, 119.2,1.1,0.3, 0.25,0.2,1], [2.2, 119.85,1.6,2.25, 119.2,1.1,0.3, 0.25,0.2,1], [3.0, 119.85,1.6,2.25, 119.2,1.1,0.3, 0.25,0.2,1], [4.5, 119.85,1.6,2.25, 122.8,0.95,-2.25, 0.2,0.2,1], [5, 119.85,1.6,2.25, 122.8,0.95,-2.25, 0.2,0.2,1]] },
     { beat:4, name:'How it is kept safe — The model risk desk', nav:'The model risk desk', start:45, dur:5, setting:'The model risk desk', source:'Planned control; AI Canvas: Model Training',
-      head:'A weekly check is planned to catch drift and unfair results between retrains.', sup:'A new model runs in the shadow before it can replace the old one.',
-      cam:[[0, 160.0,1.5,-1.15, 158.4,1.75,-3.42, 0.2,0.18,1], [0.9, 160.0,1.5,-1.15, 158.4,1.75,-3.42, 0.2,0.18,1], [2.3, 159.75,1.5,0.15, 158.95,1.12,-1.95, 0.3,0.28,1], [5, 159.75,1.5,0.15, 158.95,1.12,-1.95, 0.3,0.28,1]] },
+      head:'A weekly check is planned to catch drift and unfair results between retrains.', sup:'A new model runs in the shadow, then needs model risk sign-off.',
+      cam:[[0, 160.0,1.5,-1.15, 158.4,1.75,-3.42, 0.2,0.18,1], [0.3, 160.0,1.5,-1.15, 158.4,1.75,-3.42, 0.2,0.18,1], [1.05, 160.15,1.5,-1.1, 157.7,1.05,-1.6, 0.35,0.2,1], [1.9, 160.2,1.5,-1.0, 157.7,1.05,-1.6, 0.35,0.2,1], [2.7, 159.75,1.5,0.15, 158.95,1.12,-1.95, 0.3,0.28,1], [5, 159.75,1.5,0.15, 158.95,1.12,-1.95, 0.3,0.28,1]] },
     { beat:4, name:'How it is kept safe — The governance board', nav:'The governance board', start:50, dur:5, setting:'The governance board', source:'Board decision, with evidence on file',
-      head:'The bank re-weights that group and tests again before the scale decision.', sup:'Progress is checked every 30 days, with the fairness test on file.',
+      head:"The bank re-weights that group's training data and tests again before scaling.", sup:'Progress is checked every 30 days, with the fairness test on file.',
       cam:[[0, 200.5,2.4,2.9, 200.35,1.7,-3.42, 0.2,0.2,1], [5, 200.45,1.6,2.6, 200.35,1.8,-3.42, 0.2,0.2,1]] },
     { beat:0, name:'Close', start:55, dur:4, setting:'What comes next',
       head:'Answers should come fast, with reasons people can read and challenge.', sup:'Next gate: the board decides whether the pilot can scale.',
@@ -519,7 +531,7 @@ var CONFIG = {
     o.Lu = new THREE.PointLight(0xffe2b0, 0, 6, 1.4); o.Lu.position.set(124.2, 1.5, -2.4); scene.add(o.Lu);
     o.ground = k.mesh(k.UG.plane, 0, 600, 200, 1, 100, -0.006, 0, { rx:-PI/2, noShadow:true, mat:new THREE.MeshLambertMaterial({ color:0x1d2126 }) });
 
-    // ---------------- K1 Nadia's kitchen at night (and in the morning for the close); the street outside the window
+    // ---------------- K1 Nadia's kitchen after dark (and in the morning for the close); the street outside the window
     set('kit');
     var KW = 0xD9CCB8;
     A(k.room({ w:7, d:5, h:2.6, x:0, z:0, ground:false, floor:0xB39C80, wall:KW }));
@@ -608,6 +620,10 @@ var CONFIG = {
     k.box(0x8E9BA6, 3.2, 0.42, 0.04, 118.4, 0.96, 0.025, cur);
     o.agentMon = mon(119.2, 0.25, 0, 0.62, 0.4, 384, RCP.agent, { full:false, red:0, rs:1, hi:-1, book:false, rev:false });
     o.podMon = [A(k.monitor({ x:117.6, z:0.25 })), A(k.monitor({ x:117.6, z:-0.2, ry:PI })), A(k.monitor({ x:119.2, z:-0.2, ry:PI }))];
+    // the complaints tray on the corner of the agent's desk, the end of the pod, and the amber complaint card (shot 7)
+    k.box(0x4A5560, 0.32, 0.02, 0.26, 119.76, 0.76, 0.6, cur); k.box(0x4A5560, 0.32, 0.05, 0.02, 119.76, 0.785, 0.48, cur); k.box(0x4A5560, 0.32, 0.05, 0.02, 119.76, 0.785, 0.72, cur);
+    o.complaint = k.grp(119.76, 0.785, 0.6, cur); k.box(0, 0.24, 0.02, 0.17, 0, 0, 0, o.complaint, { mat:lam(0xe9a23b, 0.08) });
+    k.box(0, 0.05, 0.022, 0.05, 0.095, 0.002, -0.06, o.complaint, { mat:lam(0xb8792a, 0.1), ry:PI/4 }); o.complaint.visible = false;
     o.agent = seat(119.2, 1.2, PI, { shirt:P.shirt.staff, trousers:P.trousers.navy, skin:P.skin[1], hair:P.hair[1], headset:true, chair:0x2B3440 });
     o.pod = [ seat(117.6, 1.2, PI, { shirt:P.shirt.staff2, trousers:P.trousers.dark, skin:P.skin[4], hair:P.hair[5], headset:true, chair:0x2B3440 }),
               seat(117.6, -1.15, 0, { shirt:P.shirt.grey, trousers:P.trousers.navy, skin:P.skin[0], hair:P.hair[3], longHair:true, headset:true, chair:0x2B3440 }),
@@ -622,15 +638,20 @@ var CONFIG = {
     k.box(P.dark, 0.075, 0.15, 0.02, 0, -0.02, 0.03, o.mini.userData.handR);
     // the underwriting desk (lit for night in shot 6, for morning in shot 10)
     A(k.desk({ x:123.5, z:-2.6, w:1.8, d:0.8 }));
-    o.uwMon = mon(123.4, -2.85, 0, 0.62, 0.38, 384, RCP.uw, { v:0.62, ok:false });
+    o.uwMon = mon(123.55, -2.85, 0, 0.62, 0.38, 384, RCP.uw, { v:0.62, dec:false });
     A(k.monitor({ x:122.75, z:-2.8, ry:0.3 }));
-    var pip = frame(124.1, 0.98, -2.65, 0.24, 0.4, -0.25, 0x1B2733);
+    var pip = frame(124.1, 0.98, -2.65, 0.24, 0.4, -0.25, 0x1B2733); o.pipF = pip;
     o.pip = phoneC(pip, { mode:'spin', a:0 }, 2.2); o.pip.group.position.set(0, 0, 0.012);
-    k.box(0xB07A2A, 0.38, 0.04, 0.3, 122.9, 0.77, -2.35, cur); k.box(0xC98A2A, 0.38, 0.06, 0.02, 122.9, 0.8, -2.2, cur); k.box(0xC98A2A, 0.38, 0.06, 0.02, 122.9, 0.8, -2.5, cur);
-    o.ticket = k.box(0, 0.22, 0.025, 0.15, 122.9, 0.81, -2.35, cur, { mat:lam(0xe9a23b, 0.22) }); o.ticket.visible = false;
+    k.box(0xB07A2A, 0.38, 0.04, 0.3, 122.8, 0.77, -2.25, cur); k.box(0xC98A2A, 0.38, 0.06, 0.02, 122.8, 0.8, -2.1, cur); k.box(0xC98A2A, 0.38, 0.06, 0.02, 122.8, 0.8, -2.4, cur);
+    o.ticket = k.box(0, 0.22, 0.025, 0.15, 122.8, 0.81, -2.25, cur, { mat:lam(0xe9a23b, 0.22) }); o.ticket.visible = false;
+    // shot 6: Nadia's referral card drops into the tray; a clear approval for someone else passes the desk into the chute, untouched
+    o.refCard = k.box(0, 0.22, 0.025, 0.15, 122.8, 0.81, -2.25, cur, { mat:lam(0xe9a23b, 0.22) }); o.refCard.visible = false;
+    var chute = k.grp(122.05, 0, -3.25, cur); k.box(0x55606A, 0.36, 1.25, 0.36, 0, 0.625, 0, chute); k.box(0x2A3138, 0.28, 0.02, 0.28, 0, 1.26, 0, chute);
+    k.box(0x3fa34d, 0.36, 0.05, 0.37, 0, 1.0, 0, chute, { noShadow:true }); k.coll(121.87, 0, -3.43, 122.23, 1.27, -3.07, 'chute');
+    o.autoTick = tok({ g:'check', disc:RC.ok }, 0.2, 124.9, 1.5, -3.3, 0); o.autoTick.visible = false;
     k.cyl(0x333333, 0.07, 0.03, 124.35, 0.765, -2.88, cur); k.cyl(0x333333, 0.012, 0.42, 124.35, 0.98, -2.88, cur); k.mesh(k.UG.cone, 0x2F4F4F, 0.18, 0.12, 0.18, 124.3, 1.2, -2.8, {}, cur);
     o.uwBulb = k.sph(0, 0.04, 124.3, 1.14, -2.8, cur, { mat:lam(0xffe2b0, 0.1) });
-    o.uw = seat(123.5, -1.75, PI, { shirt:P.shirt.white, trousers:P.trousers.dark, skin:P.skin[2], hair:P.hair[4], badge:'#3fa34d', chair:0x3B4652 });
+    o.uw = seat(123.7, -1.75, PI, { shirt:P.shirt.white, trousers:P.trousers.dark, skin:P.skin[2], hair:P.hair[4], badge:'#3fa34d', chair:0x3B4652 });
     A(k.shelf({ x:114.25, z:-1.5, ry:PI/2, seed:5 })); A(k.plant({ x:114.6, z:-4.0 })); A(k.plant({ x:125.4, z:-4.0, s:1.1 }));
 
     // ---------------- K6 the model-risk desk: wall dashboard (approval-rate chart, fairness panel), desk, lamp, second monitor
@@ -641,23 +662,24 @@ var CONFIG = {
     o.fair = wall(160.95, 1.75, -3.42, 1.6, 1.3, 384, RCP.fair, { b:[0,0,0], col:[RC.blue,RC.blue,RC.blue], red:0, rs:1, flag:0 });
     A(k.desk({ x:158.4, z:-1.6, w:1.8, d:0.8 }));
     o.rkMon = A(k.monitor({ x:157.95, z:-1.9 }));
-    o.shadow = mon(158.95, -1.9, 0, 0.7, 0.4, 384, RCP.shadow, { k:0, ph:0, sh:0 });
+    o.shadow = mon(158.95, -1.9, 0, 0.7, 0.4, 384, RCP.shadow, { k:0, ph:0, sh:0, so:0 });
     k.cyl(0x333333, 0.07, 0.03, 157.6, 0.765, -1.75, cur); k.cyl(0x333333, 0.012, 0.4, 157.6, 0.97, -1.75, cur); k.mesh(k.UG.cone, 0x2F3F4F, 0.18, 0.12, 0.18, 157.63, 1.17, -1.7, {}, cur);
     o.lampM = lam(0x6a6a6a, 0.05); k.sph(0, 0.045, 157.63, 1.11, -1.7, cur, { mat:o.lampM });
+    o.sheet = k.grp(156.75, 1.6, -3.385, cur); o.sheet.add(cscreen(0.34, 0.46, 160, RCP.sheet, {}).mesh); o.sheet.visible = false;
     o.alertTok = tok({ g:'warn', col:'#ffffff', disc:RC.amber }, 0.16, 157.85, 0.86, -1.42, 0.35); o.alertTok.visible = false;
     o.rk1 = seat(157.95, -0.85, PI, { shirt:P.shirt.staff, trousers:P.trousers.dark, skin:P.skin[4], hair:P.hair[0], chair:0x2B3440 });
     o.rk2 = seat(158.85, -0.85, PI, { shirt:P.shirt.grey, trousers:P.trousers.navy, skin:P.skin[1], hair:P.hair[2], longHair:true, chair:0x2B3440 });
     o.rk3 = A(k.person({ shirt:P.shirt.staff2, trousers:P.trousers.khaki, skin:P.skin[3], hair:P.hair[5], badge:'#4a7fd4' })); o.rk3.visible = false;
     A(k.plant({ x:164.3, z:-3.0 })); A(k.shelf({ x:164.75, z:-0.5, ry:-PI/2, seed:9 }));
 
-    // ---------------- K7 the board room: seven seats (the seven present at the Q2 board), papers, wall screen
+    // ---------------- K7 the board room: six people (the seven seats present at the Q2 board; the DPO holds two), papers, wall screen
     set('board');
     A(k.room({ w:9, d:7, h:3, x:200, z:0, ground:false, floor:0x8E7A66, wall:0xE5E1D8 }));
     A(k.windowPane({ x:204.42, y:1.7, z:-0.8, w:2.6, h:1.4, ry:-PI/2 }));
     A(k.desk({ x:200, z:-1.0, w:1.4, d:3.6, h:0.74, color:0x6B5038, legs:0x3A2C20, label:'table' }));
     o.board = wall(200.35, 1.95, -3.42, 2.4, 1.3, 512, RCP.board, { k:0 });
-    var shirts = [0x2F5D8C, 0x7D8790, 0xF2F0EA, 0x3E7C6B, 0x8E5BA8, 0x26324A, 0xC75B39], seats7 = [[198.62,-2.2,PI/2],[198.62,-1.0,PI/2],[198.62,0.2,PI/2],[201.38,-2.2,-PI/2],[201.38,-1.0,-PI/2],[201.38,0.2,-PI/2],[200,-3.12,0]];
-    o.members = seats7.map(function(s, n){ return seat(s[0], s[1], s[2], { shirt:shirts[n], trousers:n % 2 ? P.trousers.dark : P.trousers.navy, skin:P.skin[(n*2) % 5], hair:P.hair[(n*3) % 6], longHair:n % 3 === 1, chair:0x2B2B2E }); });
+    var shirts = [0x2F5D8C, 0x7D8790, 0xF2F0EA, 0x3E7C6B, 0x8E5BA8, 0xC75B39], seats6 = [[198.62,-2.2,PI/2],[198.62,-1.0,PI/2],[198.62,0.2,PI/2],[201.38,-2.2,-PI/2],[201.38,-1.0,-PI/2],[200,-3.12,0]];
+    o.members = seats6.map(function(s, n){ return seat(s[0], s[1], s[2], { shirt:shirts[n], trousers:n % 2 ? P.trousers.dark : P.trousers.navy, skin:P.skin[(n*2) % 5], hair:P.hair[(n*3) % 6], longHair:n % 3 === 1, chair:0x2B2B2E }); });
     var pb = cscreen(0.28, 0.38, 160, RCP.paperBars, {}); pb.mesh.position.set(200.2, 0.743, 0.3); pb.mesh.rotation.set(-PI/2, 0, 0.2); cur.add(pb.mesh);
     var pc = cscreen(0.28, 0.38, 160, RCP.paperCard, {}); pc.mesh.position.set(199.8, 0.743, 0.15); pc.mesh.rotation.set(-PI/2, 0, -0.15); cur.add(pc.mesh);
     A(k.plant({ x:195.9, z:-3.0 })); A(k.plant({ x:204.0, z:-3.0 }));
@@ -684,7 +706,7 @@ var CONFIG = {
     L.sun.position.set(e[7] - 0.406*40, 0.767*40, e[8] + 0.496*40); L.sun.target.position.set(e[7], 0, e[8]);
     function pulse(a){ return ramp(lt, a, a + 0.3)*(0.6 + 0.4*tri(lt*1.2)); }   // a red fault ring, pulsing once it appears
 
-    // ---------------- K1 the kitchen: shots 1-2 at night, the close in the morning
+    // ---------------- K1 the kitchen: shots 1-2 after dark, the close in the morning
     if (SET === 'kit') {
       var n = o.nadia; k.place(n, 0, 0.5, 0); k.sit(n, 1);
       if (i < 12) {
@@ -740,17 +762,23 @@ var CONFIG = {
     if (SET === 'cc') {
       var uw = o.uw; k.sit(uw, 1);
       if (i === 5) {
-        // night: only the underwriter is in; the pod is empty
+        // evening, after dark: the underwriting team covers referrals; the contact-centre pod has gone home
         o.Lu.intensity = 1.6; o.uwBulb.emissiveIntensity = 1.1; o.ccWinM.color.setHex(0x1a2433); o.ccWinM.emissive.setHex(0x1a2433);
         o.agent.visible = false; o.pod.forEach(function(p){ p.visible = false; }); o.agentMon.show({ full:false, red:0, rs:1, hi:-1, book:false, rev:false, off:1 });
         o.agentMon.mesh.material.color.setHex(0x222a33); o.podMon.forEach(function(m){ m.show({ off:true }); });
+        // a clear approval for someone else is issued automatically: the green tick passes the desk into the chute (0-1.0 s)
+        if (lt < 1.0) { var au = lin(lt, 0, 0.75), ad2 = lin(lt, 0.75, 1.0); o.autoTick.visible = true;
+          o.autoTick.position.set(124.9 - 2.85*au, 1.5 - 0.08*au + 0.08*Math.sin(au*PI) - 0.45*ad2, -3.3 + 0.05*au); o.autoTick.scale.setScalar(Math.max(0.001, 1 - 0.8*ad2)); }
+        // Nadia's score is not a clear approval: her referral card drops into the underwriter's tray (lands at 1.0 s)
+        if (lt >= 0.7) { o.refCard.visible = true; o.refCard.position.y = 0.81 + 0.55*(1 - ramp(lt, 0.7, 1.0)); }
         var tap = ramp(lt, 2.0, 2.4)*(1 - ramp(lt, 2.8, 3.3));
         if (tap > 0.01) k.point(uw, tap); else k.typing(uw, t, 0.4);
         k.look(uw, 0, 0.12);
-        o.uwMon.show({ v:0.62, ok:lt >= 2.5 });
+        // she reads the summary, the score and the three reasons, then takes the decline (2.5 s)
+        o.uwMon.show({ v:0.62, dec:lt >= 2.5 });
         o.pip.show(lt < 3.5 ? { mode:'spin', a:Math.floor(lt*10)*0.6 } : { mode:'decl' });
       } else {
-        o.uwMon.show({ v:0.62, ok:true }); o.pip.show({ mode:'decl' });
+        o.uwMon.show({ v:0.45, dec:false }); o.pipF.visible = false;   // morning: the underwriter is on another case; the phone inset was shot 6 only
         o.pod.forEach(function(p, j){ k.sit(p, 1); k.typing(p, t + j*0.7, 0.6); });
         o.podMon.forEach(function(m, j){ m.show({ header:'#3a4856', rows:5, lit:3 + j % 3 }); });
         var ag = o.agent, ad = ag.userData; k.sit(ag, 1);
@@ -758,10 +786,10 @@ var CONFIG = {
           // fault: Nadia calls (inset frame, upper left); the agent's screen has empty reason slots; a red ring pulses round them
           o.f7.visible = true; var md = o.mini.userData; k.place(o.mini, 0.05, 0.05, 0.35); o.mini.position.y = -0.235; md.ra.rotation.x = -0.35; md.ra.rotation.z = -0.25; md.re.rotation.x = -2.35; k.look(o.mini, -0.2, 0.1);
           if (lt >= 0.5 && lt < 2.0) { var rp = frac((lt - 0.5)/0.75); o.ringP.visible = true; o.ringP.scale.setScalar(1 + 2.2*rp); o.ringP.material.opacity = 0.85*(1 - rp); }
-          if (lt < 0.8) k.typing(ag, t, 0.6);
-          var spread = ramp(lt, 2.4, 2.9);
-          if (spread > 0.01) { ad.la.rotation.x = -0.35*spread; ad.ra.rotation.x = -0.35*spread; ad.la.rotation.z = 0.85*spread; ad.ra.rotation.z = -0.85*spread; ad.le.rotation.x = ad.re.rotation.x = -1.1*spread; }
-          k.look(ag, 0, lt < 2.4 ? 0.1 : -0.1);
+          // with nothing to read back, the agent logs the call as a complaint: an amber card drops into the complaints tray (3.5-4.5 s)
+          if (lt < 0.8 || lt >= 3.0) k.typing(ag, t, 0.6);
+          k.look(ag, 0, lt < 3.0 ? 0.1 : 0.3);
+          if (lt >= 3.5) { o.complaint.visible = true; o.complaint.position.y = 0.785 + 0.6*(1 - ramp(lt, 3.5, 4.5)); o.complaint.rotation.y = 0.5*(1 - ramp(lt, 3.5, 4.5)); }
           o.agentMon.show({ full:false, red:pulse(2.0), rs:1 + 0.05*tri(lt*1.2), hi:-1, book:false, rev:false });
         } else {
           // control: the reasons are on screen; the agent reads each back; a review ticket goes to the underwriter's tray
@@ -771,19 +799,25 @@ var CONFIG = {
           o.speech.forEach(function(m, j){ var a0 = 0.8 + j*0.6, u = lin(lt, a0, a0 + 0.9); if (u > 0 && u < 1) { m.visible = true; m.position.y = 1.55 + 0.35*u; m.scale.setScalar(Math.max(0.001, Math.min(1, u*5, (1 - u)*5))); } });
           o.agentMon.show({ full:true, red:0, rs:1, hi:hi, book:true, rev:lt >= 3.0 });
           var tu = lin(lt, 3.0, 4.5);
-          if (lt >= 3.0) { o.ticket.visible = true; var ax = 119.4, ay = 1.0, az = 0.45, bx = 122.9, by = 0.81, bz = -2.35, cx = 121.2, cy = 2.3, cz = -0.9, q = 1 - tu;
+          if (lt >= 3.0) { o.ticket.visible = true; var ax = 119.4, ay = 1.0, az = 0.45, bx = 122.8, by = 0.81, bz = -2.25, cx = 121.2, cy = 2.3, cz = -0.9, q = 1 - tu;
             o.ticket.position.set(q*q*ax + 2*q*tu*cx + tu*tu*bx, q*q*ay + 2*q*tu*cy + tu*tu*by, q*q*az + 2*q*tu*cz + tu*tu*bz); o.ticket.rotation.y = 0.6*q; }
-          k.typing(uw, t, 0.4); k.look(uw, 0.5*ramp(lt, 4.0, 4.6), 0.15);
+          k.typing(uw, t, 0.4); k.look(uw, 0, 0.15);   // the ticket reaches the team's tray; who picks it up is not shown
         }
       }
     }
 
     // ---------------- K6 the model-risk desk
     if (SET === 'risk') {
-      k.sit(o.rk1, 1); k.sit(o.rk2, 1); k.typing(o.rk1, t, 0.5); k.look(o.rk2, 0.1, -0.25); k.typing(o.rk2, t + 1, 0.2);
+      k.sit(o.rk1, 1); k.typing(o.rk1, t, 0.5);
+      if (i !== 7) { k.sit(o.rk2, 1); k.look(o.rk2, 0.1, -0.25); k.typing(o.rk2, t + 1, 0.2); }
       o.rkMon.show({ header:'#3a4856', rows:5, lit:5, bars:[0.4, 0.55, 0.5], threshold:0.7 });
       var cs = { drift:1, red:0, rs:1 + 0.06*tri(lt*1.2), wk:0, alert:false }, done = { b:[1,1,1], col:[RC.ok, RC.ok, RC.amber], red:0, rs:1, flag:1 };
-      if (i === 7) { cs.drift = ramp(lt, 1.0, 2.0); cs.red = pulse(2.0); o.chart.show(cs); }
+      if (i === 7) { cs.drift = ramp(lt, 1.0, 2.0); cs.red = pulse(2.0); o.chart.show(cs);
+        // no alert fires (the lamp stays dark); a model-risk analyst lays the month-end figures beside the chart and points to the gap
+        var r2 = o.rk2; k.place(r2, 157.0, -2.75, 2.2); r2.rotation.set(0, 2.2, 0); k.look(r2, -0.1, -0.1);   // full set: the restored seat rotation is (PI, 0, PI)
+        k.gesture(r2, ramp(lt, 2.1, 2.4)*(1 - ramp(lt, 2.6, 2.9)), t);
+        o.sheet.visible = lt >= 2.5; o.sheet.scale.setScalar(Math.max(0.001, ramp(lt, 2.5, 2.75)));
+        k.point(r2, ramp(lt, 2.7, 3.1)); }
       else if (i === 8) {
         o.chart.show(cs);
         var b = [0, 1, 2].map(function(j){ return ramp(lt, 0.5 + 0.7*j, 1.1 + 0.7*j); });
@@ -794,13 +828,13 @@ var CONFIG = {
         var wk = lin(lt, 0, 2.0), alert = Math.floor(wk*20) > 10; cs.wk = wk; cs.alert = alert; o.chart.show(cs);
         if (alert) { o.lampM.color.setHex(0xe9a23b); o.lampM.emissive.setHex(0xe9a23b); o.lampM.emissiveIntensity = 1.2;
           o.alertTok.visible = true; o.alertTok.position.y = 0.86 + 0.7*(1 - ramp(lt, 1.05, 1.35)); }
-        o.shadow.show({ k:ramp(lt, 2.0, 2.3), ph:Math.floor(frac(lt*0.8)*20)/20, sh:Math.round(3*ramp(lt, 3.8, 4.3)) });
+        o.shadow.show({ k:ramp(lt, 2.0, 2.3), ph:Math.floor(frac(lt*0.8)*20)/20, sh:Math.round(3*ramp(lt, 3.8, 4.3)), so:ramp(lt, 2.0, 2.3) });
       }
     }
 
-    // ---------------- K7 the board: seven seated; the re-test shown pending; the 30-day ring fills once; the gate stays closed
+    // ---------------- K7 the board: six seated; the re-test shown pending; the 30-day ring fills once; the gate stays closed
     if (SET === 'board') {
-      o.members.forEach(function(p, j){ k.sit(p, 1); k.look(p, [0.3,0.1,-0.2,-0.3,-0.1,0.2,0][j], 0.1); if (j === 6) k.gesture(p, ramp(lt, 1.0, 1.5)*(1 - ramp(lt, 3.6, 4.2)), t); });
+      o.members.forEach(function(p, j){ k.sit(p, 1); k.look(p, [0.3,0.1,-0.2,-0.3,-0.1,0][j], 0.1); if (j === 5) k.gesture(p, ramp(lt, 1.0, 1.5)*(1 - ramp(lt, 3.6, 4.2)), t); });
       o.board.show({ k:Math.floor(30*lin(lt, 1.0, 3.5)) });
     }
     o.flush();

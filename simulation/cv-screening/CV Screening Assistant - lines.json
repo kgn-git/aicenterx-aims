@@ -87,19 +87,19 @@
     {
       "shot": "2.2",
       "kind": "support",
-      "text": "It ranks, but it never decides. The recruiter makes the shortlist.",
+      "text": "It only ranks. The recruiter decides who goes on the shortlist.",
       "words": 11,
       "limit": 14,
-      "fk": 5.9,
+      "fk": 4.8,
       "client": false
     },
     {
       "shot": "2.3",
       "kind": "headline",
-      "text": "As planned, every CV would be scored, and none would be missed.",
+      "text": "As planned, every CV would be scored, not just those read first.",
       "words": 12,
       "limit": 14,
-      "fk": 6.8,
+      "fk": 5.8,
       "client": false
     },
     {
@@ -159,10 +159,10 @@
     {
       "shot": "3.3",
       "kind": "support",
-      "text": "As planned, the tool has no way yet to explain an outcome.",
+      "text": "No one read their low-ranked CV. A rank is not a reason.",
       "words": 12,
       "limit": 14,
-      "fk": 4.8,
+      "fk": 2.5,
       "client": false
     },
     {
@@ -186,10 +186,10 @@
     {
       "shot": "4.2",
       "kind": "headline",
-      "text": "The impact review is drafted, but no one has signed it.",
+      "text": "The rights review is drafted, but no one has signed it.",
       "words": 11,
       "limit": 14,
-      "fk": 5.9,
+      "fk": 4.8,
       "client": false
     },
     {
@@ -222,10 +222,10 @@
     {
       "shot": "C",
       "kind": "headline",
-      "text": "The gate opens only when both checks are done and signed off.",
+      "text": "Only the board lifts the hold, once both checks are signed off.",
       "words": 12,
       "limit": 14,
-      "fk": 6.8,
+      "fk": 4.8,
       "client": false
     },
     {

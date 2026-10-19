@@ -309,7 +309,7 @@ function qCard(c, x, y, w, h, o, wire){
   var body = o.col || CV.app; if (o.white) body = cvMix(body.charAt(0) === '#' ? body : CV.app, '#ffffff', o.white);
   cvFill(c, x, y, w, h, h*0.2, body);
   if (o.tick) gTick(c, x + h*0.5, y + h*0.5, h*0.36, CV.ok); else cvDot(c, x + h*0.5, y + h*0.5, h*0.26, 'rgba(255,255,255,.75)');
-  cvFill(c, x + h*0.95, y + h*0.3, w*0.3, h*0.14, h*0.07, 'rgba(255,255,255,.7)'); cvFill(c, x + h*0.95, y + h*0.58, w*0.2, h*0.12, h*0.06, 'rgba(255,255,255,.45)');
+  var v = o.v || 0; cvFill(c, x + h*0.95, y + h*0.3, w*(0.22 + 0.14*v), h*0.14, h*0.07, 'rgba(255,255,255,.7)'); cvFill(c, x + h*0.95, y + h*0.58, w*(0.12 + 0.16*(1 - v)), h*0.12, h*0.06, 'rgba(255,255,255,.45)');
   if (o.bar != null) { cvFill(c, x + w*0.54, y + h*0.3, w*0.4, h*0.4, h*0.14, 'rgba(10,16,24,.45)'); if (o.bar > 0.005) cvFill(c, x + w*0.54, y + h*0.3, w*0.4*o.bar, h*0.4, h*0.14, CV.ai); }
 }
 // the recruiter's monitor, as a pure function of (shot, local time)
@@ -320,6 +320,8 @@ function paintRec(c, W, H, sp){
   if (s === 'C') {   // close: the padlock in the corner, and above it the two check boxes, both still empty
     var bx = W - 190; cvFill(c, 350, 50, W - 358, H - 58, 14, CV.paleBg); cvFill(c, bx - 20, 92, 196, 150, 14, CV.ui);
     [[132, 'scales'], [194, 'two']].forEach(function(r){ cvStroke(c, bx, r[0] - 20, 40, 40, 6, '#c9d2dc', 4); if (r[1] === 'scales') gScales(c, bx + 86, r[0], 40, '#c9d2dc'); else gTwo(c, bx + 86, r[0], 42, '#c9d2dc'); });
+    cvFill(c, 368, 120, 60, 60, 12, CV.vio); c.fillStyle = '#f3efe6'; c.beginPath(); c.ellipse(398, 152, 16, 9, 0, 0, 2*Math.PI); c.fill();   // the board: a table and its seats
+    [[398, 133], [374, 152], [422, 152], [398, 171], [380, 138], [416, 138]].forEach(function(q){ cvDot(c, q[0], q[1], 4.2, '#f3efe6'); });
     gLock(c, W - 76, H - 92, 70, CV.bad, 0); return; }
   var pl = s === '2.3' ? 1 + 0.7*Math.sin(Math.PI*cvL(lt, 3.2, 3.9)) : 1;
   gLock(c, W - 26, 15, 20*pl, CV.bad, 0);
@@ -331,42 +333,49 @@ function recLayer(c, W, H, s, lt, wire, ga){
   if (s === '4.3') { loopLayer(c, W, H); return; }
   // the requisition card (headset glyph: a customer-service adviser role)
   if (wire) cvStroke(c, 32, 48, 256, 38, 8, CV.wire, 2); else { cvFill(c, 32, 48, 256, 38, 8, CV.req); gHeadset(c, 54, 66, 24, '#d9cff0'); cvFill(c, 80, 58, 120, 7, 3.5, 'rgba(255,255,255,.55)'); cvFill(c, 80, 72, 80, 6, 3, 'rgba(255,255,255,.3)'); }
-  var sorted = s === '2.2' || s === '2.3' || s === 'C' || s === 'idle', scroll = s === '2.2' ? 3*cvE(cvL(lt, 2.8, 3.2)) : 0;
+  // two smaller requisition cards: the recruiter's other open roles (SA1), dimmer than the one in view
+  [316, 432].forEach(function(rx){ if (wire) cvStroke(c, rx, 52, 104, 30, 7, CV.wire, 2); else { cvFill(c, rx, 52, 104, 30, 7, cvMix(CV.req, CV.ui, 0.3)); cvDot(c, rx + 15, 67, 7, 'rgba(217,207,240,.55)'); cvFill(c, rx + 30, 61, 58, 6, 3, 'rgba(255,255,255,.35)'); cvFill(c, rx + 30, 71, 40, 5, 2.5, 'rgba(255,255,255,.2)'); } });
+  var sorted = s === '2.2' || s === '2.3' || s === 'C' || s === 'idle';
+  // the queue scrolls: in 2.2 the recruiter scrolls below the line; in 1.1 to the end of the column and back to the top
+  var scroll = s === '2.2' ? 3*cvE(cvL(lt, 2.8, 3.2)) : (s === '1.1' ? 6*(cvE(cvL(lt, 3.3, 3.9)) - cvE(cvL(lt, 4.1, 4.7))) : 0);
   var srt = s === '2.2' ? cvE(cvL(lt, 0.2, 1.2)) : 1, x0 = 32, cw = 256, ch = 26, sh = 32, yq = 98, i;
   c.save(); c.beginPath(); c.rect(24, 92, 282, H - 92); c.clip();
   for (i=0;i<RQ.sc.length;i++){
-    var slot = i, o = {}, dx = 0, dy = 0, a = 1;
-    if (s === '1.1') { var ti = 0.35 + 1.15*Math.sqrt(i), ka = cvR(lt, ti, ti + 0.22); if (ka <= 0.001) continue; a = ka; dy = -(1 - ka)*22; }
+    var slot = i, o = { v:((i*5) % 7)/6 }, dx = 0, dy = 0, a = 1;
+    if (s === '1.1') { var ti = 0.35 + 0.2*i, ka = cvR(lt, ti, ti + 0.22); if (ka <= 0.001) continue; a = ka; dy = -(1 - ka)*22; }
     else if (s === '1.2') { if (i < 4) { var oj = 0.35 + 1.0*i; o.white = cvR(lt, oj, oj + 0.15)*(1 - cvR(lt, oj + 0.3, oj + 0.6)); var mv = cvR(lt, oj + 0.3, oj + 0.75); dx = 30*mv; a = 1 - 0.55*mv; }
       if (i >= 5) { var g0 = 2.3 + (13 - i)*0.14; o.col = cvMix(CV.app, CV.grey, cvR(lt, g0, g0 + 0.4)); } }
     else if (sorted) { slot = s === '2.2' ? i + (RQ.rank[i] - i)*srt : RQ.rank[i]; o.bar = RQ.sc[i];
       if (i === RQ.top) { if (s !== '2.2' || lt >= 2.05) o.tick = true; if (s === '2.2') o.white = cvR(lt, 1.9, 2.0)*(1 - cvR(lt, 2.05, 2.3)); }
-      if (i === RQ.pulled) { if (s !== '2.2' || lt >= 3.5) o.tick = true; if (s === '2.2') o.white = cvR(lt, 3.35, 3.45)*(1 - cvR(lt, 3.5, 3.75)); } }
+      if (i === RQ.pulled) { if (s !== '2.2' || lt >= 3.5) o.tick = true; if (s === '2.2') o.white = cvR(lt, 3.35, 3.45)*(1 - cvR(lt, 3.5, 3.75)); }
+      if (s === '2.3' && RQ.rank[i] < 5) { var fo = 0.25 + 0.3*RQ.rank[i]; o.white = 0.85*cvR(lt, fo, fo + 0.1)*(1 - cvR(lt, fo + 0.2, fo + 0.4)); } }
     c.globalAlpha = ga*a;
     qCard(c, x0 + dx, yq + (slot - scroll)*sh + dy, cw, ch, o, wire); c.globalAlpha = ga;
   }
   if (sorted) { var la = s === '2.2' ? cvR(lt, 1.2, 1.6) : 1; if (la > 0) { var yl = yq + (5 - scroll)*sh - 3; c.globalAlpha = ga*la; c.strokeStyle = wire ? CV.wire : '#ffffff'; c.lineWidth = 3; c.setLineDash([12, 8]); c.beginPath(); c.moveTo(26, yl); c.lineTo(300, yl); c.stroke(); c.setLineDash([]); c.globalAlpha = ga; } }
   c.restore();
+  // 1.1: a scroll thumb beside the column, so the scroll to the end of the queue and back reads on screen
+  if (s === '1.1' && !wire) { var tH = H - 104, th = tH*0.55; cvFill(c, 22, 98, 4, tH, 2, 'rgba(255,255,255,.08)'); cvFill(c, 22, 98 + (tH - th)*scroll/6, 4, th, 2, 'rgba(255,255,255,.6)'); }
   // the reading budget beside the column (beat 1): blue up to the dashed mark, grey beyond it
   if (s === '1.1' || s === '1.2' || s === '0') {
-    var by0 = yq, by1 = H - 6, f = s === '1.1' ? cvL(lt, 0.5, 4.7) : (s === '1.2' ? 1 : 0), yM = by0 + 0.3*(by1 - by0), yF = by0 + f*(by1 - by0);
+    var by0 = yq, by1 = H - 6, f = s === '1.1' ? cvL(lt, 0.4, 3.3) : (s === '1.2' ? 1 : 0), yM = by0 + 0.3*(by1 - by0), yF = by0 + f*(by1 - by0);
     cvFill(c, 300, by0, 9, by1 - by0, 4, 'rgba(255,255,255,.08)');
     if (f > 0) { cvFill(c, 300, by0, 9, Math.min(yF, yM) - by0, 4, CV.app); if (yF > yM) cvFill(c, 300, yM, 9, yF - yM, 4, CV.grey);
       c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.setLineDash([6, 4]); c.beginPath(); c.moveTo(292, yM); c.lineTo(318, yM); c.stroke(); c.setLineDash([]); }
   }
   // the shortlist tray: cards a person has ticked (green = a person's decision)
   if (sorted) {
-    if (wire) cvStroke(c, 360, 70, 248, 250, 12, CV.wire, 2); else { cvFill(c, 360, 70, 248, 250, 12, 'rgba(255,255,255,.05)'); cvStroke(c, 360, 70, 248, 250, 12, '#5d6a7a', 2); gTick(c, 384, 92, 11, CV.ok); }
+    if (wire) cvStroke(c, 360, 96, 248, 240, 12, CV.wire, 2); else { cvFill(c, 360, 96, 248, 240, 12, 'rgba(255,255,255,.05)'); cvStroke(c, 360, 96, 248, 240, 12, '#5d6a7a', 2); gTick(c, 384, 118, 11, CV.ok); }
     var inTray = s === '2.2' ? (lt >= 2.7 ? 1 : 0) + (lt >= 4.2 ? 1 : 0) : 2;
-    for (var k2=0;k2<inTray;k2++) qCard(c, 372, 116 + k2*36, 224, 26, { bar:RQ.sc[k2 ? RQ.pulled : RQ.top], tick:true }, wire);
+    for (var k2=0;k2<inTray;k2++) qCard(c, 372, 136 + k2*36, 224, 26, { bar:RQ.sc[k2 ? RQ.pulled : RQ.top], tick:true }, wire);
     if (s === '2.2' && !wire) {   // the two picks fly to the tray; the cursor carries them
       var cur = null, g1 = cvE(cvL(lt, 2.15, 2.7)), g2 = cvE(cvL(lt, 3.6, 4.2));
-      if (lt >= 2.15 && lt < 2.7) { var gx = x0 + (372 - x0)*g1, gy = yq + (116 - yq)*g1; qCard(c, gx, gy, cw + (224 - cw)*g1, 26, { bar:RQ.sc[RQ.top], tick:true }); cur = [gx + 120, gy + 14]; }
-      if (lt >= 3.6 && lt < 4.2) { var py0 = yq + (8 - 3)*sh, hx = x0 + (372 - x0)*g2, hy = py0 + (152 - py0)*g2; qCard(c, hx, hy, cw + (224 - cw)*g2, 26, { bar:RQ.sc[RQ.pulled], tick:true }); cur = [hx + 120, hy + 14]; }
+      if (lt >= 2.15 && lt < 2.7) { var gx = x0 + (372 - x0)*g1, gy = yq + (136 - yq)*g1; qCard(c, gx, gy, cw + (224 - cw)*g1, 26, { bar:RQ.sc[RQ.top], tick:true }); cur = [gx + 120, gy + 14]; }
+      if (lt >= 3.6 && lt < 4.2) { var py0 = yq + (8 - 3)*sh, hx = x0 + (372 - x0)*g2, hy = py0 + (172 - py0)*g2; qCard(c, hx, hy, cw + (224 - cw)*g2, 26, { bar:RQ.sc[RQ.pulled], tick:true }); cur = [hx + 120, hy + 14]; }
       if (!cur && lt >= 1.5) {
         if (lt < 2.15) cur = [330 + (150 - 330)*cvE(cvL(lt, 1.5, 1.9)), 300 + (110 - 300)*cvE(cvL(lt, 1.5, 1.9))];
-        else if (lt < 3.6) { var u3 = cvE(cvL(lt, 3.0, 3.35)); cur = [492 + (150 - 492)*u3, 130 + (110 + 5*sh - 130)*u3]; }
-        else cur = [492, 166];
+        else if (lt < 3.6) { var u3 = cvE(cvL(lt, 3.0, 3.35)); cur = [492 + (150 - 492)*u3, 150 + (110 + 5*sh - 150)*u3]; }
+        else cur = [492, 186];
       }
       if (cur) gCursor(c, cur[0], cur[1], 22);
     }
@@ -411,26 +420,57 @@ function paintAudit(c, W, H, sp){
     var ld = cvE(cvL(lt, 2.6, 3.3)); if (ld > 0) { var yl = -10 + (0.56*H + 10)*ld; c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.setLineDash([12, 8]); c.beginPath(); c.moveTo(0.04*W, yl); c.lineTo(0.96*W, yl); c.stroke(); c.setLineDash([]); }
   }
 }
-// the auditor's right monitor: a checklist; the auditor flags one row in red
-function paintCheck(c, W, H, sp){ c.setLineDash([]); c.fillStyle = CV.ui; c.fillRect(0, 0, W, H); c.fillStyle = CV.head; c.fillRect(0, 0, W, 0.13*H);
-  for (var r=0;r<6;r++){ var y = 0.2*H + r*0.13*H; cvStroke(c, 0.06*W, y, 0.07*H, 0.07*H, 4, '#9aa6b4', 2.5); cvFill(c, 0.18*W, y + 0.02*H, W*[0.5, 0.42, 0.56, 0.38, 0.48, 0.44][r], 0.035*H, 4, 'rgba(255,255,255,.35)');
-    if (sp.f && r === 2) { cvFill(c, 0.03*W, y - 0.025*H, 0.94*W, 0.12*H, 6, 'rgba(216,74,58,.22)'); gFlag(c, 0.86*W, y + 0.035*H, 0.11*H, CV.bad); } } }
-// the made-up applicant's phone: not shortlisted (grey cross); a "why?" request; dots; then an empty grey card
+// the auditor's right monitor: a short checklist (the auditor flags one row in red) above a strip of pair glyphs that fills
+// run after run (3.2). In each pair glyph the left half is the base CV, the right half the career-break CV (grey corner);
+// in most pairs the career-break half sits lower, so the audit reads a pattern across many pairs, not one pair. Picture only.
+var PAIRS = { runs:3, per:8, low:function(j){ return ((j*7 + 3) % 10) < 8; } };
+function paintCheck(c, W, H, sp){ var lt = sp.q || 0; c.setLineDash([]); c.fillStyle = CV.ui; c.fillRect(0, 0, W, H); c.fillStyle = CV.head; c.fillRect(0, 0, W, 0.13*H);
+  for (var r=0;r<3;r++){ var y = 0.19*H + r*0.11*H; cvStroke(c, 0.06*W, y, 0.065*H, 0.065*H, 4, '#9aa6b4', 2.5); cvFill(c, 0.16*W, y + 0.018*H, W*[0.46, 0.38, 0.42][r], 0.032*H, 4, 'rgba(255,255,255,.35)');
+    if (sp.f && r === 1) { cvFill(c, 0.03*W, y - 0.022*H, 0.7*W, 0.11*H, 6, 'rgba(216,74,58,.22)'); gFlag(c, 0.66*W, y + 0.032*H, 0.1*H, CV.bad); } }
+  var n = sp.s === '3.2' ? PAIRS.runs*PAIRS.per*cvL(lt, 0.5, 4.1) : 0, cw = 0.085*W, gy0 = 0.56*H, rh = 0.13*H, gs = 0.03*W;
+  for (var j=0;j<PAIRS.runs*PAIRS.per;j++){ var col = j % PAIRS.per, row = Math.floor(j/PAIRS.per), x = 0.05*W + col*cw, y = gy0 + row*rh;
+    var a = Math.max(0, Math.min(1, n - j));
+    if (a <= 0) { cvStroke(c, x + 0.006*W, y, 2*gs + 0.012*W, 0.09*H, 4, 'rgba(255,255,255,.12)', 1.5); continue; }
+    var dy = PAIRS.low(j) ? 0.045*H*a : 0; c.globalAlpha = a;
+    cvFill(c, x + 0.006*W, y, gs, gs, 3, CV.app); cvFill(c, x + 0.018*W + gs, y + dy, gs, gs, 3, CV.app); cvFill(c, x + 0.018*W + gs + gs*0.55, y + dy, gs*0.45, gs*0.45, 2, CV.grey);
+    c.globalAlpha = 1; } }
+// the made-up applicant's phone (3.3): the rejection email (grey cross: not progressing); the applicant types a short reply
+// (a question-mark glyph) and sends it; a grey template card comes back, lines of text glyphs with no reason in them (SA4)
+function gQ(c, cx, cy, r, col){ c.setLineDash([]); c.strokeStyle = col; c.lineWidth = r*0.22; c.lineCap = 'round'; c.beginPath(); c.arc(cx, cy - r*0.22, r*0.3, Math.PI*1.1, Math.PI*2.35); c.lineTo(cx, cy + r*0.22); c.stroke(); cvDot(c, cx, cy + r*0.52, r*0.13, col); }
 function paintPhone(c, W, H, sp){ var lt = sp.q || 0, live = sp.s === '3.3'; c.setLineDash([]);
   c.fillStyle = '#f3f1ec'; c.fillRect(0, 0, W, H); c.fillStyle = '#5d6670'; c.fillRect(0, 0, W, 0.08*H);
-  var ex = 0.22*W, ey = 0.15*H, ew = 0.56*W, eh = 0.36*W; c.strokeStyle = '#5d6670'; c.lineWidth = 6; c.lineJoin = 'round'; c.strokeRect(ex, ey, ew, eh); c.beginPath(); c.moveTo(ex, ey); c.lineTo(ex + ew/2, ey + eh*0.58); c.lineTo(ex + ew, ey); c.stroke();
-  gCross(c, ex + ew, ey, 0.12*W, CV.grey);
-  cvFill(c, 0.18*W, 0.33*H, 0.64*W, 0.03*H, 5, 'rgba(60,70,80,.25)'); cvFill(c, 0.26*W, 0.385*H, 0.48*W, 0.03*H, 5, 'rgba(60,70,80,.18)');
-  if (live && lt >= 1.9) { var gm = cvR(lt, 3.4, 3.8), bx = 0.1*W, by = 0.48*H, bw = 0.8*W, bh = 0.15*H + gm*0.06*H;
-    cvFill(c, bx, by, bw, bh, 18, cvMix('#dfe3e8', CV.grey, gm)); c.fillStyle = cvMix('#dfe3e8', CV.grey, gm); c.beginPath(); c.moveTo(bx + 0.12*W, by + bh - 2); c.lineTo(bx + 0.08*W, by + bh + 0.05*H); c.lineTo(bx + 0.26*W, by + bh - 2); c.closePath(); c.fill();
-    if (lt < 3.45) for (var d=0;d<3;d++) cvDot(c, 0.5*W + (d - 1)*0.15*W, by + bh/2 - 0.025*H*Math.max(0, Math.sin(lt*9 - d*0.9)), 0.045*W, '#5d6670'); }
-  var qx = 0.5*W, qy = 0.84*H, qr = 0.12*W; cvDot(c, qx, qy, qr, '#3a4452');
-  if (live && lt > 1.35 && lt < 2.0) { c.strokeStyle = 'rgba(74,127,212,.8)'; c.lineWidth = 5; c.beginPath(); c.arc(qx, qy, qr*(1.15 + 0.4*cvL(lt, 1.35, 2.0)), 0, 2*Math.PI); c.stroke(); }
-  c.strokeStyle = '#ffffff'; c.lineWidth = qr*0.22; c.lineCap = 'round'; c.beginPath(); c.arc(qx, qy - qr*0.22, qr*0.3, Math.PI*1.1, Math.PI*2.35); c.lineTo(qx, qy + qr*0.22); c.stroke(); cvDot(c, qx, qy + qr*0.52, qr*0.13, '#ffffff'); }
-// the board room's wall screen: a red padlock closes over a small queue glyph
-function paintWall(c, W, H, sp){ var lt = sp.q || 0; c.setLineDash([]); c.fillStyle = CV.ui; c.fillRect(0, 0, W, H);
-  for (var i=0;i<5;i++) cvFill(c, W/2 - 0.2*W, 0.2*H + i*0.13*H, 0.4*W, 0.09*H, 6, i < 2 ? CV.app : cvMix(CV.app, CV.ui, 0.35));
-  var open = sp.s === '4.1' ? 1 - cvE(cvL(lt, 2.0, 2.8)) : 0; gLock(c, W/2, 0.5*H, 0.36*H, CV.bad, open); }
+  // the rejection email
+  var ex = 0.24*W, ey = 0.11*H, ew = 0.52*W, eh = 0.32*W; c.strokeStyle = '#5d6670'; c.lineWidth = 6; c.lineJoin = 'round'; c.strokeRect(ex, ey, ew, eh); c.beginPath(); c.moveTo(ex, ey); c.lineTo(ex + ew/2, ey + eh*0.58); c.lineTo(ex + ew, ey); c.stroke();
+  gCross(c, ex + ew, ey, 0.11*W, CV.grey);
+  cvFill(c, 0.14*W, 0.28*H, 0.72*W, 0.026*H, 5, 'rgba(60,70,80,.25)'); cvFill(c, 0.14*W, 0.325*H, 0.52*W, 0.026*H, 5, 'rgba(60,70,80,.18)');
+  // the compose field at the foot; the question-mark glyph appears as the applicant types, then the send button is tapped
+  var fy = 0.87*H, fh = 0.085*H, typed = live ? cvR(lt, 1.25, 1.6)*(1 - cvR(lt, 2.15, 2.25)) : 0, tap = live ? Math.sin(Math.PI*cvL(lt, 1.9, 2.2)) : 0;
+  cvStroke(c, 0.06*W, fy, 0.66*W, fh, fh/2, '#9aa3ad', 3);
+  if (typed > 0) { c.globalAlpha = typed; gQ(c, 0.17*W, fy + fh*0.5, 0.11*W, '#3a4452'); c.globalAlpha = 1; }
+  if (live && lt >= 1.05 && lt < 2.15 && Math.floor(lt*4) % 2 === 0) cvFill(c, 0.25*W, fy + fh*0.22, 3, fh*0.56, 1.5, '#3a4452');
+  cvDot(c, 0.84*W, fy + fh/2, fh*0.5*(1 + 0.18*tap), tap > 0.05 ? CV.app : '#7d8894');
+  c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(0.84*W - fh*0.18, fy + fh*0.28); c.lineTo(0.84*W + fh*0.24, fy + fh*0.5); c.lineTo(0.84*W - fh*0.18, fy + fh*0.72); c.closePath(); c.fill();
+  if (!live) return;
+  // the sent reply rises into the thread, right-aligned
+  var su = cvE(cvL(lt, 2.15, 2.55)); if (lt >= 2.15) { var by = fy + (0.4*H - fy)*su, bw = 0.36*W, bh = 0.075*H;
+    cvFill(c, 0.92*W - bw, by, bw, bh, bh/2, CV.app); gQ(c, 0.92*W - bw/2, by + bh/2, 0.09*W, '#ffffff'); }
+  // the template card comes back, grey: lines of text glyphs and no reason in them
+  var tu = cvE(cvL(lt, 3.0, 3.4)); if (tu > 0) { var tx = 0.06*W, ty = 0.52*H + (1 - tu)*0.04*H, tw = 0.74*W, th = 0.27*H; c.globalAlpha = tu;
+    cvFill(c, tx, ty, tw, th, 14, '#c3c8ce'); c.beginPath(); c.moveTo(tx + 0.08*W, ty + th - 2); c.lineTo(tx + 0.04*W, ty + th + 0.04*H); c.lineTo(tx + 0.2*W, ty + th - 2); c.closePath(); c.fill();
+    for (var l=0;l<4;l++) cvFill(c, tx + 0.06*W, ty + 0.035*H + l*0.05*H, tw*[0.82, 0.7, 0.78, 0.5][l], 0.022*H, 4, 'rgba(70,78,88,.45)');
+    c.globalAlpha = 1; } }
+// the board room's wall screen (4.1): the use case as a violet card with a CV glyph, beside the decision log; the minuted
+// decision adds a new row to the log, and a red padlock closes over the violet card
+function paintWall(c, W, H, sp){ var lt = sp.q || 0, live = sp.s === '4.1'; c.setLineDash([]); c.fillStyle = CV.ui; c.fillRect(0, 0, W, H);
+  c.fillStyle = CV.head; c.fillRect(0, 0, W, 0.1*H);
+  var vx = 0.06*W, vy = 0.2*H, vw = 0.36*W, vh = 0.66*H; cvFill(c, vx, vy, vw, vh, 10, CV.vio); gDoc(c, vx + vw/2, vy + vh/2, 0.5*H, '#f3efe6', CV.vio);
+  var lx = 0.5*W, lw = 0.44*W; cvFill(c, lx, 0.2*H, lw, 0.07*H, 4, 'rgba(255,255,255,.28)');
+  for (var i=0;i<4;i++){ var ry = 0.32*H + i*0.12*H; cvDot(c, lx + 0.025*W, ry + 0.035*H, 0.022*H, '#7d8894'); cvFill(c, lx + 0.06*W, ry + 0.02*H, lw*[0.8, 0.62, 0.72, 0.55][i], 0.03*H, 3, 'rgba(255,255,255,.22)'); }
+  var nr = live ? cvE(cvL(lt, 2.0, 2.4)) : 1, hl = live ? cvR(lt, 2.0, 2.2)*(1 - cvR(lt, 2.8, 3.6)) : 0;
+  if (nr > 0) { var ny = 0.8*H; c.globalAlpha = nr; if (hl > 0) cvFill(c, lx - 0.01*W, ny - 0.015*H, lw + 0.02*W, 0.1*H, 5, 'rgba(255,255,255,' + (0.3*hl).toFixed(3) + ')');
+    gLock(c, lx + 0.025*W, ny + 0.035*H, 0.06*H, CV.bad, 0); cvFill(c, lx + 0.06*W, ny + 0.02*H, lw*0.68*nr, 0.03*H, 3, 'rgba(255,255,255,.6)'); c.globalAlpha = 1; }
+  var la = live ? cvR(lt, 2.4, 2.7) : 1, open = live ? 1 - cvE(cvL(lt, 2.7, 3.3)) : 0;
+  if (la > 0) { c.globalAlpha = la; gLock(c, vx + vw/2, vy + vh*0.55, 0.34*H, CV.bad, open); c.globalAlpha = 1; } }
 // static paper and card textures for the board room, the privacy office and the abstract set
 function paperBars(c, W, H, seed, sign){ c.fillStyle = '#f7f5f0'; c.fillRect(0, 0, W, H); cvFill(c, 0.1*W, 0.07*H, 0.45*W, 0.05*H, 6, '#2b3440');
   for (var r=0;r<9;r++){ var len = 0.45 + 0.4*(((r*7 + seed*5) % 11)/11); cvFill(c, 0.1*W, 0.18*H + r*0.07*H, 0.8*W*len, 0.032*H, 4, 'rgba(43,52,64,.82)'); }
@@ -442,8 +482,8 @@ function checkCard(c, W, H){ c.fillStyle = '#f7f5f0'; c.fillRect(0, 0, W, H); [[
    ------------------------------------------------------------------------------------------------------------------
    Built from simulation/cv-screening/CV Screening Assistant - Script and Protocols.md (approved). Every entry below is one shot
    of the Part 1 shot script: same start and dur, and the setting, headline and support line copied verbatim. `shot` is the
-   script's shot number (0, 1.1 ... 4.3, C); it is never shown on screen. The source line beside the numeral is taken from the
-   script's "traces to" column. The use case is held at the gate (d1): everything is staged as proposed, with made-up applicants.
+   script's shot number (0, 1.1 ... 4.3, C); it is never shown on screen. The source line beside the numeral and the navigation
+   label are copied from the script's source-line table (Part 1, "Allowed overlay extras"). The use case is held at the gate (d1): everything is staged as proposed, with made-up applicants.
    ================================================================================================================== */
 var CONFIG = {
   title: 'CV Screening Assistant',
@@ -469,31 +509,31 @@ var CONFIG = {
       head:'The assistant checks how well each CV fits the job.', sup:'It reads the CV text and the fields the applicant filled in.',
       cam:[[0, 40.32,1.4,1.97, 40,1.45,0, 0.2,0.2], [4.5, 40.24,1.4,1.38, 40,1.45,0, 0.2,0.2]] },
     { shot:'2.2', beat:2, name:'The AI at work — The recruiter\'s desk', nav:'Ranked for the recruiter', start:18.5, dur:4.5, setting:'The recruiter\'s desk', source:'AI Canvas: Modeling Approach; control A.9',
-      head:'It puts the closest matches first for the recruiter to check.', sup:'It ranks, but it never decides. The recruiter makes the shortlist.',
+      head:'It puts the closest matches first for the recruiter to check.', sup:'It only ranks. The recruiter decides who goes on the shortlist.',
       cam:[[0, 0.95,1.45,-0.75, 0.25,1.15,-1.43, 0.25,0.15], [4.5, 0.45,1.35,1.3, 0.25,1.15,-1.43, 0.25,0.15]] },   // overridden in update(): a curved path round the recruiter
     { shot:'2.3', beat:2, name:'The AI at work — The recruiter\'s desk', nav:'Every CV scored', start:23, dur:4.5, setting:'The recruiter\'s desk', source:'AI Canvas: Customer Value, Business Value',
-      head:'As planned, every CV would be scored, and none would be missed.', sup:'This is a plan. It has not been used on real people.',
+      head:'As planned, every CV would be scored, not just those read first.', sup:'This is a plan. It has not been used on real people.',
       cam:[[0, 1.75,1.5,0.6, 0.25,1.15,-1.43, 0.2,0.12], [4.5, 1.2,1.5,0.75, 0.25,1.15,-1.43, 0.2,0.12]] },
     { shot:'3.1', beat:3, name:'What can go wrong — The audit desk', nav:'Two equal CVs', start:27.5, dur:4, setting:'The audit desk', source:'Risk r4; impact assessment, entry 1',
       head:'Could a ranking tool treat two equal people differently?', sup:'To find out, testers would give it pairs of made-up CVs.',
       cam:[[0, 80.5,1.3,0.35, 79.5,1.18,-1.68, 0.24,0.18], [4, 80.4,1.3,-0.3, 79.5,1.18,-1.68, 0.24,0.18]] },
-    { shot:'3.2', beat:3, name:'What can go wrong — The audit desk', nav:'The planted fault', start:31.5, dur:5, setting:'The audit desk', source:'Risk r4; impact entry 1; planted fault F1',
+    { shot:'3.2', beat:3, name:'What can go wrong — The audit desk', nav:'The planted fault', start:31.5, dur:5, setting:'The audit desk', source:'Risk r4; impact assessment, entry 1 (staged test)',
       head:'These two CVs differ only by a career break, and their ranks split.', sup:'This fault was planted. It shows what a bias audit must catch.',
       cam:[[0, 79.86,1.35,0.74, 79.5,1.18,-1.68, 0.22,0.2], [5, 79.82,1.35,0.7, 79.5,1.18,-1.68, 0.22,0.2]] },
     { shot:'3.3', beat:3, name:'What can go wrong — An applicant\'s kitchen', nav:'No reason given', start:36.5, dur:6, setting:'An applicant\'s kitchen', source:'AI Canvas: Customer Value; impact entry 2',
-      head:'If a rejected applicant asks why, no one can give a reason.', sup:'As planned, the tool has no way yet to explain an outcome.',
+      head:'If a rejected applicant asks why, no one can give a reason.', sup:'No one read their low-ranked CV. A rank is not a reason.',
       cam:[[0, 121.2,1.25,0.95, 120.22,1.06,-0.48, 0.24,0.18], [6, 120.95,1.25,0.6, 120.22,1.06,-0.48, 0.24,0.18]] },
     { shot:'4.1', beat:4, name:'How it is kept safe — The governance board', nav:'The board holds it', start:42.5, dur:4.5, setting:'The governance board', source:'Board decision d1, Q2 board, 12 June 2026',
       head:'The board has held the tool at the gate.', sup:'It stays shut until a rights review and a bias audit are done.',
       cam:[[0, 162.0,2.6,2.07, 160,0.75,-0.8, 0.18,0.15], [4.5, 161.2,2.6,2.49, 160,0.75,-0.8, 0.18,0.15]] },   // overridden in update(): a 15 degree orbit
-    { shot:'4.2', beat:4, name:'How it is kept safe — The privacy office', nav:'Review not signed', start:47, dur:4, setting:'The privacy office', source:'Evidence e5, draft; control A.5',
-      head:'The impact review is drafted, but no one has signed it.', sup:'Sign-off waits for an independent bias audit.',
+    { shot:'4.2', beat:4, name:'How it is kept safe — The privacy office', nav:'Review not signed', start:47, dur:4, setting:'The privacy office', source:'Evidence e5, FRIA draft; control A.5',
+      head:'The rights review is drafted, but no one has signed it.', sup:'Sign-off waits for an independent bias audit.',
       cam:[[0, 200.16,1.77,-0.8, 200.15,0.77,-0.98, 0.2,0.18], [4, 200.3,1.95,0.2, 200.15,0.77,-0.98, 0.2,0.18]] },
     { shot:'4.3', beat:4, name:'How it is kept safe — The recruiter\'s desk', nav:'No training yet', start:51, dur:4, setting:'The recruiter\'s desk', source:'AI Canvas: Model Training; risk r4; control A.6',
       head:'Nothing is trained while the gate holds.', sup:'Later, recruiters\' choices would teach it, once an audit clears each version.',
       cam:[[0, 0.5,1.35,1.3, 0.25,1.15,-1.43, 0.25,0.15], [4, 0.65,1.4,2.1, 0.25,1.15,-1.43, 0.25,0.15]] },
     { shot:'C', beat:0, name:'Close card — CV Screening Assistant', nav:'Close', start:55, dur:4, setting:'CV Screening Assistant',
-      head:'The gate opens only when both checks are done and signed off.', sup:'Until then, the tool is not used on anyone.',
+      head:'Only the board lifts the hold, once both checks are signed off.', sup:'Until then, the tool is not used on anyone.',
       cam:[[0, 0.95,1.4,0.85, 0.25,1.15,-1.43, 0.22,0.15], [4, 1.2,1.4,1.75, 0.25,1.15,-1.43, 0.22,0.15]] }
   ],
 
@@ -573,22 +613,27 @@ var CONFIG = {
     k.cyl(0xE8E6E1, 0.05, 0.1, 120.35, 0.8, -1.0); k.plant({ x:122.0, z:-0.2, s:0.7 });
     o.app = k.person({ shirt:0x6E7A70, trousers:P.trousers.denim, skin:P.skin[1], hair:P.hair[2] }); k.place(o.app, 120, -0.1, PI);
     o.phone = cscreen(k.phone({ parent:o.app.userData.handR, spec:{ off:true } }), 180, 360, paintPhone); o.phone.s.group.scale.setScalar(1.6); o.phone.s.group.position.set(0, -0.1, 0.06); o.phone.s.mesh.rotation.z = PI;   // held from behind, beyond the fingertips
-    o.phoneDown = k.box(P.dark, 0.1, 0.012, 0.2, 120.28, 0.757, -0.62, null, { noShadow:true }); o.phoneDown.rotation.y = 0.3; o.phoneDown.visible = false;
+    o.phoneDown = k.grp(120.28, 0.757, -0.62); o.phoneDown.rotation.y = 0.3; o.phoneDown.visible = false;   // put down on the table, screen up and dim
+    k.box(P.dark, 0.1, 0.012, 0.2, 0, 0, 0, o.phoneDown, { noShadow:true }); k.box(0x4A5260, 0.088, 0.002, 0.184, 0, 0.007, 0, o.phoneDown, { noShadow:true });
 
-    // ---------- the governance board room (the bm-q2 attendance, no name labels)
+    // ---------- the governance board room (the bm-q2 attendance: six people in seven seats, no name labels)
     k.room({ x:160, z:-0.6, w:9, d:7, h:3.2, wall:0xE4E1DA, floor:0x8E97A0, ground:false }); k.box(0xF2F0EA, 9.0, 0.06, 7.0, 160.0, 3.23, -0.6, null, { noShadow:true });
     k.desk({ x:160, z:-0.8, w:2.4, d:1.1, color:P.woodDark, legs:P.dark });
     o.wall = cscreen(k.wallScreen({ x:160, y:1.1, z:-4.0, w:1.8, h:0.95, res:16, spec:{ off:true } }), 384, 211, paintWall);
     var seats = [[158.3, -0.8, PI/2], [159.5, 0.05, PI], [160.5, 0.05, PI], [159.5, -1.65, 0], [160.5, -1.65, 0], [161.7, -0.8, -PI/2]];
     o.board = seats.map(function(sd, i){ k.chair({ x:sd[0], z:sd[1], ry:sd[2] }); var p = k.person({ shirt:neutral[i], trousers:i % 2 ? P.trousers.dark : P.trousers.navy, skin:P.skin[(i*2 + 1) % 5], hair:P.hair[(i*3) % 6] }); k.place(p, sd[0], sd[1], sd[2]); return p; });
     o.chairP = o.board[0];
-    var caseT = tex(256, 170, function(c, W, H){ c.fillStyle = CV.vio; c.fillRect(0, 0, W, H); gDoc(c, W/2, H/2, 120, '#f3efe6', CV.vio); });
-    flat(caseT, 0.3, 0.2, 159.75, 0.756, -0.8);
-    o.mark = k.cyl(0xD84A3A, 0.06, 0.004, 159.75, 0.76, -0.8, null, { noShadow:true }); o.mark.visible = false;
-    o.stamp = k.grp(159.0, 0.752, -0.42); k.box(0x8E2A20, 0.09, 0.03, 0.07, 0, 0.015, 0, o.stamp); k.cyl(0xD84A3A, 0.016, 0.08, 0, 0.07, 0, o.stamp); k.sph(0xD84A3A, 0.03, 0, 0.12, 0, o.stamp);
+    // papers in front of each member (glyph bars only)
+    var papT = tex(105, 140, function(c, W, H){ paperBars(c, W, H, 4, false); });
+    [[158.68, -0.8, PI/2], [159.5, -0.32, 0], [160.5, -0.32, 0], [159.5, -1.28, PI], [160.5, -1.28, PI], [161.32, -0.8, -PI/2]].forEach(function(q){ flat(papT, 0.21, 0.28, q[0], 0.756, q[1], q[2]); });
+    // the board secretary at a side desk, who types the minute (not a board member)
+    k.desk({ x:157.25, z:-2.45, w:0.8, d:0.55, color:P.woodDark, legs:P.dark });
+    var lap = k.grp(157.25, 0.75, -2.45); lap.rotation.y = -PI/2; k.box(0x2B3440, 0.34, 0.015, 0.24, 0, 0.008, 0.02, lap); var lid = k.grp(0, 0.015, -0.1, lap); lid.rotation.x = -0.25; k.box(0x2B3440, 0.34, 0.22, 0.012, 0, 0.11, 0, lid); k.box(0x9FB4CF, 0.3, 0.18, 0.002, 0, 0.11, 0.007, lid, { noShadow:true });
+    k.chair({ x:156.6, z:-2.45, ry:PI/2 });
+    o.sec = k.person({ shirt:0x8A7F74, trousers:P.trousers.navy, skin:P.skin[3], hair:P.hair[4] }); k.place(o.sec, 156.6, -2.45, PI/2);
     k.plant({ x:156.0, z:-3.6, s:1.1 }); k.plant({ x:164.0, z:-3.6, s:1.1 }); k.windowPane({ x:164.42, y:1.7, z:-1.5, w:2.4, h:1.4, ry:-PI/2 });
 
-    // ---------- the Data Protection Officer's office: the draft impact review (e5) on the desk
+    // ---------- the Data Protection Officer's office: the draft rights review, the FRIA (e5), on the desk
     k.room({ x:200, w:5, d:4.5, h:2.8, wall:0xE2E5E0, ground:false }); k.box(0xF2F0EA, 5.0, 0.06, 4.5, 200.0, 2.83, 0, null, { noShadow:true });
     k.desk({ x:200, z:-1.0, w:1.5, d:0.8 }); k.chair({ x:200, z:-1.75, ry:0 });
     k.shelf({ x:198.8, z:-2.03, seed:21 }); k.plant({ x:202.0, z:-1.9, s:0.9 }); k.windowPane({ x:197.58, y:1.6, z:-0.6, w:1.6, h:1.2, ry:PI/2 });
@@ -596,7 +641,7 @@ var CONFIG = {
     o.pages = [0, 1, 2].map(function(i){ return flat(tex(210, 280, function(c, W, H){ paperBars(c, W, H, i + 1, i === 2); }), 0.21, 0.28, 200.0, 0.759 + i*0.0015, -0.98); });
     o.cover = k.grp(199.85, 0.764, -0.98); k.box(0x6F6488, 0.3, 0.008, 0.36, 0.15, 0, 0, o.cover, { noShadow:true });
     k.cyl(0x1E262C, 0.006, 0.15, 200.62, 0.757, -0.86, null, { rz:PI/2, ry:0.5, noShadow:true });   // the pen, untouched
-    flat(tex(220, 150, checkCard), 0.2, 0.136, 199.62, 0.756, -0.72);
+    flat(tex(220, 150, checkCard), 0.2, 0.136, 199.42, 0.756, -0.98);   // left of the open folder, clear of the headline area
 
     // the sun follows the set in view (it is restored every frame)
     o.sunDir = new THREE.Vector3(-0.45, 0.85, 0.55).normalize();
@@ -613,18 +658,18 @@ var CONFIG = {
     var hour = 9;
     if (sh === '0') { hour = 7.6; L.hemi.intensity = 0.3; L.sun.intensity = 0.1; L.fill.intensity = 0.05; win(o.winA, 0x5D6B80, 0.5); win(o.winB, 0x5D6B80, 0.5); }
     else if (sh === '1.1') hour = 9 + lt/60;
-    else if (sh === '1.2') { var dd = cvE(cvL(lt, 0.4, 4.6)); hour = 9.1 + 7.9*dd; L.sun.color.setHex(0xFFF6EA).lerp(o.cDark.clone().setHex(0xFFB870), dd); L.sun.intensity = 0.72 - 0.12*dd; L.hemi.intensity = 0.62 - 0.1*dd;
+    else if (sh === '1.2') { var dd = cvE(cvL(lt, 0.4, 4.6)); hour = 9.1 + 5.9*dd; L.sun.color.setHex(0xFFF6EA).lerp(o.cDark.clone().setHex(0xFFB870), 0.7*dd); L.sun.intensity = 0.72 - 0.12*dd; L.hemi.intensity = 0.62 - 0.1*dd;
       var wc = o.cGlow.clone().setHex(0xDDEFF6).lerp(o.cGlow.clone().setHex(0xFFD49A), dd).getHex(); win(o.winA, wc, 0.75); win(o.winB, wc, 0.75); }
     else if (sh === '2.2' || sh === '2.3') hour = 9.3 + (sh === '2.3' ? 0.05 : 0) + lt/600;
     else if (sh === '4.3') { hour = 18.2; L.hemi.intensity = 0.34; L.sun.intensity = 0.22; L.sun.color.setHex(0xFF9A60); L.fill.intensity = 0.1; win(o.winA, 0x6A5A8A, 0.55); win(o.winB, 0x6A5A8A, 0.55); }
     else if (sh === 'C') { hour = 18.4; L.hemi.intensity = 0.26; L.sun.intensity = 0.12; L.sun.color.setHex(0xFF8A50); L.fill.intensity = 0.08; win(o.winA, 0x4A4A70, 0.5); win(o.winB, 0x4A4A70, 0.5); }
     o.mHand.rotation.z = -(hour % 1)*2*PI; o.hHand.rotation.z = -((hour % 12)/12)*2*PI;
 
-    // the recruiter: absent on the open and close cards; types; leans back as the queue overflows
+    // the recruiter: absent on the open and close cards; types; in 1.1 scrolls to the end of the queue and back to the top
     var rec = o.rec, rd = rec.userData; rec.visible = sh !== '0' && sh !== 'C';
     k.sit(rec, 1); k.look(rec, -0.18, 0.1);
-    if (sh === '1.1') { var lean = cvR(lt, 3.3, 4.2); k.typing(rec, t, 0.7*(1 - lean)); rd.body.rotation.x = -0.15*lean;
-      if (lean > 0) { rd.la.rotation.x = rd.ra.rotation.x = -0.55*(1 - lean) - 0.12*lean; rd.le.rotation.x = rd.re.rotation.x = -0.9*(1 - lean) - 0.55*lean; } k.look(rec, -0.18, 0.1 - 0.25*lean); }
+    if (sh === '1.1') { var mo = cvR(lt, 3.0, 3.3), sd = cvE(cvL(lt, 3.3, 3.9)) - cvE(cvL(lt, 4.1, 4.7)); k.typing(rec, t, 0.7*(1 - mo));
+      rd.ra.rotation.x = -0.55 - 0.1*mo; rd.ra.rotation.z = 0.18*mo; rd.re.rotation.x = -0.9 - 0.05*mo*Math.sin(t*10)*Math.min(1, 4*Math.abs(sd)); k.look(rec, -0.18, 0.1 + 0.12*sd); }
     else if (sh === '1.2' || sh === '2.2') k.typing(rec, t, 1);
     else k.typing(rec, t, sh === '2.3' ? 0.3 : 0);
     var recSpec = { '0':{ s:'0' }, '1.1':{ s:'1.1', q:cvQ(Math.min(lt, 4.9), 0.05) }, '1.2':{ s:'1.2', q:cvQ(Math.min(lt, 4.6), 0.05) }, '2.2':{ s:'2.2', q:cvQ(Math.min(lt, 4.4), 0.05) },
@@ -645,36 +690,36 @@ var CONFIG = {
     var flag = sh === '3.2' && lt >= 3.9;
     if (sh === '3.2') k.point(o.aud, cvR(lt, 3.4, 3.8)*(1 - cvR(lt, 4.4, 4.9)));
     o.audL.show(sh === '3.1' ? { s:'3.1', q:cvQ(Math.min(lt, 2.1), 0.05) } : (sh === '3.2' ? { s:'3.2', q:cvQ(lt, 0.05) } : { s:'3.1', q:2.1 }));
-    o.audR.show({ f:flag ? 1 : 0 });
+    o.audR.show(sh === '3.2' ? { s:'3.2', q:cvQ(Math.min(lt, 4.2), 0.05), f:flag ? 1 : 0 } : { s:'3.1', f:0 });
     o.pin.scale.setScalar(sh === '3.1' ? 1 + 0.25*Math.max(0, Math.sin(PI*cvL(lt, 2.2, 3.0))) : 1);
 
-    // ---------- the applicant's kitchen (3.3): evening, a warm lamp; the phone; the "why?" request; the phone set face down
+    // ---------- the applicant's kitchen (3.3): evening, a warm lamp; the rejection email; a typed reply; a template back; the phone put down
     if (sh === '3.3') { L.hemi.intensity = 0.2; L.sun.intensity = 0; L.fill.intensity = 0.06; o.lamp.intensity = 1.7; o.bulb.material.emissiveIntensity = 1.2; }
     var app = o.app, ad = app.userData; k.sit(app, 1);
     var hk = sh === '3.3' ? 1 - cvR(lt, 4.3, 4.9) : 1, down = sh === '3.3' && lt >= 4.75;
     ad.ra.rotation.x = -0.3*hk; ad.re.rotation.x = -2.25*hk; ad.ra.rotation.z = 0.12*hk;
     o.phone.s.group.visible = !down; o.phoneDown.visible = down;
-    if (sh === '3.3') { var tk = cvR(lt, 1.05, 1.4)*(1 - cvR(lt, 1.7, 2.05)); ad.la.rotation.x = -0.45*tk; ad.le.rotation.x = -1.55*tk; ad.la.rotation.z = -0.25*tk; }
+    if (sh === '3.3') { var tk = cvR(lt, 1.0, 1.3)*(1 - cvR(lt, 2.15, 2.45)); ad.la.rotation.x = -0.45*tk; ad.le.rotation.x = -(1.55 + 0.06*Math.sin(t*16))*tk; ad.la.rotation.z = -0.25*tk; }
     k.look(app, 0.12*hk, 0.38*hk + 0.12*(1 - hk));
     o.phone.show(sh === '3.3' ? { s:'3.3', q:cvQ(Math.min(lt, 4.0), 0.05) } : { s:'idle' });
 
-    // ---------- the governance board (4.1): the chair stands and presses a red hold stamp; the wall padlock closes
+    // ---------- the governance board (4.1): the chair calls the decision, the members nod, the secretary types the minute;
+    //            on the wall screen a new decision-log row appears and the padlock closes over the use-case card
     o.board.forEach(function(p, i){ k.sit(p, 1); if (i) k.look(p, [0, 0.35, -0.35, -0.35, 0.35, 0][i], 0.25); });
+    k.sit(o.sec, 1); k.look(o.sec, 0, 0.3); k.typing(o.sec, t, sh === '4.1' ? cvR(lt, 0.9, 1.1)*(1 - cvR(lt, 2.2, 2.4)) : 0);
     if (sh === '4.1') {
-      var cp = o.chairP, cd = cp.userData, up = cvR(lt, 0.15, 0.7);
-      k.sit(cp, 1 - up); k.place(cp, 158.3 + 0.22*up, -0.8, PI/2); cd.body.rotation.x = 0.28*cvR(lt, 0.6, 1.2)*(1 - cvR(lt, 2.7, 3.5)); k.point(cp, cvR(lt, 0.7, 1.3)*(1 - cvR(lt, 2.6, 3.4))); k.look(cp, 0, 0.3);
-      var K = [[0, 159.0, 0.752, -0.42], [0.8, 159.0, 0.752, -0.42], [1.45, 159.72, 1.02, -0.78], [1.72, 159.75, 0.768, -0.8], [1.95, 159.75, 0.768, -0.8], [2.4, 159.7, 0.98, -0.76]], a = K[0], b = K[K.length - 1];
-      for (var ki=0; ki<K.length - 1; ki++) if (lt >= K[ki][0] && lt < K[ki + 1][0]) { a = K[ki]; b = K[ki + 1]; break; }
-      var su = a === b ? 1 : cvE((lt - a[0])/(b[0] - a[0])); if (lt >= K[K.length - 1][0]) a = b;
-      o.stamp.position.set(a[1] + (b[1] - a[1])*su, a[2] + (b[2] - a[2])*su, a[3] + (b[3] - a[3])*su);
-      o.mark.visible = lt >= 1.72;
+      var cp = o.chairP, cd = cp.userData; k.look(cp, 0, 0.2);
+      var gk = cvR(lt, 0.25, 0.6)*(1 - cvR(lt, 1.5, 1.9)); k.gesture(cp, gk, t); cd.body.rotation.x = 0.1*gk;
+      var nod = Math.max(0, Math.sin(PI*2*cvL(lt, 1.2, 2.2)))*Math.sin(PI*cvL(lt, 1.2, 2.2));
+      o.board.forEach(function(p, i){ if (i) k.look(p, [0, 0.35, -0.35, -0.35, 0.35, 0][i], 0.25 + 0.22*nod); });
       // a 15 degree orbit, high angle, 2.6 m up and 3.5 m from the centre of the table
       var an = (55 + 15*cvE(c.u))*PI/180; k.camAim(160 + 3.5*Math.cos(an), 2.6, -0.8 + 3.5*Math.sin(an), 160, 0.75, -0.8, 0.18, 0.15);
     }
-    o.wall.show(sh === '4.1' ? { s:'4.1', q:cvQ(Math.min(lt, 2.9), 0.05) } : { s:'idle' });
+    o.wall.show(sh === '4.1' ? { s:'4.1', q:cvQ(Math.min(lt, 3.6), 0.05) } : { s:'idle' });
 
     // ---------- the privacy office (4.2): the folder opens on three drafted pages; the signature line stays empty
-    if (sh === '4.2') { o.cover.rotation.z = 0.985*PI*cvE(cvL(lt, 0.2, 1.2)); var pu = cvE(cvL(lt, 1.0, 2.0)); o.pages[1].position.x = 200.0 + 0.24*pu; o.pages[2].position.x = 200.0 + 0.48*pu; }
+    //            the top-down view faces the sun, so the light is softened to keep the pale desk from washing out
+    if (sh === '4.2') { L.sun.intensity = 0.5; L.hemi.intensity = 0.5; o.cover.rotation.z = 0.985*PI*cvE(cvL(lt, 0.2, 1.2)); var pu = cvE(cvL(lt, 1.0, 2.0)); o.pages[1].position.x = 200.0 + 0.24*pu; o.pages[2].position.x = 200.0 + 0.48*pu; }
 
     // ---------- 2.2 camera: from beside the recruiter, back and round to over the shoulder, clear of the recruiter's head
     if (sh === '2.2') { var u = cvE(cvL(lt, 0.4, 4.3)), P0 = [0.95, 1.45, -0.75], P1 = [1.65, 1.4, 0.35], P2 = [0.45, 1.35, 1.3], w0 = (1 - u)*(1 - u), w1 = 2*(1 - u)*u, w2 = u*u;

@@ -281,30 +281,30 @@ var CONFIG = {
       head:'A model scores the payment in under a fifth of a second.', sup:'It reads how she paid and her account\'s past.',
       cam:[[0, 113.7,1.6,2.15, 114.6,1.1,0.75, 0.15,0.1], [1.4, 117.6,1.6,2.15, 120.2,2.15,0.35, 0.1,0.0], [3.0, 119.95,1.6,2.15, 122.1,1.75,0.45, 0.2,0.1], [5, 120.1,1.6,2.15, 122.1,1.8,0.4, 0.2,0.08]] },
     { beat:2, name:'The AI at work — held for a person', nav:'Held for a person', start:21, dur:4, setting:'Inside the bank\'s systems', source:'AI Canvas: Modeling Approach',
-      head:'Most payments pass. The ones in doubt wait for a person.', sup:'The most worrying go first.',
+      head:'Almost all payments pass. Those in doubt are held for a person.', sup:'The most worrying go first.',
       cam:[[0, 120.6,2.2,3.4, 122.4,1.4,0.3, 0.2,0.15], [4, 119.8,3.0,4.7, 122.4,1.3,0.3, 0.22,0.2]] },
     { beat:2, name:'The AI at work — an analyst decides', nav:'An analyst decides', start:25, dur:5, setting:'The fraud review desk', source:'AI Canvas: Customer Value',
-      head:'An analyst checks a payment from a stolen card and stops it.', sup:'A person, not the model, makes the call.',
+      head:'An analyst spots a payment made with stolen card details and stops it.', sup:'A person, not the model, makes the call.',
       cam:[[0, 56.85,1.7,-0.25, 56.2,1.12,-2.85, 0.18,0.15], [5, 56.72,1.64,-0.35, 56.2,1.12,-2.85, 0.18,0.15]] },
     { beat:3, name:'What can go wrong — weekend shopping', nav:'Weekend shopping', start:30, dur:5, setting:'The fraud review desk', source:'AI Canvas: Model Training',
       head:'Tonight\'s weekend shopping does not match what the model was last tuned on.', sup:'Honest payments are held, and the queue grows.',
       cam:[[0, 58.2,2.2,-3.7, 60,1.95,-5.9, 0.12,0.1], [5, 57.4,2.8,3.0, 60.4,1.3,-3.0, 0.2,0.2]] },
-    { beat:3, name:'What can go wrong — the check runs late', nav:'The check runs late', start:35, dur:5, setting:'Inside the bank\'s systems', source:'AI Canvas: Data Strategy',
-      head:'At the busiest moment, the check takes too long.', sup:'A month-end data job slows the store the model reads from.',
-      // low (1.25 m) and further back than the script's 2.2 m, aimed right: the waiting payments and phones on the tray stay clear of the caption
-      cam:[[0, 120.2,1.25,4.4, 120.9,2.0,0.3, 0.3,0.1], [5, 120.2,1.25,4.1, 120.9,2.0,0.3, 0.3,0.1]] },
+    { beat:3, name:'What can go wrong — a month-end evening', nav:'A month-end evening', start:35, dur:5, setting:'Month-end, inside the bank\'s systems', source:'AI Canvas: Data Strategy',
+      head:'At a month-end peak, the check ran past its time limit.', sup:'A data job slowed the store the model reads from.',
+      // an earlier month-end evening: low (1.2 m) on the feature-store rack, about 2.2 m from its front, slow push; the cylinder upper left, the scorer and gauge upper right
+      cam:[[0, 120.4,1.2,3.9, 120.5,2.2,0.2, 0,0.12, 1], [5, 120.4,1.2,3.6, 120.5,2.2,0.2, 0,0.12, 1]] },
     { beat:3, name:'What can go wrong — still waiting', nav:'Still waiting', start:40, dur:4, setting:'At home', source:'AI Canvas: Customer Value',
       head:'Can shoppers trust a fraud check that stops honest payments by mistake?', sup:'She is still waiting.',
       cam:[[0, -0.55,1.3,0.0, 0.45,1.1,-2.1, 0.25,0.15], [4, -0.5,1.3,-0.08, 0.45,1.1,-2.1, 0.25,0.15]] },
     { beat:4, name:'How it is kept safe — a person decides', nav:'A person decides', start:44, dur:5, setting:'The fraud review desk', source:'AI Canvas: Customer Value',
-      head:'No payment is blocked until a person has looked at it.', sup:'Her payment is honest, so it goes through.',
+      head:'No payment is blocked until a person has looked at it.', sup:'The analyst finds nothing wrong and lets her payment through.',
       cam:[[0, 60.85,1.7,-0.25, 60.2,1.12,-2.85, 0.18,0.15], [5, 60.72,1.64,-0.35, 60.2,1.12,-2.85, 0.18,0.15]] },
     { beat:4, name:'How it is kept safe — the weekly checks', nav:'The weekly checks', start:49, dur:5, setting:'Monday, the fraud review desk', source:'AI Canvas: Model Training',
-      head:'Each analyst\'s yes or no goes back to teach the model.', sup:'Weekly checks track false alarms, missed fraud and the queue.',
+      head:'Each analyst\'s yes or no is kept for the next re-tune.', sup:'Weekly checks track false alarms, missed fraud and the queue.',
       // from behind the desks, so both labels stay in frame as they fly up from the desks into the store on the wall screen
       cam:[[0, 57.0,1.0,-0.2, 60.2,1.9,-5.9, 0.2,0.1], [5, 57.0,2.6,-0.6, 60.6,1.8,-5.9, 0.2,0.2]] },
     { beat:4, name:'How it is kept safe — the board', nav:'The board\'s setting', start:54, dur:5, setting:'The board\'s risk review', source:'AI Canvas: Modeling Approach',
-      head:'The board accepted some false alarms at this setting. It looks again each quarter.', sup:'Weekend false alarms are not fixed yet.',
+      head:'In May, the board accepted some false alarms and set a check each quarter.', sup:'Weekend false alarms are not fixed yet.',
       cam:[[0, 178.8,2.4,3.6, 180.3,1.95,-3.9, 0.22,0.18], [5, 179.1,2.35,2.85, 180.3,1.95,-3.9, 0.22,0.18]] },
     { beat:0, name:'Close', start:59, dur:6, setting:'A card payment',
       head:'The goal is fraud stopped as you pay, with a person behind every block.', sup:'Every scene is taken from its AI Canvas and its records.',
@@ -344,6 +344,11 @@ var CONFIG = {
         c.fillStyle = col; c.beginPath(); c.moveTo(x - s*0.48, y - s*0.1); c.lineTo(x - s*0.4, y - s*0.36); c.lineTo(x + s*0.4, y - s*0.36); c.lineTo(x + s*0.48, y - s*0.1); c.closePath(); c.fill();
         c.fillStyle = bg; for (var q=0;q<4;q++) c.fillRect(x - s*0.36 + q*s*0.2, y - s*0.34, s*0.08, s*0.22); },
       spinner: function(c, x, y, r, col, ang, lw){ c.lineCap = 'round'; c.lineWidth = lw; c.strokeStyle = 'rgba(140,140,140,.3)'; circ(c, x, y, r); c.stroke(); c.strokeStyle = col; c.beginPath(); c.arc(x, y, r, ang, ang + PI*1.3); c.stroke(); },
+      phone: function(c, x, y, s, col, scr){ fRR(c, x - s*0.27, y - s*0.46, s*0.54, s*0.92, s*0.09, col); fRR(c, x - s*0.2, y - s*0.36, s*0.4, s*0.68, s*0.03, scr); },
+      laptop: function(c, x, y, s, col, scr){ fRR(c, x - s*0.4, y - s*0.36, s*0.8, s*0.52, s*0.05, col); c.fillStyle = scr; c.fillRect(x - s*0.32, y - s*0.29, s*0.64, s*0.38); fRR(c, x - s*0.52, y + s*0.18, s*1.04, s*0.1, s*0.04, col); },
+      spark: function(c, x, y, r, col){ c.fillStyle = col; c.beginPath(); for (var i=0;i<8;i++){ var a = -PI/2 + i*PI/4, rr2 = i % 2 ? r*0.38 : r; if (i) c.lineTo(x + rr2*Math.cos(a), y + rr2*Math.sin(a)); else c.moveTo(x + rr2*Math.cos(a), y + rr2*Math.sin(a)); } c.closePath(); c.fill(); },
+      hold: function(c, x, y, r, col){ c.fillStyle = col; circ(c, x, y, r); c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = r*0.14; c.lineCap = 'round'; c.lineJoin = 'round'; circ(c, x, y, r*0.6); c.stroke();
+        c.beginPath(); c.moveTo(x, y - r*0.38); c.lineTo(x, y); c.lineTo(x + r*0.28, y + r*0.17); c.stroke(); },   // a generic "on hold" clock: no claim about what the shop or the bank's app shows
       tick: function(c, x, y, r, col){ c.fillStyle = col; circ(c, x, y, r); c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = r*0.2; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(x - r*0.42, y + r*0.02); c.lineTo(x - r*0.1, y + r*0.34); c.lineTo(x + r*0.45, y - r*0.3); c.stroke(); },
       cross: function(c, x, y, r, col){ c.strokeStyle = col; c.lineWidth = r*0.22; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - r*0.4, y - r*0.4); c.lineTo(x + r*0.4, y + r*0.4); c.moveTo(x + r*0.4, y - r*0.4); c.lineTo(x - r*0.4, y + r*0.4); c.stroke(); },
       cyl: function(c, x, y, w, h, col, lw, fill){ var ry = w*0.18; c.lineWidth = lw; c.strokeStyle = col; c.fillStyle = fill; c.beginPath(); c.moveTo(x - w/2, y - h/2); c.lineTo(x - w/2, y + h/2); c.ellipse(x, y + h/2, w/2, ry, 0, PI, 0, true); c.lineTo(x + w/2, y - h/2); c.closePath(); c.fill(); c.stroke();
@@ -365,8 +370,6 @@ var CONFIG = {
       fGlobe: discTex(function(c){ D.globe(c, 64, 64, 34, C.ink, 7); }),
       fClock: discTex(function(c){ D.clockBack(c, 64, 66, 31, C.ink, 7); }),
       batch: discTex(function(c){ c.fillStyle = C.ink; [40, 60, 80].forEach(function(y){ c.fillRect(34, y - 5, 60, 10); }); }),
-      phone: ctex(64, 128, function(c){ fRR(c, 6, 4, 52, 120, 10, '#1b2027'); fRR(c, 11, 14, 42, 100, 5, '#f3f1ec'); }),
-      spin: ctex(64, 64, function(c){ c.lineCap = 'round'; c.lineWidth = 7; c.strokeStyle = '#ffffff'; c.beginPath(); c.arc(32, 32, 22, 0, PI*1.3); c.stroke(); }),
       tagOk: ctex(64, 64, function(c){ fRR(c, 4, 4, 56, 56, 12, C.ok); c.strokeStyle = '#ffffff'; c.lineWidth = 7; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(18, 33); c.lineTo(28, 43); c.lineTo(46, 22); c.stroke(); }),
       tagNo: ctex(64, 64, function(c){ fRR(c, 4, 4, 56, 56, 12, C.red); D.cross(c, 32, 32, 30, '#ffffff'); }),
       glow: ctex(64, 64, function(c){ var g = c.createRadialGradient(32, 32, 2, 32, 32, 30); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,.75)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); }),
@@ -414,16 +417,19 @@ var CONFIG = {
         if (r[3]) { c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(2, rh*0.12); circ(c, W - pad - rh*0.55, y + rh*0.5, rh*0.26); c.stroke(); }
         if (r[4]) { c.strokeStyle = C.person; c.lineWidth = Math.max(3, rh*0.14); rrp(c, pad - 1, y + rh*0.04, W - 2*pad + 2, rh*0.92, rh*0.2); c.stroke(); } });
       c.globalAlpha = 1; }
-    function paintCase(c, W, H, sp){ // the case an analyst opens: card, online, where it was paid; outlined in blue under the analyst's hand
+    function paintCase(c, W, H, sp){ // the case an analyst opens: card, online, the device, where it was paid; outlined in blue under the analyst's hand
       c.fillStyle = '#141b23'; c.fillRect(0, 0, W, H); var q;
       if (!sp.m) { c.fillStyle = '#2a3542'; c.fillRect(0, 0, W, H*0.13); for (q=0;q<5;q++) fRR(c, W*0.06, H*(0.22 + q*0.15), W*(0.45 + 0.4*hash(q*3.3)), H*0.06, H*0.03, 'rgba(235,240,245,.16)'); return; }
       c.globalAlpha = sp.k; c.fillStyle = sp.b; c.fillRect(0, 0, W, H*0.13);
-      D.card(c, W*0.17, H*0.33, W*0.17, '#e8e6e1', 'rgba(20,27,35,.65)'); D.globe(c, W*0.17, H*0.57, W*0.055, '#e8e6e1', Math.max(2, W*0.008));
-      if (sp.g) D.shop(c, W*0.17, H*0.81, W*0.13, '#e8e6e1', '#141b23');
+      D.card(c, W*0.17, H*0.29, W*0.15, '#e8e6e1', 'rgba(20,27,35,.65)'); D.globe(c, W*0.17, H*0.48, W*0.05, '#e8e6e1', Math.max(2, W*0.008));
+      if (sp.far) { D.laptop(c, W*0.16, H*0.68, H*0.2, sp.b, '#141b23'); D.spark(c, W*0.245, H*0.58, H*0.055, sp.b); }   // a device the account has never used
+      else D.phone(c, W*0.17, H*0.68, H*0.18, '#e8e6e1', '#141b23');                                                    // the account's usual device
+      if (sp.g) D.shop(c, W*0.17, H*0.87, W*0.12, '#e8e6e1', '#141b23');
       var mx = W*0.33, my = H*0.2, mw = W*0.62, mh = H*0.72; fRR(c, mx, my, mw, mh, H*0.04, '#1e3439');
       c.strokeStyle = 'rgba(255,255,255,.07)'; c.lineWidth = 1; for (q=1;q<6;q++){ c.beginPath(); c.moveTo(mx + mw*q/6, my); c.lineTo(mx + mw*q/6, my + mh); c.stroke(); } for (q=1;q<4;q++){ c.beginPath(); c.moveTo(mx, my + mh*q/4); c.lineTo(mx + mw, my + mh*q/4); c.stroke(); }
       c.strokeStyle = 'rgba(120,170,190,.35)'; c.lineWidth = H*0.02; c.beginPath(); c.moveTo(mx, my + mh*0.72); c.bezierCurveTo(mx + mw*0.3, my + mh*0.5, mx + mw*0.5, my + mh*0.95, mx + mw, my + mh*0.62); c.stroke();
       [[0.24, 0.5], [0.31, 0.6], [0.2, 0.64], [0.28, 0.43], [0.36, 0.52]].forEach(function(p){ D.pin(c, mx + mw*p[0], my + mh*p[1], H*0.11, 'rgba(170,180,190,.9)'); });   // the account's usual places
+      [0.07, 0.14].forEach(function(u){ D.phone(c, mx + mw*u, my + mh*0.16, H*0.12, 'rgba(170,180,190,.9)', '#1e3439'); });                                    // the account's usual devices
       if (sp.g) [0.6, 0.72, 0.84].forEach(function(u){ D.shop(c, mx + mw*u, my + mh*0.84, H*0.1, 'rgba(170,180,190,.85)', '#1e3439'); });                    // past purchases like this one
       var cp = sp.far ? [0.86, 0.24] : [0.3, 0.53]; D.pin(c, mx + mw*cp[0], my + mh*cp[1], H*0.17, sp.b);
       c.globalAlpha = 1;
@@ -450,8 +456,8 @@ var CONFIG = {
       var N = Math.round(95*sp.d), r = H*0.016;
       for (i=0;i<N;i++){ var h1 = hash(i*7.13), h2 = hash(i*3.71 + 1), h3 = hash(i*5.17 + 2), h4 = hash(i*9.1 + 3), h5 = hash(i*1.93 + 4);
         var x = rx + r*3 + k.frac(h1 + sp.q*(0.07 + 0.07*h2))*(rw - r*6), y = ry + rh*(0.08 + 0.84*h3), amber = h4 < sp.a;
-        c.fillStyle = amber ? C.held : 'rgba(243,239,230,.82)'; circ(c, x, y, r); c.fill();
-        if (h5 < sp.g) { c.strokeStyle = amber ? 'rgba(233,162,59,.85)' : 'rgba(243,239,230,.45)'; c.lineWidth = 1.5; circ(c, x, y, r*2.1); c.stroke(); c.beginPath(); c.moveTo(x - r*2.1, y); c.lineTo(x + r*2.1, y); c.stroke(); } }
+        c.fillStyle = amber ? C.held : 'rgba(63,163,77,.92)'; circ(c, x, y, r); c.fill();
+        if (h5 < sp.g) { c.strokeStyle = amber ? 'rgba(233,162,59,.85)' : 'rgba(110,196,122,.55)'; c.lineWidth = 1.5; circ(c, x, y, r*2.1); c.stroke(); c.beginPath(); c.moveTo(x - r*2.1, y); c.lineTo(x + r*2.1, y); c.stroke(); } }
       var qx2 = W*0.8, qw2 = W*0.16, base2 = H*0.9, bh2 = H*0.062; c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(qx2, base2, qw2, 3);
       for (i=0;i<Math.min(sp.n, 12);i++) fRR(c, qx2 + qw2*0.08, base2 - (i + 1)*bh2, qw2*0.84, bh2*0.8, bh2*0.2, mix(C.heldL, C.heldD, Math.min(1, i/9))); }
     function paintBoard(c, W, H, sp){ c.fillStyle = '#17202a'; c.fillRect(0, 0, W, H);
@@ -460,16 +466,18 @@ var CONFIG = {
       var nx = sx + sw*0.62; c.globalAlpha = sp.nk; var g = c.createRadialGradient(nx, sy, 2, nx, sy, H*0.2); g.addColorStop(0, 'rgba(74,143,216,.55)'); g.addColorStop(1, 'rgba(74,143,216,0)'); c.fillStyle = g; c.fillRect(nx - H*0.2, sy - H*0.2, H*0.4, H*0.4);
       fRR(c, nx - W*0.012, sy - H*0.13, W*0.024, H*0.26, W*0.008, C.person); c.globalAlpha = sp.ad;
       [[0.7, -0.07], [0.77, 0.06], [0.85, -0.05], [0.93, 0.07]].forEach(function(d){ c.fillStyle = C.held; circ(c, sx + sw*d[0], sy + H*d[1], H*0.028); c.fill(); }); c.globalAlpha = 1;
-      // the calendar ring: quarter marks light in turn, the next one pulses
-      var cx = W*0.62, cy = H*0.5, cr = H*0.26, ms = [sp.m1, sp.m2, sp.m3]; c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = H*0.02; circ(c, cx, cy, cr); c.stroke();
-      for (var q=0;q<4;q++){ var an = PI/2 + q*PI/2, mx = cx + cr*Math.cos(an), my = cy + cr*Math.sin(an);
-        if (q < 3) { c.fillStyle = 'rgba(255,255,255,.25)'; circ(c, mx, my, H*0.045); c.fill(); c.globalAlpha = ms[q]; c.fillStyle = C.violet; circ(c, mx, my, H*0.045); c.fill(); c.globalAlpha = 1; }
-        else { c.strokeStyle = C.paper; c.lineWidth = H*0.012; circ(c, mx, my, H*0.045*(1 + 0.5*sp.pu)); c.stroke(); c.fillStyle = 'rgba(243,239,230,' + (0.25 + 0.5*sp.pu) + ')'; circ(c, mx, my, H*0.036); c.fill(); } }
-      // the weekend bump from the monitoring pack slides in beside the next mark
+      // the calendar ring, four quarter marks: May's decision lit blue at the top; the next mark (right) pulses but stays unlit: promised, not yet booked
+      var cx = W*0.62, cy = H*0.5, cr = H*0.26; c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = H*0.02; circ(c, cx, cy, cr); c.stroke();
+      for (var q=0;q<4;q++){ var an = -PI/2 + q*PI/2, mx = cx + cr*Math.cos(an), my = cy + cr*Math.sin(an);
+        c.fillStyle = '#17202a'; circ(c, mx, my, H*0.052); c.fill();
+        if (q === 0) { c.fillStyle = 'rgba(255,255,255,.25)'; circ(c, mx, my, H*0.045); c.fill(); c.globalAlpha = sp.m; c.fillStyle = C.person; circ(c, mx, my, H*0.045); c.fill(); c.globalAlpha = 1; }
+        else if (q === 1) { c.strokeStyle = 'rgba(243,239,230,' + (0.4 + 0.55*sp.pu) + ')'; c.lineWidth = H*0.012; circ(c, mx, my, H*0.04*(1 + 0.45*sp.pu)); c.stroke(); }
+        else { c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = H*0.01; circ(c, mx, my, H*0.036); c.stroke(); } }
+      // the weekend bump from the monitoring pack slides in beside the next mark, as what that review will have to weigh
       if (sp.bk > 0) { c.globalAlpha = sp.bk; var bx0 = W*0.81 + (1 - sp.bk)*W*0.08, bw = W*0.15, base = H*0.72, hs = [0.1, 0.1, 0.13, 0.1, 0.13, 0.36, 0.13];
         fRR(c, bx0 - W*0.01, H*0.24, bw + W*0.02, H*0.56, H*0.03, 'rgba(255,255,255,.06)');
         hs.forEach(function(h, j){ fRR(c, bx0 + j*bw/7 + bw*0.02, base - h*H, bw/7*0.7, h*H, H*0.01, j === 5 ? C.held : 'rgba(243,239,230,.55)'); }); c.globalAlpha = 1; } }
-    function paintInset(c, W, H, sp){ // her phone, mirrored in the overlay so the camera never comes close: gift, card, spinner, tick
+    function paintInset(c, W, H, sp){ // her phone, mirrored in the overlay so the camera never comes close: gift, card, checkout spinner, on-hold clock, tick
       c.clearRect(0, 0, W, H); fRR(c, 0, 0, W, H, W*0.16, '#10151b'); fRR(c, W*0.06, H*0.035, W*0.88, H*0.93, W*0.11, '#f3f1ec');
       fRR(c, W*0.16, H*0.075, W*0.68, H*0.05, H*0.025, C.violet);
       if (sp.g) D.gift(c, W/2, H*0.3, W*0.48, '#c75b39', '#f3f1ec');
@@ -477,6 +485,7 @@ var CONFIG = {
       if (sp.btn) fRR(c, W*0.2, H*0.72, W*0.6, H*0.08, H*0.04, C.violet);
       if (sp.tp > 0) { c.globalAlpha = 1 - sp.tp; c.strokeStyle = C.violet; c.lineWidth = W*0.03; circ(c, W/2, H*0.76, W*0.1 + sp.tp*W*0.22); c.stroke(); c.globalAlpha = 1; }
       if (sp.sp >= 0) D.spinner(c, W/2, H*0.77, W*0.14, C.held, sp.sp, W*0.06);
+      if (sp.ck) D.hold(c, W/2, H*0.77, W*0.17, C.held);
       if (sp.tk) D.tick(c, W/2, H*0.77, W*0.17, C.ok); }
 
     // ---------- global: one ground plane (recoloured per set) and the practical lights (switched per set)
@@ -597,12 +606,11 @@ var CONFIG = {
     scene.add(new THREE.Mesh(new THREE.TubeGeometry(o.readCurve, 24, 0.01, 6, false), new THREE.MeshBasicMaterial({ color:0x5fb3b3, transparent:true, opacity:0.35 })));
     o.batch = k.link({ from:[118.5, 2.05, 0.1], to:[119.6, 2.86, 0.05], lift:0.7, n:14 });
     o.her2 = spr(T.cnp, 0.17, C.paper); o.her2Ring = spr(T.ring, 0.26);
-    o.stream = []; for (q=0;q<20;q++) o.stream.push(spr(q % 2 ? T.cnp : T.pay, 0.15, C.paper));
+    var NSTREAM = 145; o.stream = []; for (q=0;q<NSTREAM;q++) o.stream.push(spr(q % 2 ? T.cnp : T.pay, 0.15, C.paper));
     o.tubeOld = [spr(T.cnp, 0.15, C.held), spr(T.pay, 0.15, C.held)];
     o.tubeMore = []; for (q=0;q<4;q++) o.tubeMore.push(spr(q % 2 ? T.pay : T.cnp, 0.15, C.held));
     o.fp = [spr(T.fCard, 0.15, C.store), spr(T.fGlobe, 0.15, C.store), spr(T.fClock, 0.15, C.store)];
     o.fq = []; for (q=0;q<6;q++) o.fq.push(spr([T.fCard, T.fGlobe, T.fClock][q % 3], 0.13, C.store));
-    o.phones = []; o.spins = []; for (q=0;q<6;q++){ o.phones.push(spr(T.phone, 0.2, '#ffffff', 0.5)); o.spins.push(spr(T.spin, 0.075, C.held)); }
     end('B', n);
 
     // ================= Set D: the board's risk review (decision d3 as taken at the May session; five seats present)
@@ -635,22 +643,23 @@ var CONFIG = {
       C:{ bg:0x0e141c, fog:[26, 60], hemi:0.52, hc:0xd0dcf2, sun:0.22, sc:0xc8d6ff, fill:0.1, gr:0x1f232a, c:[60, 0, -2], desk:0.4 },
       M:{ bg:0xd6e1e9, fog:[30, 90], hemi:0.74, hc:0xf4f6f8, sun:0.78, sc:0xfff4e4, fill:0.14, gr:0x9aa2a8, c:[60, 0, -2] },
       B:{ bg:0x0a0f15, fog:[16, 45], hemi:0.42, hc:0xa9c3e6, sun:0.18, sc:0xb8d0ff, fill:0.1, gr:0x14181d, c:[120, 0, -1], dc:0.45 },
+      N:{ bg:0x060b16, fog:[16, 45], hemi:0.4, hc:0x8eaee8, sun:0.16, sc:0x96b6ff, fill:0.1, gr:0x11161f, c:[120, 0, -1], dc:0.55, dcc:0x6fa8ff },   // the same aisle on an earlier month-end evening: a cooler light
       D:{ bg:0xdfe4e8, fog:[24, 70], hemi:0.7, hc:0xf4f4f2, sun:0.7, sc:0xfff3e2, fill:0.14, gr:0xa5aaae, c:[180, 0, -1] }
     };
-    o.SETOF = ['E', 'A', 'C', 'B', 'B', 'C', 'C', 'B', 'A', 'C', 'M', 'D', 'E'];   // one per CONFIG.beats entry
+    o.SETOF = ['E', 'A', 'C', 'B', 'B', 'C', 'C', 'N', 'A', 'C', 'M', 'D', 'E'];   // one per CONFIG.beats entry (M: set C on Monday; N: set B on the earlier month-end evening)
     var SUNDIR = V(-0.45, 0.85, 0.55).normalize(), TMP = V(), TMP2 = V();
-    o.applySet = function(id){ var s = SET[id], L = k.lights, vis = id === 'M' ? 'C' : id, key, q2;
+    o.applySet = function(id){ var s = SET[id], L = k.lights, vis = id === 'M' ? 'C' : (id === 'N' ? 'B' : id), key, q2;
       for (key in SETS) if (key !== vis) for (q2=0; q2<SETS[key].length; q2++) SETS[key][q2].visible = false;
       k.scene.background.setHex(s.bg); k.scene.fog.color.setHex(s.bg); k.scene.fog.near = s.fog[0]; k.scene.fog.far = s.fog[1];
       L.hemi.intensity = s.hemi; L.hemi.color.setHex(s.hc); L.sun.intensity = s.sun; L.sun.color.setHex(s.sc); L.fill.intensity = s.fill;
       L.sun.position.set(s.c[0] + SUNDIR.x*40, s.c[1] + SUNDIR.y*40, s.c[2] + SUNDIR.z*40); L.sun.target.position.set(s.c[0], s.c[1], s.c[2]);
-      o.ground.material.color.setHex(s.gr); o.lamp.intensity = s.lamp || 0; o.deskLight.intensity = s.desk || 0; o.dcLight.intensity = s.dc || 0; };
+      o.ground.material.color.setHex(s.gr); o.lamp.intensity = s.lamp || 0; o.deskLight.intensity = s.desk || 0; o.dcLight.intensity = s.dc || 0; o.dcLight.color.setHex(s.dcc || 0x9fd4ff); };
 
     function spinAng(t){ return ((Math.floor(t*16)/16)*5) % (2*PI); }
-    o.upInset = function(t){ var vis = 0, sp = { g:1, cd:0, btn:0, tp:0, sp:-1, tk:0 };
+    o.upInset = function(t){ var vis = 0, sp = { g:1, cd:0, btn:0, tp:0, sp:-1, ck:0, tk:0 };
       if (t >= 4 && t < 10) { vis = k.ramp(t, 4.5, 4.9); sp.btn = t < 6.2 ? 1 : 0; sp.tp = t >= 5.2 && t < 5.7 ? Math.round(k.lin(t, 5.2, 5.7)*10)/10 : 0; sp.cd = t >= 5.6 ? 1 : 0; if (t >= 6.2) sp.sp = spinAng(t); }
-      else if (t >= 40 && t < 44) { vis = k.ramp(t, 40.1, 40.5); sp.cd = 1; sp.sp = spinAng(t); }
-      else if (t >= 47 && t < 49) { vis = k.ramp(t, 47.0, 47.35); sp.cd = 1; if (t < 47.9) sp.sp = spinAng(t); else sp.tk = 1; }
+      else if (t >= 40 && t < 44) { vis = k.ramp(t, 40.1, 40.5); sp.cd = 1; sp.ck = 1; }                                 // on hold while her bank checks it
+      else if (t >= 47 && t < 49) { vis = k.ramp(t, 47.0, 47.35); sp.cd = 1; if (t < 47.9) sp.ck = 1; else sp.tk = 1; }      // the clock becomes a tick
       o.inset.cv.style.opacity = vis.toFixed(3);
       if (vis > 0) { var key = JSON.stringify(sp); if (key !== o.inset.key) { o.inset.key = key; o.inset.c.save(); paintInset(o.inset.c, 140, 280, sp); o.inset.c.restore(); } } };
 
@@ -662,7 +671,7 @@ var CONFIG = {
       if (!open) for (q2=0; q2<o.rise.length; q2++){ var r = o.rise[q2], p = o.riseP[q2], u = k.frac((t - 59.8)/2.4 + q2*0.37), a = k.ramp(t, 60.0, 60.8)*(1 - u)*Math.min(1, u*6);
         r.visible = a > 0.01; r.position.set(p[0], p[1] + u*4.5, p[2]); r.material.opacity = a; } };
 
-    // ---- Set A: she pays on her phone; her packet leaves through the window; later she waits
+    // ---- Set A: she pays on her phone; her packet leaves through the window; later her payment is on hold and she waits
     o.upA = function(t){ var her = o.her, d = her.userData;
       k.sit(her, 1); k.holdPhone(her, 1);
       d.re.rotation.x = -1.7 + (t < 30 ? 0.06*Math.sin(t*5)*(1 - k.ramp(t, 4.8, 5.0)) : 0);                       // scrolling
@@ -672,7 +681,7 @@ var CONFIG = {
       if (t >= 40) { var w = k.ramp(t, 40.9, 41.5)*(1 - k.ramp(t, 42.5, 43.1)); yaw = 0.95*w; pitch = 0.42*(1 - w) - 0.05*w; }   // phone, window, phone
       k.look(her, yaw, pitch);
       var S0 = { bg:'#f3f1ec', header:C.violet, rows:4, lit:4 };
-      o.herPhone.show(t < 5.6 ? S0 : (t < 6.2 ? { bg:'#f3f1ec', header:C.violet, rows:2, lit:2, badge:{ glyph:'dot', color:C.violet } } : { bg:'#f3f1ec', header:C.violet, rows:2, lit:2, badge:{ glyph:'loop', color:C.held } }));
+      o.herPhone.show(t < 5.6 ? S0 : (t < 6.2 ? { bg:'#f3f1ec', header:C.violet, rows:2, lit:2, badge:{ glyph:'dot', color:C.violet } } : { bg:'#f3f1ec', header:C.violet, rows:2, lit:2, badge:{ glyph:t >= 30 ? 'clock' : 'loop', color:C.held } }));
       if (t >= 6.4 && t < 7.45) { her.updateMatrixWorld(true); o.herPhone.group.getWorldPosition(TMP); var u = k.lin(t, 6.4, 7.4), e = k.smooth(u);
         TMP2.set(k.lerp(TMP.x, 0.35, e), k.lerp(TMP.y, 1.85, e) + Math.sin(PI*u)*0.35, k.lerp(TMP.z, -2.6, e));
         var a = k.ramp(u, 0, 0.08)*(1 - k.ramp(u, 0.75, 1)); o.fly.visible = o.flyRing.visible = a > 0.01; o.fly.position.copy(TMP2); o.flyRing.position.copy(TMP2); o.fly.material.opacity = a; o.flyRing.material.opacity = a; } };
@@ -704,13 +713,14 @@ var CONFIG = {
       if (t >= 30 && t < 35) for (q2=0; q2<3; q2++) k.look(o.an[q2], 0.15*(q2 - 1), -0.15*k.ramp(t, 31, 32));
       var Q = o.queue(t, monday); for (q2=0; q2<3; q2++) o.qm[q2].draw({ r:Q.r }, paintQueue);
       var c0 = { m:0 }, c1 = { m:0 };
-      if (t >= 25.5 && t < 28.6) c0 = { m:1, k:k.ramp(t, 25.5, 25.9), b:t >= 27.4 ? C.red : shade(0.93), far:1, g:0, ol:t >= 26.6 && t < 28.4 ? 1 : 0 };      // a stolen card: paid far from the account's usual places
-      if (t >= 44.6 && t < 47.6) c1 = { m:1, k:k.ramp(t, 44.6, 45.0), b:t >= 46.4 ? C.ok : shade(0.74), far:0, g:1, ol:t >= 45.6 && t < 47.4 ? 1 : 0 };      // hers: near home, a gift shop like before
+      if (t >= 25.5 && t < 28.6) c0 = { m:1, k:k.ramp(t, 25.5, 25.9), b:t >= 27.4 ? C.red : shade(0.93), far:1, g:0, ol:t >= 26.6 && t < 28.4 ? 1 : 0 };      // stolen card details: a new device, far from the account's usual places
+      if (t >= 44.6 && t < 47.6) c1 = { m:1, k:k.ramp(t, 44.6, 45.0), b:t >= 46.4 ? C.ok : shade(0.74), far:0, g:1, ol:t >= 45.6 && t < 47.4 ? 1 : 0 };      // hers: her usual device, near home, a gift shop like before
       o.cm[0].draw(c0, paintCase); o.cm[1].draw(c1, paintCase); o.cm[2].draw({ m:0 }, paintCase);
       var hr = monday ? 9 + 5/60 : 21 + 40/60 + (t - 10)/3600, mn = monday ? 5 : 40 + (t - 10)/60;
       o.hourC.rotation.z = -((hr % 12)/12)*2*PI; o.minC.rotation.z = -(mn/60)*2*PI;
       if (!monday) {
-        var wk = t >= 30 ? 1 : 0, dens = 1 + wk*1.4*k.ramp(t, 30.3, 33.5), am = 0.05 + wk*0.2*k.ramp(t, 30.6, 34.0), gl = 0.3 + wk*0.5*k.ramp(t, 30.3, 33.0);
+        // holds are rare (a staging ratio, not a rate); on the weekend surge noticeably more turn amber, though green still dominates
+        var wk = t >= 30 ? 1 : 0, dens = 1 + wk*1.4*k.ramp(t, 30.3, 33.5), am = 0.02 + wk*0.12*k.ramp(t, 30.6, 34.0), gl = 0.3 + wk*0.5*k.ramp(t, 30.3, 33.0);
         o.wallC.draw({ q:Math.floor(t*15)/15, d:dens, a:am, g:gl, n:Math.round(Q.n) }, paintWall);
       } else {
         o.winC.forEach(function(w){ w.night.visible = false; w.day.visible = true; });
@@ -721,7 +731,10 @@ var CONFIG = {
         for (q2=0; q2<3; q2++) k.look(o.an[q2], 0.1*(q2 - 1), -0.15*k.ramp(t, 51.0, 51.6));
       } };
 
-    // ---- Set B: her payment is scored; most pass, the doubtful wait in the queue; at month-end the store is busy and the check runs late
+    // ---- Set B: her payment is scored; almost all pass, the doubtful are held in the queue; on an earlier month-end evening the store was busy and the check ran late
+    // shot 2.2's stream: one payment every S_GAP s leaves the card switch at S_V m/s; two of the ~ninety the scorer sees are held (hers and the most worrying): a staging ratio, not a rate
+    var S_T0 = 18.5, S_GAP = 0.045, S_V = 5, S_DEEP = 57;
+    function sArr(i){ return S_T0 + S_GAP*i + 7.5/S_V; }
     function slotY(r){ return 1.76 - r*0.19; }
     function put(sp, x, y, z, col, op, sc){ sp.visible = true; sp.position.set(x, y, z); if (col) sp.material.color.set(col); sp.material.opacity = op == null ? 1 : op; if (sc) sp.scale.set(sp.scale.x*sc, sp.scale.y*sc, 1); }
     o.upB = function(t){ var q2, x, s, shot = t < 21 ? 1 : (t < 25 ? 2 : 3);
@@ -731,8 +744,10 @@ var CONFIG = {
       // the score bar and the latency needle
       var bar = 0, bcol = C.paper, lat = 0;
       if (shot === 1) { bar = 0.74*k.ramp(t, 17.6, 18.8); bcol = bar > 0.7 ? C.held : C.paper; lat = 0.36*k.ramp(t, 17.8, 18.9); }
-      else if (shot === 2) { var last = -1; for (q2=0; q2<20; q2++){ var ar0 = 18.6 + 0.3*q2 + 2.5; if (t >= ar0 && t < ar0 + 0.6) last = q2; }
-        if (last >= 0) { bar = last === 4 ? 0.93 : (last === 9 ? 0.71 : 0.15 + 0.4*hash(last)); bcol = bar > 0.7 ? C.held : C.ok; } else { bar = 0.74; bcol = C.held; }
+      else if (shot === 2) { var ad = sArr(S_DEEP);
+        if (t < 22.3) { bar = 0.74; bcol = shade(0.74); }                                         // hers, until she drops into the queue
+        else if (t >= ad - 0.05 && t < ad + 0.5) { bar = 0.93; bcol = shade(0.93); }              // the most worrying
+        else { bar = 0.16 + 0.12*Math.abs(Math.sin(t*9)); bcol = C.ok; }                          // the stream: low scores, passed
         lat = 0.34 + 0.03*Math.sin(t*6); }
       else { bar = 0.3*k.ramp(t, 35, 36); lat = k.lerp(0.36, 0.84, k.ramp(t, 36.0, 37.6)) + (t > 37.6 ? 0.02*Math.sin(t*11) : 0); }
       o.bar.scale.y = Math.max(0.002, bar); o.bar.position.y = 0.98 + bar/2; o.barMat.color.set(bcol);
@@ -741,9 +756,8 @@ var CONFIG = {
       var hv = false, hp = [0, 1.04, 0.75], hc = C.paper, hs = 1;
       if (shot === 1 && t >= 16.15) { hv = true; hp[0] = t < 17.0 ? k.lerp(114.5, 119.6, k.lin(t, 16.15, 17.0)) : k.lerp(119.6, 121.95, k.lin(t, 17.0, 17.6)); if (t >= 18.85) { hc = shade(0.74); hs = 1 + 0.25*k.ramp(t, 18.85, 19.05)*(1 - k.ramp(t, 19.05, 19.6)); } }
       if (shot === 2) { hv = true; hc = shade(0.74); var du = k.smooth(k.lin(t, 22.0, 22.45)); hp = [k.lerp(121.95, 123.45, du), k.lerp(1.04, slotY(2), du), k.lerp(0.75, 0.2, du)]; }
-      if (shot === 3) { hv = true; hc = shade(0.74); hp = [123.45, slotY(5), 0.2]; }
       if (hv) { put(o.her2, hp[0], hp[1], hp[2], hc, 1, hs); put(o.her2Ring, hp[0], hp[1], hp[2] + 0.01, null, 1, hs); }
-      // the queue tube: two cases already waiting, ranked; in shot 2.2 hers drops in, a worse one arrives and rises to the top
+      // the queue tube: two cases already waiting; in shot 2.2 hers drops in, a worse one arrives and rises to the top (her packet is not in shot 3.2, an earlier evening)
       var sortU = k.ramp(t, 23.2, 23.7), tubeAt = function(sp, s0, r0, r1, enter){ var y, xx = 123.45, zz = 0.2, sc = 1;
           if (t < enter + 0.45) { var e = k.smooth(k.lin(t, enter, enter + 0.45)); xx = k.lerp(122.0, 123.45, e); y = k.lerp(1.04, slotY(r0), e); zz = k.lerp(0.75, 0.2, e); }
           else { y = k.lerp(slotY(r0), slotY(r1), sortU); xx += Math.sin(PI*sortU)*0.11*(r1 < r0 ? -1 : (r1 > r0 ? 1 : 0)); }
@@ -752,26 +766,23 @@ var CONFIG = {
       if (shot === 1) { tubeAt(o.tubeOld[0], 0.72, 0, 0, -9); tubeAt(o.tubeOld[1], 0.80, 1, 1, -9); }
       if (shot === 2) {
         tubeAt(o.tubeOld[0], 0.72, 0, 3, -9); tubeAt(o.tubeOld[1], 0.80, 1, 1, -9);
-        for (q2=0; q2<20; q2++){ s = o.stream[q2]; var s0 = 18.6 + 0.3*q2, ar = s0 + 2.5; if (t < s0) continue;
-          if (t < ar) { x = 114.5 + 3*(t - s0); put(s, x, 1.04, 0.75, C.paper, k.ramp(t, s0, s0 + 0.2)); continue; }
-          if (q2 === 4) { tubeAt(s, 0.93, 3, 0, ar); continue; }
-          if (q2 === 9) { tubeAt(s, 0.71, 4, 4, ar); continue; }
-          x = 122 + 3*(t - ar); if (x > 127) continue; put(s, x, 1.04, 0.75, C.ok, 1 - k.ramp(x, 126.2, 126.9)); } }
+        for (q2=0; q2<NSTREAM; q2++){ s = o.stream[q2]; var s0 = S_T0 + S_GAP*q2, ar = sArr(q2); if (t < s0) continue;
+          if (t < ar) { x = 114.5 + S_V*(t - s0); put(s, x, 1.04, 0.75, C.paper, k.ramp(t, s0, s0 + 0.2)); continue; }
+          if (q2 === S_DEEP) { tubeAt(s, 0.93, 3, 0, ar); continue; }
+          x = 122 + S_V*(t - ar); if (x > 127) continue; put(s, x, 1.04, 0.75, C.ok, 1 - k.ramp(x, 126.2, 126.9)); } }
       if (shot === 3) {
-        var more = [0.9, 0.88, 0.85, 0.79], mrank = [0, 1, 2, 4]; tubeAt(o.tubeOld[1], 0.80, 3, 3, -9); tubeAt(o.tubeOld[0], 0.72, 6, 6, -9);   // hers sits in slot 5
+        var more = [0.9, 0.88, 0.85, 0.79], mrank = [0, 1, 2, 4]; tubeAt(o.tubeOld[1], 0.80, 3, 3, -9); tubeAt(o.tubeOld[0], 0.72, 5, 5, -9);   // that evening's queue
         for (q2=0; q2<4; q2++) tubeAt(o.tubeMore[q2], more[q2], mrank[q2], mrank[q2], -9);
-        for (q2=0; q2<7; q2++) put(o.stream[q2], 121.45 - 0.15*q2 + 0.02*Math.sin(t*3 + q2), 1.04, 0.75, C.paper, 1, 0.85);       // payments bunch up, waiting to be scored
         o.batch.set(t, 1.6*k.ramp(t, 35.0, 35.7), false, C.batch); o.batchSign.visible = true;                                                           // the month-end batch job pours into the same port
         for (q2=0; q2<6; q2++){ if (t < 35.4 + 0.25*q2) continue; var uq = k.clamp(0.3 - 0.055*q2 + 0.012*Math.sin(t*2.5 + q2) + 0.01*k.lin(t, 35, 40), 0.02, 1);
-          o.readCurve.getPoint(uq, TMP); put(o.fq[q2], TMP.x, TMP.y, TMP.z, null, k.ramp(t, 35.4 + 0.25*q2, 35.7 + 0.25*q2)); }
-        for (q2=0; q2<6; q2++){ var px = 121.0 + q2*0.28; put(o.phones[q2], px, 1.23, 0.5, null, k.ramp(t, 35.6 + q2*0.1, 36.0 + q2*0.1), 1.25); put(o.spins[q2], px, 1.24, 0.52, null, k.ramp(t, 35.6 + q2*0.1, 36.0 + q2*0.1), 1.25); } }
+          o.readCurve.getPoint(uq, TMP); put(o.fq[q2], TMP.x, TMP.y, TMP.z, null, k.ramp(t, 35.4 + 0.25*q2, 35.7 + 0.25*q2)); } }   // no customer and no phone: a miss of a fraction of a second is not something a shopper sees
       // the three things the store sends to the scorer: the payment, how it was made, the account's past
       if (shot === 1) for (q2=0; q2<3; q2++){ var t0 = 17.0 + 0.12*q2, u = k.lin(t, t0, t0 + 0.75); if (t < t0 || t > t0 + 0.85) continue; o.readCurve.getPoint(u, TMP); put(o.fp[q2], TMP.x, TMP.y, TMP.z, null, 1 - k.ramp(t, t0 + 0.7, t0 + 0.85)); } };
 
-    // ---- Set D: the board room; the screen shows the accepted setting and the quarterly calendar
+    // ---- Set D: the board room (d3 as taken in May, five seats present); the screen shows the accepted setting and the promised quarterly re-review
     o.upD = function(t){ for (var q2=0; q2<5; q2++){ var a = o.board[q2]; k.sit(a, 1); k.typing(a, 0, 0); k.look(a, (q2 < 3 ? 1 : -1)*(q2 === 2 ? 0.6 : 0.9), -0.08); }
       k.gesture(o.board[1], t >= 55 && t < 58 ? k.ramp(t, 55.2, 55.7)*(1 - k.ramp(t, 57.0, 57.6)) : 0, t);
-      o.boardScr.draw({ nk:k.ramp(t, 54.2, 54.7), ad:k.ramp(t, 54.6, 55.2), m1:k.ramp(t, 54.9, 55.2), m2:k.ramp(t, 55.3, 55.6), m3:k.ramp(t, 55.7, 56.0), pu:t >= 56 ? Math.round(k.tri((t - 56)*1.1)*10)/10 : 0, bk:k.ramp(t, 56.8, 57.5) }, paintBoard); };
+      o.boardScr.draw({ nk:k.ramp(t, 54.2, 54.7), ad:k.ramp(t, 54.6, 55.2), m:k.ramp(t, 54.9, 55.3), pu:t >= 56 ? Math.round(k.tri((t - 56)*1.1)*10)/10 : 0, bk:k.ramp(t, 56.8, 57.5) }, paintBoard); };
     return o;
   },
 
@@ -779,8 +790,7 @@ var CONFIG = {
     var id = o.SETOF[c.i];
     o.applySet(id);
     o.upInset(t);
-    for (var q=0; q<o.spins.length; q++) o.spins[q].material.rotation = -((t*5 + q*0.9) % (2*Math.PI));   // set every frame: sprite rotation is not part of the restored state
-    if (id === 'E') o.upE(t); else if (id === 'A') o.upA(t); else if (id === 'C' || id === 'M') o.upC(t, id === 'M'); else if (id === 'B') o.upB(t); else o.upD(t);
+    if (id === 'E') o.upE(t); else if (id === 'A') o.upA(t); else if (id === 'C' || id === 'M') o.upC(t, id === 'M'); else if (id === 'B' || id === 'N') o.upB(t); else o.upD(t);
   }
 };
 /* ================================================== END OF CONFIG ================================================= */

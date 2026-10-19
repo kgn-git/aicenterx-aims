@@ -3,16 +3,20 @@
 Usage:  python test/service-copilot_test.py [--write-lines]
 
 The shared controls and layout test is test/film_controls_test.py; this file adds what only this film's script asks for:
-  1. lines: the 28 on-screen lines in simulation/service-copilot/copilot-lines.json match the approved script's shot table
-     verbatim, and pass the script's counting rules (words <= 14 per line, Flesch-Kincaid grade <= 8, reading pace <= 5.0
-     words per second, film budget <= 300 words). --write-lines regenerates the JSON from the script.
-  2. film text: every scene in the film (window.FILM_CONFIG) has the script's start, dur, setting, scene name, headline and
-     support line; the corner label and accent are the script's; no source line, note, chip or card is added; no record id
-     appears on screen.
+  1. lines: the 28 caption lines and the 12 source lines in simulation/service-copilot/copilot-lines.json match the approved
+     script's shot table and "Source lines" table verbatim, and pass the script's counting rules (caption lines <= 14 words,
+     source lines <= 10 words, Flesch-Kincaid grade <= 8 on every line, reading pace <= 5.0 words per second, caption budget
+     <= 300 words; the script states 276 caption words and 97 source-line words). --write-lines regenerates the JSON.
+  2. film text: every scene in the film (window.FILM_CONFIG) has the script's start, dur, setting, scene name, headline,
+     support line and source line (beats only; the cards carry none); the corner label and accent are the script's; no note,
+     chip or card is added; no record id appears on screen; the beat numeral is shown on beats.
   3. clearance: >= 0.6 m from every collider and person (FILM.clearance) and >= 0.9 m from every visible head, at 0.1 s steps.
-  4. faithful to status: guards in test are never shown solid; the web-chat filter is absent until 4.2; red rings only appear
-     in beat 3; the withdrawn tile is gone after the nightly rebuild; the open pips stay lit.
-  5. fallback: with three.js blocked, the page shows the open headline, the WebGL note, the colour legend and every scene.
+  4. faithful to status and to the realism review: guards in test are never shown solid; the web-chat filter is absent until
+     4.2; red rings only appear in beat 3; the withdrawn tile is gone after the nightly rebuild; the open pips stay lit; no
+     customer text or lock sits on the copilot panel; a different agent takes the June call; the agent escalates to a team
+     leader in 3.2; the June seal turns dashed in 4.4 at a six-of-eight-seat session.
+  5. fallback: with three.js blocked, the page shows the open headline, the WebGL note, the colour legend and every scene
+     with its beat number and name.
 Prints a JSON report; exit code 1 on any failure.
 """
 import json
@@ -29,11 +33,12 @@ FILM = DIR / 'Customer Service Copilot.html'
 LINES = DIR / 'copilot-lines.json'
 GL_ARGS = ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
 LIMIT_WORDS, LIMIT_FK, LIMIT_PACE, BUDGET = 14, 8.0, 5.0, 300
+LIMIT_SOURCE_WORDS, SCRIPT_CAPTION_WORDS, SCRIPT_SOURCE_WORDS = 10, 276, 97
 SCENE_NAMES = ['Introduction', 'The situation \u2014 The call', 'The situation \u2014 The search', 'The AI at work \u2014 Finding the policy',
                'The AI at work \u2014 The cited answer', 'The AI at work \u2014 The agent decides', 'What can go wrong \u2014 The old fee list',
                'What can go wrong \u2014 The hidden trick', 'What can go wrong \u2014 The leak between teams', 'How it is kept safe \u2014 The nightly rebuild',
                'How it is kept safe \u2014 Still being tested', 'How it is kept safe \u2014 Checking samples', 'How it is kept safe \u2014 The next gate', 'Close']
-RECORD_ID = re.compile(r'\b(?:r|n|d|e|w\d-o)\d+\b|\bA\.\d+\b|\bmd-[a-z]+|\bds-[a-z]+|\bbm-q\d', re.I)
+RECORD_ID = re.compile(r'\b(?:r|n|d|e|w\d-o)\d+\b|\bA\.\d+\b|\bmd-[a-z]+|\bds-[a-z]+|\bbm-[a-z]', re.I)
 
 
 # ---------------------------------------------------------------- the script's counting rules (Part 1, "Word count and readability")
@@ -63,7 +68,18 @@ def script_shots():
     return rows
 
 
-def build_lines(rows):
+def script_sources():
+    """Rows of the Part 1 "Source lines" table: shot id -> source line (the cards carry none)."""
+    out = {}
+    for line in SCRIPT.read_text(encoding='utf-8').splitlines():
+        if re.match(r'^\| \d\.\d \| From ', line):
+            c = [x.strip() for x in line.strip().strip('|').split(' | ')]
+            if len(c) == 5:
+                out[c[0]] = c[1]
+    return out
+
+
+def build_lines(rows, sources):
     out, total = [], 0
     for r in rows:
         for el in ('head', 'sup'):
@@ -74,9 +90,12 @@ def build_lines(rows):
         pace = (len(words(r['head'])) + len(words(r['sup']))) / r['dur']
         out[-1]['pace'] = round(pace, 2)
         out[-1]['dur'] = r['dur']
+    src = [{'shot': r['id'], 'text': sources[r['id']], 'words': len(words(sources[r['id']])), 'limit': LIMIT_SOURCE_WORDS, 'fk': round(fk(sources[r['id']]), 1)}
+           for r in rows if r['id'] in sources]
     return {'source': SCRIPT.name, 'rules': {'words': 'whitespace tokens containing a letter or digit', 'fk': '0.39*words/sentences + 11.8*syllables/words - 15.59; syllables = [aeiouy]+ groups, min 1; sentences at . ! ?',
-            'limits': {'words_per_line': LIMIT_WORDS, 'fk_max': LIMIT_FK, 'pace_max_wps': LIMIT_PACE, 'film_budget': BUDGET}},
-            'lines': out, 'total_words': total}
+            'limits': {'words_per_line': LIMIT_WORDS, 'source_words_per_line': LIMIT_SOURCE_WORDS, 'fk_max': LIMIT_FK, 'pace_max_wps': LIMIT_PACE, 'film_budget': BUDGET},
+            'note': 'source lines are counted apart from the caption budget and the pace, as the script states'},
+            'lines': out, 'total_words': total, 'source_lines': src, 'source_words': sum(x['words'] for x in src)}
 
 
 def main():
@@ -90,7 +109,8 @@ def main():
     rows = script_shots()
     check('script: 14 shots parsed from the Part 1 table, contiguous 0-60 s', len(rows) == 14 and all(abs(r['start'] - (rows[i - 1]['start'] + rows[i - 1]['dur'] if i else 0)) < 1e-6 for i, r in enumerate(rows))
           and abs(rows[-1]['start'] + rows[-1]['dur'] - 60) < 1e-6, [(r['id'], r['start'], r['dur']) for r in rows])
-    want = build_lines(rows)
+    sources = script_sources()
+    want = build_lines(rows, sources)
     if '--write-lines' in sys.argv:
         LINES.write_text(json.dumps(want, indent=2, ensure_ascii=False) + '\n', encoding='utf-8', newline='\n')
 
@@ -104,7 +124,12 @@ def main():
     check(f'lines: 28 lines, each <= {LIMIT_WORDS} words', len(L) == 28 and not over, over or f'max {max(x["words"] for x in L)}')
     check(f'lines: Flesch-Kincaid grade <= {LIMIT_FK:g} on every line', not hard, hard or f'max {max(x["fk"] for x in L)}')
     check(f'lines: reading pace <= {LIMIT_PACE:g} words/s on every shot', not fast, fast or f'max {max(x.get("pace", 0) for x in L)}')
-    check(f'lines: film budget <= {BUDGET} words (script states 277)', want['total_words'] <= BUDGET and want['total_words'] == 277, f'total {want["total_words"]}')
+    check(f'lines: film budget <= {BUDGET} words (script states {SCRIPT_CAPTION_WORDS})', want['total_words'] <= BUDGET and want['total_words'] == SCRIPT_CAPTION_WORDS, f'total {want["total_words"]}')
+    SL = want['source_lines']
+    bad_src = [(x['shot'], x['words'], x['fk']) for x in SL if x['words'] > LIMIT_SOURCE_WORDS or x['fk'] > LIMIT_FK]
+    check(f'source lines: 12 lines, one per beat shot, each <= {LIMIT_SOURCE_WORDS} words and grade <= {LIMIT_FK:g}; total {SCRIPT_SOURCE_WORDS} as the script states',
+          len(SL) == 12 and [x['shot'] for x in SL] == [r['id'] for r in rows if r['id'] not in ('Open', 'Close')] and not bad_src and want['source_words'] == SCRIPT_SOURCE_WORDS
+          and not [x for x in SL if RECORD_ID.search(x['text'])], bad_src or f'{len(SL)} lines, {want["source_words"]} words')
 
     with sync_playwright() as pw:
         br = pw.chromium.launch(args=GL_ARGS)
@@ -122,30 +147,33 @@ def main():
         diffs = []
         for i, (b, r) in enumerate(zip(beats, rows)):
             d = {}
-            for key, val in (('start', r['start']), ('dur', r['dur']), ('setting', r['setting']), ('head', r['head']), ('sup', r['sup']), ('name', SCENE_NAMES[i])):
-                if (abs(b.get(key, -1) - val) > 1e-6) if isinstance(val, float) else b.get(key) != val:
+            for key, val in (('start', r['start']), ('dur', r['dur']), ('setting', r['setting']), ('head', r['head']), ('sup', r['sup']), ('name', SCENE_NAMES[i]), ('source', sources.get(r['id'], ''))):
+                if (abs(b.get(key, -1) - val) > 1e-6) if isinstance(val, float) else b.get(key, '') != val:
                     d[key] = (b.get(key), val)
             want_beat = 0 if r['id'] in ('Open', 'Close') else int(r['id'][0])
             if b['beat'] != want_beat:
                 d['beat'] = (b['beat'], want_beat)
             if d:
                 diffs.append({'shot': r['id'], 'diff': d})
-        check('film text: 14 scenes with the script\'s start, dur, setting, scene name, headline and support line', len(beats) == 14 and not diffs, diffs or '14 scenes')
+        check('film text: 14 scenes with the script\'s start, dur, setting, scene name, headline, support line and source line', len(beats) == 14 and not diffs, diffs or '14 scenes')
         check('film text: corner label "Customer Service Copilot \u00b7 Pilot"; accent Customer Ops blue on every beat, neutral cards',
               cfg['initiative'] == 'Customer Service Copilot \u00b7 Pilot' and all(cfg['accent'][str(n)].lower() == '#3d7cc9' for n in (1, 2, 3, 4)) and cfg['accent']['0'].lower() == '#e8e6e1',
               {'initiative': cfg['initiative'], 'accent': cfg['accent']})
-        extra = [(b['name'], k) for b in beats for k in ('source', 'note', 'chips', 'cards', 'stages', 'foot') if b.get(k)]
-        check('film text: no source line, note, chip or card beyond the script', not extra, extra or 'none')
-        onscreen = [cfg['initiative']] + [b[k] for b in beats for k in ('setting', 'head', 'sup', 'name')]
+        extra = [(b['name'], k) for b in beats for k in ('note', 'chips', 'cards', 'stages', 'foot') if b.get(k)]
+        check('film text: no note, chip or card beyond the script', not extra, extra or 'none')
+        onscreen = [cfg['initiative']] + [b.get(k, '') for b in beats for k in ('setting', 'head', 'sup', 'name', 'source')]
         ids = [t for t in onscreen if RECORD_ID.search(t)]
         check('film text: no record id on screen', not ids, ids or 'none')
         shown = []
         for b in beats:
             pg.evaluate('t => FILM.seek(t)', b['start'] + b['dur'] / 2)
-            o = pg.evaluate("() => ({ head: document.getElementById('head').textContent, sup: document.getElementById('sup').textContent, blab: document.getElementById('blab').textContent, note: document.getElementById('note').textContent, sname: document.getElementById('sname').textContent })")
-            if o['head'] != b['head'] or o['sup'] != b['sup'] or o['blab'] or o['note'] or o['sname'] != b['setting']:
+            o = pg.evaluate("""() => ({ head: document.getElementById('head').textContent, sup: document.getElementById('sup').textContent, blab: document.getElementById('blab').textContent,
+                note: document.getElementById('note').textContent, sname: document.getElementById('sname').textContent, sidx: document.getElementById('sidx').textContent,
+                bnum: document.getElementById('bnum').textContent, bnumShown: getComputedStyle(document.getElementById('bnum')).display !== 'none' })""")
+            numeral_ok = (o['bnum'] == str(b['beat']) and o['bnumShown']) if b['beat'] else o['bnum'] == ''
+            if o['head'] != b['head'] or o['sup'] != b['sup'] or o['blab'] != b.get('source', '') or o['note'] or o['sname'] != b['setting'] or o['sidx'] != cfg['initiative'] or not numeral_ok:
                 shown.append({'scene': b['name'], 'overlay': o})
-        check('overlay: each scene shows exactly its headline, support line and setting, with no source line or note', not shown, shown or '14 scenes')
+        check('overlay: each scene shows exactly its setting, initiative label, beat numeral, source line, headline and support line, with no note', not shown, shown or '14 scenes')
 
         # ------------------------------------------------------------ 3. clearance (colliders and people >= minClearance; heads >= 0.9 m)
         cl = pg.evaluate("""() => { let worst = null, head = null;
@@ -163,8 +191,8 @@ def main():
         for k in range(0, 600, 2):
             t = k / 10
             f = flags(t)
-            if not f['voiceRing'] and f['agent']:
-                bad.append((t, 'voice filter ring missing'))
+            if not f['appRing'] and f['agent']:
+                bad.append((t, 'app-message filter ring missing'))
             if t < 44 and (f['chatRing'] or not f['chatBracket']):
                 bad.append((t, 'web-chat filter shown before 4.2'))
             if t >= 44 and (not f['chatRing'] or f['chatBracket']):
@@ -173,18 +201,34 @@ def main():
                 bad.append((t, 'withdrawn tile back after the rebuild'))
             if (f['bubbleRed'] or f['panelRed']) and not (25 <= t < 40):
                 red_outside.append(t)
-        check('status: the voice filter ring is always shown dashed; the web-chat channel has an empty bracket until 4.2, then a dashed ring', not [b for b in bad if 'filter' in b[1] or 'ring' in b[1]], bad[:8] or 'ok')
+            if 'words' in f or 'lock' in f:
+                bad.append((t, 'customer-words block or lock still in the world'))
+            if f['agent2'] and not (25 <= t < 30):
+                bad.append((t, 'the June agent outside 3.1'))
+            if f['leadAtDesk'] and not (34.0 <= t < 35):
+                bad.append((t, 'team leader at the desk outside 3.2'))
+        check('status: the app-message filter ring is always shown dashed; the web-chat channel has an empty bracket until 4.2, then a dashed ring', not [b for b in bad if 'filter' in b[1] or 'ring' in b[1]], bad[:8] or 'ok')
+        check('realism: no customer text or lock on the copilot panel; the June agent only in 3.1; the team leader at the desk only after the agent raises a hand in 3.2',
+              not [b for b in bad if 'words' in b[1] or 'June' in b[1] or 'leader' in b[1]], [b for b in bad if 'words' in b[1] or 'June' in b[1] or 'leader' in b[1]][:8] or 'ok')
         check('status: red rings (a fault reached someone) appear only in beat 3', not red_outside, red_outside[:10] or 'ok')
         moments = {
-            '2.3 green-edged source card; customer words cleared under the lock': (24.4, lambda f: f['sourceCard'] and f['cardEdge'] == '#3fa34d' and f['lock'] and not f['words'] and f['bubbleGreen']),
-            '3.1 amber-edged source card; red ring under the customer': (29.6, lambda f: f['sourceCard'] and f['cardEdge'] == '#e9a23b' and f['bubbleRed'] and f['amberTile']),
-            '3.2 hooked block in the chat pipe; keyhole card and red ring on the panel': (34.6, lambda f: f['keyhole'] and f['panelRed']),
+            '1.2 shield on the case screen (security questions passed), the fee line marked; no hold ring yet': (9.3, lambda f: f['caseBadge'] == 'shield' and f['caseFee']),
+            '2.3 the agent checks the fee line on the case screen; the account shows the fee line': (22.2, lambda f: f['caseFee'] and f['sourceCard'] and f['cardEdge'] == '#3fa34d'),
+            '2.3 the agent speaks: the sound wave runs along the call line; green-edged source card': (23.0, lambda f: f['waves'] and f['sourceCard'] and f['cardEdge'] == '#3fa34d'),
+            '2.3 green rim on the customer; source card still green-edged': (24.0, lambda f: f['bubbleGreen'] and f['sourceCard'] and f['cardEdge'] == '#3fa34d' and not f['waves']),
+            '2.3 the call ends and the panel clears for the next call': (24.9, lambda f: not f['sourceCard']),
+            '3.1 a different agent at the pilot desk; amber-edged source card; red ring under the customer': (29.6, lambda f: f['agent2'] and not f['hero'] and f['sourceCard'] and f['cardEdge'] == '#e9a23b' and f['bubbleRed'] and f['amberTile']),
             '3.2 the hooked block flows through the unfiltered chat pipe': (32.6, lambda f: f['hook'] and f['chatBracket'] and not f['chatRing']),
-            '3.3 violet title strip and red ring on the panel': (39.6, lambda f: f['violetStrip'] and f['panelRed']),
+            '3.2 keyhole card and red ring on the panel; nothing sent to the customer': (34.2, lambda f: f['keyhole'] and f['panelRed'] and not f['waves']),
+            '3.2 the agent raises a hand and the team leader is at the desk': (34.9, lambda f: f['handUp'] and f['leadAtDesk'] and f['keyhole'] and not f['waves']),
+            '3.3 violet title strip and red ring on the panel': (39.0, lambda f: f['violetStrip'] and f['panelRed']),
+            '3.3 the agent flags the unfamiliar title; the team leader is back on the floor': (39.8, lambda f: f['handUp'] and f['violetStrip'] and f['lead'] and not f['leadAtDesk']),
             '4.1 the withdrawn tile drops out of the rebuilt library': (43.5, lambda f: not f['amberTile'] and not f['agent']),
             '4.2 hooked block held at the dashed ring; the leak pip still lit': (45.5, lambda f: f['hook'] and f['chatRing'] and f['openPip']),
-            '4.4 green ring around the pilot pod; two open pips on the gate': (55.0, lambda f: f['sealRing'] and f['gatePips']),
-            'Close: green-edged source, green rim, words cleared, leak pip still lit': (58.0, lambda f: f['cardEdge'] == '#3fa34d' and f['bubbleGreen'] and f['lock'] and not f['words'] and f['openPip']),
+            '4.4 eight seats: six plaques lit, two dark, five figures; the June green seal ring around the pilot pod': (52.3, lambda f: f['plaquesLit'] == 6 and f['plaquesDark'] == 2 and f['boardFigures'] == 5 and f['sealRing'] and not f['sealDashed']),
+            '4.4 the returning arrow circles the pod; the seal ring is dashed; two open pips on the closed gate': (55.0, lambda f: f['returningArrow'] and f['sealDashed'] and not f['sealRing'] and f['gatePips']),
+            'Close: green-edged source, green rim, leak pip still lit': (58.0, lambda f: f['sourceCard'] and f['cardEdge'] == '#3fa34d' and f['bubbleGreen'] and f['openPip']),
+            'Close: the panel clears': (59.2, lambda f: not f['sourceCard']),
         }
         miss = {}
         for name, (t, ok) in moments.items():
@@ -206,9 +250,14 @@ def main():
             paras: Array.from(f.querySelectorAll(':scope > p')).map(p => p.textContent), items: Array.from(document.querySelectorAll('#fblist li')).map(li => li.textContent),
             text: f.textContent }; }""")
         br.close()
-        legend_ok = len(fb['paras']) == 2 and fb['paras'][0].startswith('This film needs 3D graphics (WebGL).') and all(w in fb['paras'][1] for w in ('green', 'amber', 'red ring', 'Violet', 'ice-white', 'dashed', 'empty bracket', 'red open pip', 'lock'))
-        items_ok = len(fb['items']) == 14 and all(r['head'] in it and r['sup'] in it and SCENE_NAMES[i] in it for i, (r, it) in enumerate(zip(rows, fb['items'])))
-        check('fallback: the open headline as title, then the WebGL note, the colour legend and every scene with its headline and support line',
+        legend_ok = (len(fb['paras']) == 2 and fb['paras'][0].startswith('This film needs 3D graphics (WebGL).')
+                     and all(w in fb['paras'][1] for w in ('green', 'amber', 'red ring', 'Violet', 'ice-white', 'dashed', 'empty bracket', 'red open pip', 'seal ring', 'returning arrow', 'not warnings the agent sees'))
+                     and 'lock' not in fb['paras'][1].lower())
+        def item_ok(i, r, it):
+            prefix = '' if r['id'] in ('Open', 'Close') else r['id'][0] + ' '
+            return it.startswith(prefix + SCENE_NAMES[i]) and r['head'] in it and r['sup'] in it
+        items_ok = len(fb['items']) == 14 and all(item_ok(i, r, it) for i, (r, it) in enumerate(zip(rows, fb['items'])))
+        check('fallback: the open headline as title, then the WebGL note, the colour legend and every scene with its beat number, name, headline and support line',
               fb['title'] == rows[0]['head'] and legend_ok and items_ok, {'title': fb['title'], 'paras': [p[:80] for p in fb['paras']], 'items': len(fb['items'])})
         check('fallback: no record id and no times', not RECORD_ID.search(fb['text']) and not re.search(r'\b\d+(\.\d+)? ?s\b|\d:\d\d', fb['text']), 'ok')
 

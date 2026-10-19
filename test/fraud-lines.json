@@ -58,7 +58,7 @@
     {
       "shot": "2.2",
       "element": "headline",
-      "text": "Most payments pass. The ones in doubt wait for a person.",
+      "text": "Almost all payments pass. Those in doubt are held for a person.",
       "limit": 14,
       "dur": 4.0
     },
@@ -72,7 +72,7 @@
     {
       "shot": "2.3",
       "element": "headline",
-      "text": "An analyst checks a payment from a stolen card and stops it.",
+      "text": "An analyst spots a payment made with stolen card details and stops it.",
       "limit": 14,
       "dur": 5.0
     },
@@ -100,14 +100,14 @@
     {
       "shot": "3.2",
       "element": "headline",
-      "text": "At the busiest moment, the check takes too long.",
+      "text": "At a month-end peak, the check ran past its time limit.",
       "limit": 14,
       "dur": 5.0
     },
     {
       "shot": "3.2",
       "element": "support",
-      "text": "A month-end data job slows the store the model reads from.",
+      "text": "A data job slowed the store the model reads from.",
       "limit": 14,
       "dur": 5.0
     },
@@ -135,14 +135,14 @@
     {
       "shot": "4.1",
       "element": "support",
-      "text": "Her payment is honest, so it goes through.",
+      "text": "The analyst finds nothing wrong and lets her payment through.",
       "limit": 14,
       "dur": 5.0
     },
     {
       "shot": "4.2",
       "element": "headline",
-      "text": "Each analyst's yes or no goes back to teach the model.",
+      "text": "Each analyst's yes or no is kept for the next re-tune.",
       "limit": 14,
       "dur": 5.0
     },
@@ -156,7 +156,7 @@
     {
       "shot": "4.3",
       "element": "headline",
-      "text": "The board accepted some false alarms at this setting. It looks again each quarter.",
+      "text": "In May, the board accepted some false alarms and set a check each quarter.",
       "limit": 14,
       "dur": 5.0
     },

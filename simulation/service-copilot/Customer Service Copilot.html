@@ -11,9 +11,8 @@
 <!--
   CUSTOMER SERVICE COPILOT (initiative `chatbot`, issue #3): simulation/service-copilot/Customer Service Copilot.html
   A standalone film set where the copilot is actually used: a contact-centre agent on a live fee query, the copilot panel
-  beside the call. Built from simulation/_template/film-template.html. Besides the CONFIG block, two small film-only changes
-  follow the script's numbering convention ("no scenario numeral"; fallback "carries no ... scene numbers"): the big beat
-  numeral beside the indicator is hidden (it still holds the beat number for tools), and fallback entries show scene names only.
+  beside the call. Built from simulation/_template/film-template.html; only the CONFIG block differs from the template, so
+  the overlay keeps the template's initiative label, beat numeral, numbered rail dots and source line, as the script allows.
   Source of truth for every scene, timing, camera move and on-screen word: "Customer Service Copilot - Script and Protocols.md".
   Tests: python test/film_controls_test.py "simulation/service-copilot/Customer Service Copilot.html"
          python test/service-copilot_test.py
@@ -203,8 +202,6 @@
     #paused{top:calc(max(18px,2.6vh) + 72px);left:max(24px,4vw);transform:none}
   }
   @media (prefers-reduced-motion:reduce){#panel,#strip button,#steps span,#bar,#nav,#rail,[data-tip]:after{transition:none}}
-  /* film-only (script, Numbering convention): beats are named by words in the indicator; no numeral is shown beside it */
-  #bnum{display:none}
 </style>
 </head>
 <body>
@@ -280,67 +277,81 @@ var CONFIG = {
   initiative: 'Customer Service Copilot · Pilot',   // top-right label (the template shows it on every scene)
   fallbackTitle: 'A copilot for the agents who answer customer calls.',
   // the colour legend for the fallback page (script: "a one-paragraph colour legend in words")
-  fallbackLegend: 'How to read the colours. A green edge or a green dot marks the current published source, and a passage that backs up the sentence it is linked to. An amber tile with a diagonal bar is a withdrawn document, an old version. A red ring means a fault reached someone: under the customer it means a customer heard something wrong; on the copilot panel it means the agent was shown something that should not have been there. Violet tiles are documents that belong to other business units. An ice-white ring on a channel pipe is the filter for customer messages: dashed means still in test, and an empty bracket means no filter on that channel. A red open pip is a problem still open. A grey ring that fills around the customer is time spent waiting on hold. A green rim on the customer means she was told an answer that its current source backs up. A lock closing over a fading grey block means the customer\'s words are cleared at the end of the call.',
+  fallbackLegend: 'How to read the colours. The colours tell the story for the viewer; they are not warnings the agent sees, because the real source card shows only a document, a version and a date. A green edge or a green dot marks the current published source, and a passage that backs up the sentence it is linked to. An amber tile with a diagonal bar is a withdrawn document, an old version: the film\'s colour for a document that should not be used. A red ring means a fault reached someone: under the customer it means a customer heard something wrong; on the copilot panel it means the agent was shown something that should not have been there. Violet tiles are documents that belong to other business units. An ice-white ring on a channel pipe is the filter for customer messages: dashed means still in test, and an empty bracket means no filter on that channel. A red open pip is a problem still open. A grey ring that fills around the customer is time spent waiting on hold. A green rim on the customer means she was told an answer that its current source backs up. A green seal ring around the pilot desk is the June sign-off for the pilot only; when it turns dashed under a returning arrow, the assessment has been re-opened.',
   beatLabels: ['The situation', 'The AI at work', 'What can go wrong', 'How it is kept safe'],
   // the script sets one film accent, Customer Ops blue, for every beat; the cards stay neutral
   accent:      { 0:'#e8e6e1', 1:'#3d7cc9', 2:'#3d7cc9', 3:'#3d7cc9', 4:'#3d7cc9' },
   accentLight: { 0:'#f3efe6', 1:'#a9c9f0', 2:'#a9c9f0', 3:'#a9c9f0', 4:'#a9c9f0' },
   minClearance: 0.6,                                   // script: >= 0.6 m from every collider (heads >= 0.9 m: test/service-copilot_test.py)
   env: { bg:0xDCE6EC, fogNear:30, fogFar:90, shadowHalf:11, sunDir:[0.78, 0.58, 0.24], center:[0.5, 0, -0.5] },
-  // one entry per shot of the approved script (Part 1). head / sup are verbatim; `trace` is the script's "traces to" column
-  // (kept for tools; never shown). No `source` line is set: the script puts no source line and no record id on screen.
+  // one entry per shot of the approved script (Part 1). setting / head / sup are verbatim from the shot table; source is
+  // verbatim from the script's "Source lines" table (plain words, no record ids; the cards carry none); `trace` is the
+  // script's "traces to" column (kept for tools; never shown).
   beats: [
     { beat:0, name:'Introduction', start:0, dur:4, setting:'The contact centre',
       head:'A copilot for the agents who answer customer calls.', sup:'It finds the policy, and the agent decides what to say.',
       trace:'Initiative summary; Business Value; md-copilot oversight',
       cam:[[0, -1.6,6.0,9.0, 2.0,0.95,1.2, 0.25,0.2], [4, -0.6,3.2,6.6, 2.0,0.95,1.2, 0.25,0.2]] },
-    { beat:1, name:'The situation — The call', nav:'The call', start:4, dur:4, setting:'A customer\'s kitchen',
+    { beat:1, name:'The situation — The call', nav:'The call', start:4, dur:4, setting:'A customer\'s kitchen, mid-morning',
+      source:'From the AI Canvas: the business problem',
       head:'A customer calls about a fee she did not expect.', sup:'The agent wants to give her the right answer.',
-      trace:'Business Problem (who, trigger); IMPACTS.chatbot (individuals)',
+      trace:'Business Problem (who, trigger); IMPACTS.chatbot entry 1 (individuals)',
       cam:[[0, 39.1,1.3,2.3, 40.2,1.05,-0.75, 0.22,0.18], [4, 39.45,1.3,1.35, 40.2,1.05,-0.75, 0.22,0.18]] },
-    { beat:1, name:'The situation — The search', nav:'The search', start:8, dur:4, setting:'The contact centre',
+    { beat:1, name:'The situation — The search', nav:'The search', start:8, dur:4, setting:'The contact centre, mid-morning',
+      source:'From the AI Canvas: the business problem and value',
       head:'Most of the call goes on searching policy documents.', sup:'The customer waits on hold while the agent reads.',
-      trace:'Business Problem; Business Value (handling time)',
+      trace:'Business Problem; Business Value (handling time); security questions passed and fee line found on the case screen',
       cam:[[0, 3.6,1.62,3.55, 2.2,1.3,0.95, 0.12,0.0], [4, 3.42,1.6,3.3, 2.2,1.3,0.95, 0.12,0.0]] },
-    { beat:2, name:'The AI at work — Finding the policy', nav:'Finding the policy', start:12, dur:4.5, setting:'The contact centre',
+    { beat:2, name:'The AI at work — Finding the policy', nav:'Finding the policy', start:12, dur:4.5, setting:'The contact centre, mid-morning',
+      source:'From the AI Canvas: the data strategy',
       head:'It looks only in the policy the bank has published.', sup:'Each document carries a version and a date.',
-      trace:'Data Strategy (published policy only); Modeling Approach (retrieval over the versioned corpus); Objective Function (retrieval relevance); ds-policy; md-embed',
+      trace:'Data Strategy (published policy only); Modeling Approach (retrieval over the versioned corpus); Objective Function (retrieval relevance); ds-policy; md-embed; DIAGRAMS.chatbot (agent question)',
       cam:[[0, 2.62,1.5,3.6, 2.45,1.2,1.02, 0.2,0.12], [1.0, 3.0,2.9,3.1, 2.9,2.2,-1.0, 0.2,0.2], [2.2, 3.6,3.05,-1.1, 3.9,2.87,-4.0, 0.2,0.22], [4.5, 3.7,3.05,-1.3, 3.9,2.87,-4.0, 0.2,0.22]] },
-    { beat:2, name:'The AI at work — The cited answer', nav:'The cited answer', start:16.5, dur:4.5, setting:'The contact centre',
+    { beat:2, name:'The AI at work — The cited answer', nav:'The cited answer', start:16.5, dur:4.5, setting:'The contact centre, mid-morning',
+      source:'From the AI Canvas: the modelling approach',
       head:'It drafts an answer and shows the source beside it.', sup:'Each sentence must point to a passage that backs it up.',
       trace:'Modeling Approach (grounding contract, as-prompt); Objective Function (citation support); md-copilot intended use; DIAGRAMS (hosted LLM, citation guard)',
       cam:[[0, 3.22,1.45,2.08, 2.45,1.15,1.04, 0.25,0.15], [4.5, 3.12,1.42,1.96, 2.45,1.15,1.04, 0.25,0.15]] },
-    { beat:2, name:'The AI at work — The agent decides', nav:'The agent decides', start:21, dur:4, setting:'The contact centre',
-      head:'The agent checks the source and decides what to say.', sup:'The customer\'s words are cleared when the call ends.',
-      trace:'Customer Value (visible source to quote back); Business Value (decision stays with the agent); Data Strategy (no retention beyond the session); md-copilot oversight; A.9',
+    { beat:2, name:'The AI at work — The agent decides', nav:'The agent decides', start:21, dur:4, setting:'The contact centre, mid-morning',
+      source:'From the copilot\'s system card: who decides',
+      head:'The agent checks the source and decides what to say.', sup:'The copilot never talks to the customer.',
+      trace:'Customer Value (visible source to quote back); Business Value (decision stays with the agent); md-copilot oversight and out-of-scope (direct customer contact); A.9',
       cam:[[0, 2.75,1.6,4.1, 2.8,1.45,0.95, 0.22,0.2], [4, 2.8,1.6,3.92, 2.8,1.45,0.95, 0.22,0.2]] },
-    { beat:3, name:'What can go wrong — The old fee list', nav:'The old fee list', start:25, dur:5, setting:'The contact centre',
+    { beat:3, name:'What can go wrong — The old fee list', nav:'The old fee list', start:25, dur:5, setting:'The contact centre, in June',
+      source:'From the incident log: an old fee list, now closed',
       head:'An old fee list was left in the search library.', sup:'The answer looked well sourced, so a customer heard the wrong fee.',
-      trace:'n2 (closed) root cause: stale document left in the retrieval index; r5; IMPACTS.chatbot entry; md-copilot limitation',
+      trace:'n2 (closed, raised 2026-06-11) root cause: stale document left in the retrieval index; r5; IMPACTS.chatbot entry 1; md-copilot limitation; staging assumption 9',
       cam:[[0, 3.15,3.0,-1.75, 2.62,2.87,-4.0, 0.2,0.2], [1.3, 3.5,3.25,1.9, 2.7,1.6,0.6, 0.22,0.2], [2.5, 2.62,1.55,3.6, 2.4,1.45,0.95, 0.22,0.07], [5, 2.58,1.55,3.45, 2.4,1.45,0.95, 0.22,0.07]] },
-    { beat:3, name:'What can go wrong — The hidden trick', nav:'The hidden trick', start:30, dur:5, setting:'Web chat',
-      head:'A customer pasted in text that tried to trick the copilot.', sup:'One channel had no filter, and the copilot let slip its own rules.',
-      trace:'n5 (open) root cause: no injection filter on one channel; r9; Data Strategy (customer text in session); staging assumption 3',
-      cam:[[0, 0.72,1.32,2.32, 1.55,1.12,1.02, 0.2,0.15], [1.2, 0.7,1.3,2.3, 1.55,1.12,1.02, 0.2,0.15], [2.0, -0.55,1.2,3.25, 0.8,0.48,0.93, 0.1,0.02], [5, -0.62,1.2,3.32, 0.8,0.48,0.93, 0.1,0.02]] },
-    { beat:3, name:'What can go wrong — The leak between teams', nav:'The leak between teams', start:35, dur:5, setting:'The contact centre',
+    { beat:3, name:'What can go wrong — The hidden trick', nav:'The hidden trick', start:30, dur:5, setting:'Web chat, in July',
+      source:'From the incident log: a filter missing, still open',
+      head:'A customer pasted in text that tried to trick the copilot.', sup:'The chat had no filter, so part of the copilot\'s instructions reached the agent.',
+      trace:'n5 (open, raised 2026-07-08) root cause: no injection filter on one channel; r9; IMPACTS.chatbot entry 2; staging assumptions 3 and 10',
+      cam:[[0, 0.72,1.32,2.32, 1.55,1.12,1.02, 0.2,0.15], [1.2, 0.7,1.3,2.3, 1.55,1.12,1.02, 0.2,0.15], [2.0, -0.55,1.2,3.25, 0.8,0.48,0.93, 0.1,0.02], [3.3, -0.62,1.2,3.32, 0.8,0.48,0.93, 0.1,0.02],
+           [4.3, -0.3,1.75,4.3, 2.35,1.1,1.4, 0.18,0.12], [5, -0.36,1.76,4.42, 2.35,1.1,1.4, 0.18,0.12]] },
+    { beat:3, name:'What can go wrong — The leak between teams', nav:'The leak between teams', start:35, dur:5, setting:'The contact centre, in July',
+      source:'From the incident log: titles shown across teams, still open',
       head:'The shared search showed file names from other parts of the bank.', sup:'Nothing kept each team\'s files apart from the others.',
-      trace:'n8 (open, no risk linked) root cause: no per-tenant isolation on the shared vector index; md-embed limitation; staging assumption 4',
+      trace:'n8 (open, raised 2026-07-11, no risk linked) root cause: no per-tenant isolation on the shared vector index; md-embed limitation; IMPACTS.chatbot entry 3; staging assumptions 4 and 10',
       cam:[[0, 1.1,2.0,3.2, 1.0,2.6,-4.0, 0.2,0.2], [2.0, 0.6,3.25,1.4, 0.55,2.87,-4.0, 0.2,0.2], [3.3, 0.6,3.25,1.4, 0.55,2.87,-4.0, 0.2,0.2], [5, 1.2,3.3,3.9, 2.45,1.15,1.02, 0.25,0.15]] },
     { beat:4, name:'How it is kept safe — The nightly rebuild', nav:'The nightly rebuild', start:40, dur:4, setting:'The contact centre, overnight',
+      source:'From the AI Canvas: model training',
       head:'Each night the library is rebuilt from current policy.', sup:'Each new version is checked with test questions.',
       trace:'Model Training (nightly rebuild, held-out evaluation, no fine-tuning); n2 closed (fix not recorded; staging assumption 7); md-copilot training-data line',
       cam:[[0, 2.0,4.3,0.4, 3.7,2.8,-4.0, 0.2,0.2], [4, 3.95,4.3,0.15, 3.7,2.8,-4.0, 0.2,0.2]] },
     { beat:4, name:'How it is kept safe — Still being tested', nav:'Still being tested', start:44, dur:4, setting:'The contact centre',
+      source:'From the risk register: filter still in test',
       head:'A filter for customer messages is still being tested.', sup:'The leak between teams is still open as well.',
       trace:'r9 status Guardrail in test; n5 open; n8 open; A.9',
       cam:[[0, 0.15,1.4,2.45, 0.85,0.5,0.92, 0.2,0.2], [1.5, 0.15,1.4,2.45, 0.85,0.5,0.92, 0.2,0.2], [2.5, 0.15,1.45,2.45, 0.6,2.75,-4.0, 0.2,0.32], [4, 0.15,1.45,2.45, 0.5,2.75,-4.0, 0.2,0.32]] },
-    { beat:4, name:'How it is kept safe — Checking samples', nav:'Checking samples', start:48, dur:4, setting:'The review desk',
-      head:'A sample of answers is checked against its sources.', sup:'Answers their source does not back up are sorted by cause.',
-      trace:'e6 (citation-support rate on 800 sampled answers, ungrounded set triaged by cause); Objective Function; A.9; r5',
+    { beat:4, name:'How it is kept safe — Checking samples', nav:'Checking samples', start:48, dur:4, setting:'The quality review desk',
+      source:'From the evidence file: a check of sampled answers',
+      head:'A sample of answers was checked against their sources.', sup:'Answers their source did not back up were sorted by cause.',
+      trace:'e6 (captured 2026-06-30: citation-support rate on 800 sampled answers, ungrounded set triaged by cause); Objective Function; A.9; r5; staging assumption 8',
       cam:[[0, -39.25,2.25,1.45, -39.75,1.8,-2.4, 0.2,0.18], [4, -39.35,2.18,1.2, -39.75,1.8,-2.4, 0.2,0.18]] },
-    { beat:4, name:'How it is kept safe — The next gate', nav:'The next gate', start:52, dur:4, setting:'The governance board',
-      head:'The board\'s sign-off covers the pilot only, not a wider rollout.', sup:'Before it grows, the risks must be checked again.',
-      trace:'d5 (bm-q2, pilot scope only, re-assessment before scale); IMPACTS.chatbot scope; A.5; n5 and n8 open; the next gate',
+    { beat:4, name:'How it is kept safe — The next gate', nav:'The next gate', start:52, dur:4, setting:'An extra board session, in July',
+      source:'From the board minutes: the extra July session',
+      head:'The board reopened its review of harms after two faults.', sup:'No more agents join until it is signed off again.',
+      trace:'d6 and bm-jul-x (2026-07-14; 6 of 8 seats, quorate); d5 (bm-q2, pilot scope only); IMPACTS.chatbot status in-progress; A.5; n5 and n8 open; the next gate',
       cam:[[0, 72.9,2.7,4.2, 70.15,0.95,0.3, 0.22,0.2], [4, 72.05,2.2,2.95, 70.15,0.95,0.3, 0.22,0.2]] },
     { beat:0, name:'Close', start:56, dur:4, setting:'The contact centre',
       head:'The agent decides, and each answer shows its source.', sup:'The aim is shorter calls and the same answer every time.',
@@ -415,20 +426,20 @@ var CONFIG = {
     o.heroRing = k.ring({ x:CP.hx, z:1.55, r:1.35 });
     o.hero = who({ shirt:0x2F5D8C, trousers:P.trousers.navy, skin:P.skin[2], hair:P.hair[1], longHair:true, headset:true });
     k.place(o.hero, CP.hx, CP.seatZ, PI);
+    // 3.1 is a June call taken by a different pilot agent at this pilot desk (script: "No coincidence"); hidden otherwise
+    o.agent2 = who({ shirt:0x8A6A3A, trousers:P.trousers.dark, skin:P.skin[4], hair:P.hair[3], longHair:false, headset:true });
+    k.place(o.agent2, CP.hx, CP.seatZ, PI); o.agent2.visible = false;
+    // the team leader: walks the aisle on the floor, and is the agent's first escalation point (3.2; staging assumption 10)
+    o.lead = who({ shirt:0x3E5C4E, trousers:P.trousers.dark, skin:P.skin[0], hair:P.hair[2], badge:'#f5f3ee' });
+    CP.leadIdle = [5.6, 3.5]; CP.leadNear = [3.9, 3.3]; CP.leadDesk = [2.95, 2.75];
+    k.place(o.lead, CP.leadIdle[0], CP.leadIdle[1], -PI/2);
 
     // ---- the copilot panel overlay (panel-local; glyphs, bars and colours only)
     var ov = o.ov = k.grp(0, 0.17 + 0.225, 0.03, o.cop.group);
     o.pQ = k.grp(0, 0, 0, ov);
     disc(bm(0x9cc3f0), 0.019, -0.315, 0.145, 0.002, o.pQ); flat(bm(0x9cc3f0), 0.014, 0.014, -0.302, 0.128, 0.001, o.pQ);
     o.pQL = k.grp(-0.285, 0.145, 0, ov); flat(bm(0x8d99a3), 0.22, 0.02, 0.11, 0, 0, o.pQL);
-    // the customer\'s words: a separate grey block with a dotted outline (session only)
-    o.pW = k.grp(0.19, 0.145, 0, ov); o.pWm = bm(0x8d99a3, true, 1); o.pWd = bm(0xc9d3dc, true, 1);
-    flat(o.pWm, 0.17, 0.04, 0, 0, 0, o.pW);
-    (function(){ var w = 0.2, h = 0.064, n; for (n=0;n<9;n++){ var xx = -w/2 + n*w/8; flat(o.pWd, 0.008, 0.006, xx, h/2, 0.001, o.pW); flat(o.pWd, 0.008, 0.006, xx, -h/2, 0.001, o.pW); }
-      for (n=1;n<3;n++){ var yy = -h/2 + n*h/3; flat(o.pWd, 0.006, 0.008, -w/2, yy, 0.001, o.pW); flat(o.pWd, 0.006, 0.008, w/2, yy, 0.001, o.pW); } })();
-    o.pLock = k.grp(0.19, 0.145, 0.006, ov); flat(bm(0xe6edf3), 0.04, 0.032, 0, -0.004, 0, o.pLock);
-    disc(bm(0x14202a), 0.005, 0, -0.004, 0.003, o.pLock);
-    o.pShackle = torus(bm(0xe6edf3), 0.013, 0.0035, PI, 0, 0.03, 0, o.pLock);
+    // (on a call the agent types the question, so no customer text sits on the panel: script, staging assumptions 3 and 11)
     o.pBars = []; o.pDots = []; o.pLines = [];
     for (var b=0;b<3;b++){
       var bg = k.grp(-0.33, CP.barY[b], 0, ov); flat(bm(0xc9d3dc), CP.barL[b], 0.022, CP.barL[b]/2, 0, 0, bg); o.pBars.push(bg);
@@ -451,14 +462,15 @@ var CONFIG = {
     o.pViolet = flat(bm(C.violet), 0.24, 0.026, -0.19, -0.165, 0.002, ov);
     o.pRedM = bm(C.red, true, 1); o.pRed = ringFlat(o.pRedM, 0.2, 0.22, 0, 0, 0.012, ov);
 
-    // ---- channel pipes from the desk into the copilot: voice (top) and web chat (bottom), with the customer-message filter rings
+    // ---- channel pipes from the desk into the copilot for the two WRITTEN channels, where customer text reaches it:
+    //      app messages (top) and web chat (bottom), with the customer-message filter rings. A voice call has no pipe.
     k.box(0x5d6b78, 0.3, 0.7, 0.3, 0.4, 0.35, 0.9); k.coll(0.25, 0, 0.75, 0.55, 0.7, 1.05, 'junction');
-    o.pipeY = { voice:0.56, chat:0.4 };
+    o.pipeY = { app:0.56, chat:0.4 };
     k.cyl(0x5d7f9e, 0.035, 2.01, 1.555, 0.56, 0.84, null, { rz:PI/2 }); k.cyl(0x5d7f9e, 0.035, 0.22, 2.56, 0.66, 0.84);
     k.cyl(0x7b8a99, 0.035, 2.11, 1.605, 0.40, 1.02, null, { rz:PI/2 }); k.cyl(0x7b8a99, 0.035, 0.38, 2.66, 0.58, 1.02);
     function dashedRing(y, z){ var g = k.grp(0.8, y, z), inner = k.grp(0, 0, 0, g), m = new THREE.MeshLambertMaterial({ color:C.ice, emissive:C.ice, emissiveIntensity:0.45 });
       g.rotation.y = PI/2; for (var j=0;j<8;j++){ var s = torus(m, 0.07, 0.012, PI/7, 0, 0, 0, inner); s.rotation.z = j*PI/4; } return g; }
-    o.voiceRing = dashedRing(0.56, 0.84); o.chatRing = dashedRing(0.40, 1.02);
+    o.appRing = dashedRing(0.56, 0.84); o.chatRing = dashedRing(0.40, 1.02);
     o.chatBracket = k.grp(0.8, 0.40, 1.02); (function(g){ var m = lam(0x9aa0a6);
       k.box(0, 0.016, 0.016, 0.17, 0, 0.078, 0, g, { mat:m }); k.box(0, 0.016, 0.016, 0.17, 0, -0.078, 0, g, { mat:m });
       k.box(0, 0.016, 0.05, 0.016, 0, 0.058, -0.085, g, { mat:m }); k.box(0, 0.016, 0.05, 0.016, 0, -0.058, -0.085, g, { mat:m });
@@ -517,8 +529,12 @@ var CONFIG = {
     // the tiles a query returns get their own material so they can glow
     function hitM(c){ return libM(new THREE.MeshLambertMaterial({ color:c, emissive:c, emissiveIntensity:0, transparent:true, opacity:0.95 }), 0.95); }
     var hits = { 'co2_1':1, 'co5_0':1, 'co6_2':1, 'co5_1':1, 'co7_0':1, 'v11_1':1 };
+    // narration colours arrive when the story reaches them (update): until 3.3 the other teams' shelves look like any other
+    // shelf (the script keeps them out of view until then), and until 3.1 the withdrawn tile looks like any other tile
+    o.vioM = vioM; o.vioHit = []; o.cPale = new THREE.Color(0xdfeaf7); o.cPaleE = new THREE.Color(0x3a5a7a); o.cVio = new THREE.Color(C.violet);
+    o.cVioE = new THREE.Color(0x3a2a5a); o.cAmb = new THREE.Color(C.amber); o.cAmbOn = new THREE.Color(0xffd28a); o.cWhite = new THREE.Color(0xffffff);
     for (var row=0; row<3; row++){
-      for (var col=0; col<13; col++){ var hk = 'v' + col + '_' + row; tile('v', col, row, hits[hk] ? hitM(C.violet) : vioM); }
+      for (var col=0; col<13; col++){ var hk = 'v' + col + '_' + row, vm = hits[hk] ? hitM(C.violet) : vioM; if (vm !== vioM) o.vioHit.push(vm); tile('v', col, row, vm); }
       for (col=0; col<10; col++){ var key = 'co' + col + '_' + row; if (key === 'co3_1') continue; tile('co', col, row, hits[key] ? hitM(0xdfeaf7) : coM); }
     }
     // the withdrawn fee schedule: an amber tile with a diagonal bar, the OLD version lit on its strip, beside the current tile
@@ -529,7 +545,7 @@ var CONFIG = {
     o.amberBarM = new THREE.MeshLambertMaterial({ color:0x2b2b2e, transparent:true, opacity:1 });
     k.mesh(k.UG.box, 0, 0.5, 0.035, 0.01, 0, 0, 0.022, { mat:o.amberBarM, rz:0.91, noShadow:true }, o.amber.g);
     // a faint dashed outline where a divider between the teams' shelves would be (there is none)
-    var divM = libM(bm(0xbfc8d0, true, 0.55), 0.55);
+    var divM = o.divM = libM(bm(0xbfc8d0, true, 0.55), 0.55);
     for (b=0;b<8;b++) k.mesh(k.UG.box, 0, 0.02, 0.1, 0.02, 1.07, 2.17 + b*0.2, LZ + 0.05, { mat:divM, noShadow:true });
     // a red open pip above the other teams' shelves (the leak is still open)
     o.openPip = torus(new THREE.MeshLambertMaterial({ color:C.red, emissive:C.red, emissiveIntensity:0.7 }), 0.075, 0.022, PI*2, -1.9, 3.98, LZ);
@@ -587,36 +603,56 @@ var CONFIG = {
     k.room({ x:BX, z:0, w:9, d:7, h:3.2, ground:false, floor:0x8C7F70, wall:0xE9E4DA });
     k.windowPane({ x:BX - 2.0, y:1.75, z:-3.42, w:2.4, h:1.5 }); k.windowPane({ x:BX + 2.0, y:1.75, z:-3.42, w:2.4, h:1.5 });
     k.desk({ x:BX, z:-0.8, w:1.4, d:4.0, color:0x7A5B3E, legs:0x4E3A28, label:'table' });
-    var seats = [[BX - 1.05, -2.0, PI/2], [BX - 1.05, -0.8, PI/2], [BX - 1.05, 0.4, PI/2], [BX + 1.05, -2.0, -PI/2], [BX + 1.05, -0.8, -PI/2], [BX + 1.05, 0.4, -PI/2], [BX, -3.35, 0]];
-    o.board = [];
+    // the out-of-cycle session: eight seats, six seat plaques lit (present) and two dark (absent), five figures, because one
+    // person (the DPO) holds two of the seats and sits behind two lit plaques. Blank plaques, no names, no faces.
+    // seats: [x, z, ry, figure?, plaques (z offsets along the table edge), lit]
+    var seats = [[BX, -3.35, 0, true, [0], true],
+      [BX - 1.05, -2.0, PI/2, true, [0], true], [BX - 1.05, -0.8, PI/2, true, [0], true], [BX - 1.05, 0.4, PI/2, true, [0], true],
+      [BX + 1.05, -2.0, -PI/2, true, [-0.17, 0.17], true], [BX + 1.05, -0.8, -PI/2, false, [0], false], [BX + 1.05, 0.4, -PI/2, false, [0], false]];
+    var litPlaque = new THREE.MeshLambertMaterial({ color:0xFFF4DC, emissive:0xFFE3A8, emissiveIntensity:0.55 }), darkPlaque = lam(0x3A3F46);
+    o.board = []; o.plaques = [];
     seats.forEach(function(s, i){ k.chair({ x:s[0], z:s[1], ry:s[2] });
-      var p = who({ shirt:[0x2B3440, 0x5B6F8A, 0x7D8790, 0x3E5C4E, 0x4A4A55, 0x6B5A7A, 0x2F4F6F][i], trousers:P.trousers.dark, skin:P.skin[(i*3) % 5], hair:P.hair[(i + 2) % 6], longHair:i % 3 === 0 });
-      k.place(p, s[0], s[1], s[2]); p.userData.head.traverse(function(n){ if (n.isMesh && n.scale.x < 0.05) n.visible = false; }); // no faces
-      o.board.push(p);
-      var px = s[0] + Math.sin(s[2])*0.62, pz = s[1] + Math.cos(s[2])*0.62; // a blank seat plaque on the table edge
-      k.box(0xF5F3EE, 0.16, 0.06, 0.02, px, 0.8, pz, null, { ry:s[2], noShadow:true }); });
-    // the models: one desk pod (the pilot cohort) and, beyond a closed dashed gate, the whole floor
-    o.podModel = k.grp(BX + 0.25, 0.77, 0.75); k.box(P.desk, 0.22, 0.03, 0.12, 0, 0.05, 0, o.podModel); k.box(P.dark, 0.1, 0.07, 0.01, 0, 0.1, -0.04, o.podModel); k.box(0x2F5D8C, 0.05, 0.1, 0.05, 0, 0.05, 0.1, o.podModel);
+      if (s[3]) { var p = who({ shirt:[0x2B3440, 0x5B6F8A, 0x7D8790, 0x4A4A55, 0x2F4F6F][o.board.length], trousers:P.trousers.dark, skin:P.skin[(i*3) % 5], hair:P.hair[(i + 2) % 6], longHair:i % 3 === 0 });
+        k.place(p, s[0], s[1], s[2]); p.userData.head.traverse(function(n){ if (n.isMesh && n.scale.x < 0.05) n.visible = false; }); // no faces
+        o.board.push(p); }
+      s[4].forEach(function(off){ // a blank seat plaque on the table edge, offset along the edge
+        var px = s[0] + Math.sin(s[2])*0.62 + Math.cos(s[2])*off, pz = s[1] + Math.cos(s[2])*0.62 - Math.sin(s[2])*off;
+        o.plaques.push({ lit:s[5], m:k.box(0, 0.16, 0.06, 0.02, px, 0.8, pz, null, { ry:s[2], mat:s[5] ? litPlaque : darkPlaque, noShadow:true }) }); }); });
+    // the models: one desk pod (the supervised pilot cohort) wearing the June sign-off's green seal ring, its lights on;
+    // a returning arrow circles it and the ring turns dashed (re-opened). Beyond it, the whole floor behind a closed gate.
+    o.podModel = k.grp(BX + 0.25, 0.77, 0.75); k.box(P.desk, 0.22, 0.03, 0.12, 0, 0.05, 0, o.podModel); k.box(0x2F5D8C, 0.05, 0.1, 0.05, 0, 0.05, 0.1, o.podModel);
+    k.box(0, 0.1, 0.07, 0.01, 0, 0.1, -0.04, o.podModel, { mat:new THREE.MeshLambertMaterial({ color:0x9cc8ff, emissive:0x4a86d8, emissiveIntensity:0.8 }), noShadow:true }); // its lights stay on
     o.sealRing = ringFlat(bm(CP.C.green), 0.15, 0.18, BX + 0.25, 0.778, 0.75); o.sealRing.rotation.x = -PI/2;
-    o.seal = k.grp(BX + 0.25, 1.3, 0.75); k.cyl(0x2E6B3A, 0.09, 0.05, 0, 0, 0, o.seal); k.cyl(0x4E3A28, 0.025, 0.16, 0, 0.1, 0, o.seal); k.sph(0x4E3A28, 0.04, 0, 0.2, 0, o.seal);
+    o.sealDash = k.grp(BX + 0.25, 0.779, 0.75); (function(){ for (var j=0;j<10;j++){ var seg = new THREE.Mesh(new THREE.RingGeometry(0.15, 0.18, 6, 1, 0, PI/10), bm(CP.C.green)); seg.rotation.x = -PI/2; seg.rotation.z = 0; seg.renderOrder = 3;
+      var g = k.grp(0, 0, 0, o.sealDash); g.rotation.y = j*PI/5; g.add(seg); } })();
+    o.sealDash.visible = false;
     o.floorModel = k.grp(BX - 0.05, 0.77, -0.35); k.box(0x9AA3AC, 0.95, 0.025, 0.6, 0, 0.012, 0, o.floorModel);
     for (b=0;b<12;b++) k.box(P.desk, 0.12, 0.04, 0.07, -0.36 + (b % 4)*0.24, 0.045, -0.18 + Math.floor(b/4)*0.18, o.floorModel);
     var gateM = lam(0xF5F3EE), gz = 0.25; k.box(0, 0.025, 0.36, 0.025, BX - 0.5, 0.95, gz, null, { mat:gateM }); k.box(0, 0.025, 0.36, 0.025, BX + 0.4, 0.95, gz, null, { mat:gateM });
-    for (b=0;b<5;b++){ k.box(0, 0.11, 0.02, 0.02, BX - 0.42 + b*0.19, 1.1, gz, null, { mat:gateM, noShadow:true }); k.box(0, 0.11, 0.02, 0.02, BX - 0.42 + b*0.19, 0.92, gz, null, { mat:gateM, noShadow:true }); }
+    k.box(0, 0.92, 0.02, 0.02, BX - 0.05, 1.1, gz, null, { mat:gateM, noShadow:true }); k.box(0, 0.92, 0.02, 0.02, BX - 0.05, 0.92, gz, null, { mat:gateM, noShadow:true }); // closed: solid rails
+    for (b=0;b<4;b++) k.box(0, 0.016, 0.2, 0.016, BX - 0.32 + b*0.18, 1.01, gz, null, { mat:gateM, noShadow:true });
     o.gatePips = []; var gpm = new THREE.MeshLambertMaterial({ color:C.red, emissive:C.red, emissiveIntensity:0.7 });
     [BX - 0.22, BX + 0.12].forEach(function(x){ k.box(0x9AA0A6, 0.004, 0.08, 0.004, x, 1.07, gz, null, { noShadow:true }); o.gatePips.push(torus(gpm, 0.03, 0.01, PI*2, x, 1.0, gz + 0.004)); });
-    o.loop = k.grp(BX - 0.05, 0.86, -0.25); (function(){ var lm = new THREE.MeshLambertMaterial({ color:0xdfe6ec, emissive:0x9ab0c6, emissiveIntensity:0.4 }), tr = torus(lm, 0.6, 0.012, PI*1.65, 0, 0, 0, o.loop); tr.rotation.x = PI/2;
-      var head = k.mesh(k.UG.cone, 0, 0.06, 0.1, 0.06, 0.6, 0, 0, { mat:lm, noShadow:true }, o.loop); head.rotation.x = PI; })();
+    // the returning arrow (assess again) circles the pilot pod model
+    o.loop = k.grp(BX + 0.25, 0.9, 0.75); (function(){ var lm = new THREE.MeshLambertMaterial({ color:0xdfe6ec, emissive:0x9ab0c6, emissiveIntensity:0.5 }), tr = torus(lm, 0.27, 0.01, PI*1.6, 0, 0, 0, o.loop); tr.rotation.x = PI/2;
+      var head = k.mesh(k.UG.cone, 0, 0.05, 0.08, 0.05, 0.27, 0, 0, { mat:lm, noShadow:true }, o.loop); head.rotation.x = -PI/2; })(); // the head leads as the loop turns
+    o.loop.visible = false;
 
     // test hook: world positions of every visible head (the script asks for >= 0.9 m from any head; checked by the film test)
     window.FILM_DEBUG = { heads:function(){ var out = [], v = k.V(); o.people.forEach(function(p){ var vis = p.visible, q = p.parent; while (vis && q) { vis = q.visible; q = q.parent; } if (!vis) return;
       p.userData.head.localToWorld(v.set(0, 0.12, 0)); out.push([v.x, v.y, v.z]); }); return out; }, camera:function(){ var c = k.camera.position; return [c.x, c.y, c.z]; },
       // the world state the script's "faithful to status" rules talk about (read after FILM.clearance(t) or FILM.signature(t))
       flags:function(){ function shown(n){ var vis = n.visible, q = n.parent; while (vis && q) { vis = q.visible; q = q.parent; } return vis; }
-        return { voiceRing:shown(o.voiceRing), chatRing:shown(o.chatRing), chatBracket:shown(o.chatBracket), amberTile:shown(o.amber.g), openPip:shown(o.openPip),
+        var cw = o.caseMon.want || {}, hd = o.hero.userData;
+        return { appRing:shown(o.appRing), chatRing:shown(o.chatRing), chatBracket:shown(o.chatBracket), amberTile:shown(o.amber.g), openPip:shown(o.openPip),
           gatePips:o.gatePips.every(shown), bubbleRed:shown(o.bubRed), bubbleGreen:shown(o.bubGreen), panelRed:shown(o.pRed), sourceCard:shown(o.pCard),
-          cardEdge:'#' + o.pEdge.color.getHexString(), keyhole:shown(o.pKey), violetStrip:shown(o.pViolet), words:shown(o.pW), lock:shown(o.pLock), hook:shown(o.hook),
-          sealRing:shown(o.sealRing), agent:shown(o.hero) }; } };
+          cardEdge:'#' + o.pEdge.color.getHexString(), keyhole:shown(o.pKey), violetStrip:shown(o.pViolet), hook:shown(o.hook),
+          sealRing:shown(o.sealRing), sealDashed:shown(o.sealDash), returningArrow:shown(o.loop),
+          agent:shown(o.hero) || shown(o.agent2), hero:shown(o.hero), agent2:shown(o.agent2), handUp:shown(o.hero) && hd.ra.rotation.x < -2,
+          lead:shown(o.lead), leadAtDesk:shown(o.lead) && Math.hypot(o.lead.position.x - CP.leadDesk[0], o.lead.position.z - CP.leadDesk[1]) < 0.3,
+          waves:o.waves.some(shown), caseBadge:cw.badge ? cw.badge.glyph : null, caseFee:!!(cw.mark && cw.mark.color === '#e9a23b'),
+          plaquesLit:o.plaques.filter(function(q){ return q.lit && shown(q.m); }).length, plaquesDark:o.plaques.filter(function(q){ return !q.lit && shown(q.m); }).length,
+          boardFigures:o.board.filter(shown).length }; } };
     return o;
   },
 
@@ -643,57 +679,70 @@ var CONFIG = {
     if (win(8, 12)) { var nq = Math.floor(t*5); o.nbMon.show({ header:['#3a4856','#5b6f8a','#4f7f6a','#7a5c8e'][nq % 4], rows:6, lit:(nq*3) % 7, progress:k.frac(t*1.9) }); k.look(o.nb.p, 0.3, 0.1); }
     o.queue.show(night ? { off:true } : { header:'#2c3a46', line:[0.4,0.45,0.5,0.42,0.48,0.52,0.5,0.47].map(function(v, j){ return v + 0.05*Math.sin(j + Math.floor(t)); }), lineColor:S.ai });
 
-    // ---------------- the hero agent
-    var H = o.hero;
+    // ---------------- the agent at the pilot desk: the hero agent, except 3.1 (a June call, taken by a different pilot agent)
+    var june = win(25, 30), H = o.hero;
     if (night) H.visible = false;
     else {
-      k.sit(H, 1);
+      var D = june ? o.agent2 : H;
+      if (june) { H.visible = false; o.agent2.visible = true; }
+      k.sit(D, 1);
       var typ = 0.25; if (win(8, 12) || win(12.2, 13.3) || win(25.3, 26.1) || win(30.1, 30.8) || win(35.3, 36.2)) typ = 1;
-      k.typing(H, t, typ);
-      var toCase = win(0, 12.1) || win(30, 32.2);
-      k.look(H, toCase ? 0.26 : -0.22, toCase ? 0.05 : 0);
-      var lean = 0.12*ramp(t, 21.2, 21.9)*(1 - ramp(t, 23.0, 23.6)) - 0.16*ramp(t, 33.9, 34.4)*(t < 35 ? 1 : 0);
-      H.userData.body.rotation.x = lean;
-      if (win(22.0, 23.1) || win(28.0, 29.0) || win(56.0, 57.0)) k.gesture(H, 0.35, t);
+      k.typing(D, t, typ);
+      // the case screen: security questions, account and documents (1.2); the fee line before speaking (2.3); the web-chat window (3.2)
+      var toCase = win(0, 12.1) || win(21.8, 22.5) || win(30, 32.2);
+      k.look(D, toCase ? 0.26 : -0.22, toCase ? 0.05 : 0);
+      D.userData.body.rotation.x = 0.12*ramp(t, 21.1, 21.6)*(1 - ramp(t, 21.8, 22.3));   // leans toward the source card
+      if (win(22.5, 23.6) || win(28.0, 29.0) || win(56.0, 57.0)) k.gesture(D, 0.35, t);
+      // 3.2: sends nothing to the customer and raises a hand for the team leader; 3.3: flags the unfamiliar title the same way
+      var hand = win(30, 35) ? ramp(t, 34.0, 34.4) : (win(35, 40) ? ramp(t, 39.2, 39.6) : 0);
+      if (hand > 0) { var dd = D.userData; dd.ra.rotation.x = lerp(dd.ra.rotation.x, -2.75, hand); dd.re.rotation.x = lerp(dd.re.rotation.x, -0.25, hand);
+        if (win(30, 35)) k.look(D, lerp(-0.22, -0.55, hand), 0.1*hand); }
     }
+    // ---------------- the team leader: walks the aisle on the open card; comes to the pilot desk when the agent raises a hand (3.2)
+    var LD = o.lead;
+    if (night) LD.visible = false;
+    else if (t < 4) k.walk(LD, [[6.4, -0.25], [3.5, -0.25]], lin(t, 0.3, 3.8), t);   // the aisle between the rows
+    // 3.2: the leader stands a step away in the aisle and walks over only once the agent's hand is up (34.0 s)
+    else if (win(30, 35)) { var lw = k.walk(LD, [CP.leadNear, CP.leadDesk], lin(t, 34.05, 34.85), t);
+      if (t < 34.05) k.look(LD, 0.15*Math.sin(t*0.5), 0);
+      if (t >= 34.85) { LD.rotation.y = Math.atan2(CP.hx - CP.leadDesk[0], CP.seatZ - CP.leadDesk[1]); k.look(LD, 0, 0.2); } }
+    else { k.place(LD, CP.leadIdle[0], CP.leadIdle[1], -PI/2); k.look(LD, win(39.2, 40) ? -0.35*ramp(t, 39.3, 39.7) : 0.15*Math.sin(t*0.5), 0); }
     // the call light on the softphone pulses while a call is waiting (open card)
     if (t < 4) o.callLight.material.emissiveIntensity = 0.2 + 0.9*k.tri(t*1.4);
     if (t < 4) o.heroRing.pulse(t, S.ai, ramp(t, 1.0, 2.2), true);
 
-    // ---------------- the customer bubble (calls live: 8.3-24.6 call one; 25.3-30 call two; 56-58.8 close)
+    // ---------------- the customer bubble (calls live: 8.3-24.6 call one; 25.3-30 the June call; 56-58.8 close)
     var call = win(8.3, 24.6) ? 1 : (win(25.3, 30) ? 2 : (win(56, 58.8) ? 3 : 0));
     if (!call || night) { o.bub.visible = false; o.callLine.visible = false; }
     else {
       var pop = call === 1 ? ramp(t, 8.3, 8.7)*(1 - ramp(t, 24.2, 24.6)) : (call === 2 ? ramp(t, 25.3, 25.7) : 1 - ramp(t, 58.2, 58.8));
       o.bub.scale.setScalar(Math.max(0.001, pop)); o.callLine.visible = pop > 0.5;
       if (call === 2) o.silM.color.setHex(0x6b5a9a);
-      // the hold ring fills clockwise while she waits, then drains when the agent answers
-      var n = 0; if (call === 1) n = Math.floor(24*(0.7*lin(t, 8.6, 12.0) + 0.3*lin(t, 12.0, 21.6))*(1 - ramp(t, 22.0, 22.8)));
+      // the hold ring fills clockwise while she waits on the search, then drains when the agent answers
+      var n = 0; if (call === 1) n = Math.floor(24*(0.7*lin(t, 9.8, 12.0) + 0.3*lin(t, 12.0, 21.6))*(1 - ramp(t, 22.6, 23.3)));
       for (i=0;i<24;i++) o.hold[i].visible = i < n;
-      o.bubGreen.visible = (call === 1 && t >= 22.8) || call === 3;
+      o.bubGreen.visible = (call === 1 && t >= 23.3) || call === 3;
       if (call === 2 && t >= 28.8) { o.bubRed.visible = true; o.bubRed.scale.setScalar(1 + 0.08*k.tri(t*1.6)); o.bubRedM.opacity = ramp(t, 28.8, 29.1); } else o.bubRed.visible = false;
     }
     if (!o.bub.visible || call === 0) o.bubRed.visible = false;
-    // the agent speaks: a sound-wave glyph travels along the line to the customer
-    var talk = win(22.0, 23.1) ? 22.0 : (win(28.0, 29.0) ? 28.0 : (win(56.0, 57.0) ? 56.0 : -1));
+    // the agent speaks: a sound-wave glyph travels along the line to the customer (nothing travels from the panel)
+    var talk = win(22.5, 23.6) ? 22.5 : (win(28.0, 29.0) ? 28.0 : (win(56.0, 57.0) ? 56.0 : -1));
     for (i=0;i<3;i++){ var wv = o.waves[i]; if (talk < 0 || night) { wv.visible = false; continue; } var u = k.frac((t - talk)*1.3 + i/3);
       wv.visible = true; wv.position.copy(o.callA).lerp(o.callB, 0.12 + 0.8*u); wv.scale.setScalar(0.8 + 0.6*u); }
     if (!o.bub.visible) for (i=0;i<3;i++) o.waves[i].visible = false;
 
-    // ---------------- the copilot panel (panel-local overlay; glyphs, bars and colours only)
-    var pv = { q:0, words:0, lock:-1, bars:[0,0,0], card:0, edge:'ok', dots:0, lines:0, glow:0, key:-1, violet:0, red:0 };
-    if (win(12, 25)) { pv.q = ramp(t, 12.3, 13.2); pv.words = ramp(t, 12.6, 13.0)*(1 - ramp(t, 23.4, 24.1)); if (t >= 23.4) pv.lock = ramp(t, 23.6, 24.1);
-      for (b=0;b<3;b++) pv.bars[b] = ramp(t, 18.0 + 0.25*b, 18.6 + 0.25*b); pv.card = ramp(t, 18.5, 18.9); pv.dots = ramp(t, 19.2, 19.6); pv.lines = ramp(t, 19.6, 20.2); pv.glow = ramp(t, 21.3, 21.8)*(1 - ramp(t, 23.0, 23.6)); }
-    else if (win(25, 30)) { pv.q = ramp(t, 25.4, 26.0); pv.words = ramp(t, 25.6, 26.0);
+    // ---------------- the copilot panel (panel-local overlay; glyphs, bars and colours only; never any customer text on a call)
+    var pv = { q:0, bars:[0,0,0], card:0, edge:'ok', dots:0, lines:0, glow:0, key:-1, violet:0, red:0 };
+    if (win(12, 25)) { var clr = 1 - ramp(t, 24.3, 24.7); pv.q = ramp(t, 12.3, 13.2)*clr;   // the call ends and the panel clears for the next call
+      for (b=0;b<3;b++) pv.bars[b] = ramp(t, 18.0 + 0.25*b, 18.6 + 0.25*b)*clr; pv.card = ramp(t, 18.5, 18.9)*clr; pv.dots = ramp(t, 19.2, 19.6)*clr; pv.lines = ramp(t, 19.6, 20.2)*clr; pv.glow = ramp(t, 21.1, 21.5)*(1 - ramp(t, 22.4, 22.9)); }
+    else if (win(25, 30)) { pv.q = ramp(t, 25.4, 26.0);
       for (b=0;b<3;b++) pv.bars[b] = ramp(t, 27.4 + 0.15*b, 27.9 + 0.15*b); pv.card = ramp(t, 27.5, 27.9); pv.edge = 'warn'; pv.dots = ramp(t, 27.9, 28.2); pv.lines = ramp(t, 28.0, 28.4); }
-    else if (win(30, 35)) { pv.q = ramp(t, 30.4, 31.0); pv.words = ramp(t, 30.6, 31.0); if (t >= 33.3) pv.key = ramp(t, 33.4, 34.2); pv.red = t >= 33.9 ? ramp(t, 33.9, 34.2) : 0; }
-    else if (win(35, 40)) { pv.q = ramp(t, 35.5, 36.1); pv.words = ramp(t, 35.7, 36.1); pv.bars = [ramp(t, 38.3, 38.7), ramp(t, 38.45, 38.85), 0]; pv.violet = ramp(t, 38.5, 38.8); pv.red = t >= 38.9 ? ramp(t, 38.9, 39.2) : 0; }
-    else if (win(56, 60)) { pv.q = 1; pv.words = 1 - ramp(t, 57.0, 57.7); pv.lock = ramp(t, 57.2, 57.7); pv.bars = [1,1,1]; pv.card = 1; pv.dots = 1; pv.lines = 1; }
+    else if (win(30, 35)) { pv.q = ramp(t, 30.4, 31.0); if (t >= 33.3) pv.key = ramp(t, 33.4, 34.2); pv.red = t >= 33.9 ? ramp(t, 33.9, 34.2) : 0; }
+    else if (win(35, 40)) { pv.q = ramp(t, 35.5, 36.1); pv.bars = [ramp(t, 38.3, 38.7), ramp(t, 38.45, 38.85), 0]; pv.violet = ramp(t, 38.5, 38.8); pv.red = t >= 38.9 ? ramp(t, 38.9, 39.2) : 0; }
+    else if (win(56, 60)) { var cl = 1 - ramp(t, 58.4, 58.9); pv.q = cl; pv.bars = [cl, cl, cl]; pv.card = cl; pv.dots = cl; pv.lines = cl; }
     if (night) { o.cop.show({ off:true }); o.caseMon.show({ off:true }); o.ov.visible = false; }
     else {
       o.pQ.visible = pv.q > 0.02; o.pQL.scale.x = Math.max(0.001, pv.q); o.pQL.visible = pv.q > 0.02;
-      o.pW.visible = pv.words > 0.01; o.pWm.opacity = pv.words; o.pWd.opacity = pv.words;
-      o.pLock.visible = pv.lock >= 0; if (pv.lock >= 0) o.pShackle.position.y = lerp(0.034, 0.016, pv.lock);
       for (b=0;b<3;b++){ var bv = pv.bars[b]; o.pBars[b].visible = bv > 0.01; o.pBars[b].scale.x = Math.max(0.001, bv); o.pBars[b].position.x = -0.33 + (1 - bv)*0.22;
         o.pDots[b].visible = pv.dots > 0.01 && bv > 0.9; o.pDots[b].scale.setScalar(0.022*Math.max(0.001, pv.dots));
         o.pLines[b].visible = pv.lines > 0.01 && bv > 0.9; o.pLines[b].scale.x = Math.max(0.001, pv.lines); }
@@ -706,15 +755,19 @@ var CONFIG = {
       o.pRed.visible = pv.red > 0.01; o.pRedM.opacity = pv.red; o.pRed.scale.setScalar(1 + 0.06*k.tri(t*1.6));
     }
 
-    // ---------------- the case screen: document after document while she waits (1.2); the web-chat window (3.2)
+    // ---------------- the case screen: security questions pass (shield), the account opens with the fee line marked, then
+    //                  document after document while she waits (1.2); the account during the call (2.x, 3.1, close); web chat (3.2)
+    var feeMark = { row:2, color:'#e9a23b' };
     if (!night) {
-      if (win(8, 12)) { var cq = Math.floor(t*4); o.caseMon.show({ header:['#3a4856','#5b6f8a','#4f7f6a','#7a5c8e','#8a6a3a'][cq % 5], rows:6, lit:1 + (cq*5) % 6, mark:{ row:cq % 6, color:'#4a86d8' }, progress:k.frac(t*1.7) }); }
+      if (win(8, 9.7)) o.caseMon.show({ header:'#3a4856', rows:6, lit:t < 9.0 ? 1 : 4, badge:t >= 8.6 ? { glyph:'shield', color:'#3fa34d' } : undefined, mark:t >= 9.1 ? feeMark : undefined });
+      else if (win(9.7, 12)) { var cq = Math.floor(t*4); o.caseMon.show({ header:['#3a4856','#5b6f8a','#4f7f6a','#7a5c8e','#8a6a3a'][cq % 5], rows:6, lit:1 + (cq*5) % 6, mark:{ row:cq % 6, color:'#4a86d8' }, progress:k.frac(t*1.7) }); }
       else if (win(30, 35)) { var ln = Math.min(5, Math.floor(lin(t, 30.1, 30.9)*5.99)); o.caseMon.show({ bg:'#eef1f4', header:'#4a86d8', rows:5, lit:ln, mark:t >= 30.9 ? { row:3, color:'#d84a3a' } : undefined }); }
+      else if (win(12, 30) || win(56, 60)) o.caseMon.show({ header:'#3a4856', rows:6, lit:4, mark:feeMark });
       else if (t >= 12) o.caseMon.show({ header:'#3a4856', rows:6, lit:4 });
     }
     o.chatHook.visible = win(30.9, 31.9) && !night; if (o.chatHook.visible) o.chatHook.scale.setScalar(1 - 0.5*ramp(t, 31.5, 31.9));
 
-    // ---------------- channel pipes: the voice ring is dashed (in test); web chat has an empty bracket until 4.2, then a dashed ring too
+    // ---------------- channel pipes: the app-message ring is dashed (in test); web chat has an empty bracket until 4.2, then a dashed ring too
     var bothRings = t >= 44;
     o.chatRing.visible = bothRings; o.chatBracket.visible = !bothRings;
     if (win(31.9, 33.5)) { o.hook.visible = true; at(o.hook, along([[0.45, 0.4, 1.02], [2.66, 0.4, 1.02], [2.66, 0.8, 1.02]], lin(t, 32.0, 33.35))); }
@@ -726,6 +779,18 @@ var CONFIG = {
     if (libF < 1) for (i=0;i<o.libMats.length;i++) o.libMats[i].m.opacity = o.libMats[i].base*libF;
     if (t < 4) { o.amberM.opacity = 0.97*libF; o.amberBarM.opacity = libF; o.amberParts.on.opacity = libF; o.amberParts.off.opacity = libF; o.amberParts.pip.opacity = libF; }
     o.openPip.visible = t >= 38.8;
+    // the other teams' shelves turn violet, and the missing divider shows, as 3.3 opens on the full library
+    var vr = ramp(t, 35.0, 35.8);
+    if (vr < 1) {
+      o.vioM.color.copy(o.cPale).lerp(o.cVio, vr); o.vioM.emissive.copy(o.cPaleE).lerp(o.cVioE, vr); o.vioM.emissiveIntensity = lerp(0.25, 0.3, vr);
+      for (i=0;i<o.vioHit.length;i++) o.vioHit[i].color.copy(o.cPale).lerp(o.cVio, vr);
+      o.divM.opacity *= vr; }
+    // the withdrawn fee schedule takes the film's amber, and its diagonal bar, as 3.1 opens on the library
+    var ar = ramp(t, 25.0, 25.4);
+    if (ar < 1) {
+      o.amberM.color.copy(o.cPale).lerp(o.cAmb, ar); o.amberM.emissive.copy(o.cPaleE).lerp(o.cAmb, ar); o.amberM.emissiveIntensity = lerp(0.25, 0.1, ar);
+      o.amberParts.on.color.copy(o.cWhite).lerp(o.cAmbOn, ar); o.amberParts.on.emissive.copy(o.cWhite).lerp(o.cAmb, ar);
+      o.amberBarM.opacity *= ar; o.amberBarM.visible = ar > 0; }
     function hit(T2, a, z){ var u = ramp(t, a, a + 0.4)*(1 - ramp(t, z, z + 0.5)); T2.g.position.z = T2.z + 0.32*u; if (T2.plate.emissiveIntensity != null && T2.plate !== o.amberM) T2.plate.emissiveIntensity = 0.55*u; return u; }
     var TA = o.tileAt, panelTop = [CP.copX, 1.33, CP.monZ + 0.05];
     o.pulse.visible = false; for (b=0;b<3;b++) o.strips[b].g.visible = false;
@@ -752,7 +817,7 @@ var CONFIG = {
     }
     // 3.1 the old fee list: the amber tile glows beside the current tile; the query picks the amber one
     if (win(25, 30)) {
-      o.amberM.emissiveIntensity = 0.1 + 0.6*ramp(t, 25.4, 26.0);
+      o.amberM.emissiveIntensity = 0.1 + 0.6*ramp(t, 25.2, 25.6);
       pulseTo([o.amber.x, o.amber.y, CP.LZ + 0.25], 25.8, 26.5);
       var au = ramp(t, 26.4, 26.8); o.amber.g.position.z = o.amber.z + 0.32*au*(1 - ramp(t, 28.5, 29.0));
       strip(0, tp(o.amber), barTarget(1), 26.8, 27.75, 0xffe1a8);
@@ -812,16 +877,17 @@ var CONFIG = {
       }
     }
 
-    // ---------------- the board (4.4): a seal stamps a green ring around one desk pod; the whole floor waits behind a closed dashed gate
+    // ---------------- the board (4.4): the extra July session. The pilot pod wears the June sign-off's green seal ring; a
+    //                  returning arrow circles it and the ring turns dashed (re-opened); the whole floor stays behind the closed
+    //                  gate with its two open pips
     if (win(52, 56)) {
       var L4 = t - 52;
       for (i=0;i<o.board.length;i++){ k.sit(o.board[i], 1); k.look(o.board[i], 0.25*Math.sin(i*1.7), 0.05); }
-      var down = ramp(L4, 0.6, 1.0), up = ramp(L4, 1.25, 1.7); o.seal.position.y = 1.3 - 0.48*down + 0.48*up;
-      o.sealRing.visible = L4 >= 1.0; o.sealRing.scale.setScalar(L4 >= 1.0 ? 0.6 + 0.4*ramp(L4, 1.0, 1.25) : 0.001);
-      o.loop.rotation.y = -L4*1.4;
+      o.loop.visible = L4 >= 0.6; o.loop.scale.setScalar(Math.max(0.001, ramp(L4, 0.6, 1.0))); o.loop.rotation.y = 1.6*Math.max(0, L4 - 0.6);
+      var reopened = L4 >= 1.9;
+      o.sealRing.visible = !reopened; if (!reopened) o.sealRing.scale.setScalar(1 + 0.06*ramp(L4, 1.4, 1.9)*k.tri(L4*3));
+      o.sealDash.visible = reopened; if (reopened) o.sealDash.rotation.y = 0.12*(L4 - 1.9);
     }
-    // ensure the first frame of the film never shows the stamped ring early
-    if (t < 53) o.sealRing.visible = false;
   }
 };
 // the fallback page: a one-paragraph colour legend in words, after the WebGL note and before the scenes (part of the CONFIG block)
@@ -864,7 +930,7 @@ function showFallback(){
   list.textContent = '';
   B.forEach(function(s){
     var li = document.createElement('li'), b = document.createElement('b'), p = document.createElement('span');
-    b.textContent = s.name;   // film-only: the script's fallback carries no scene numbers
+    b.textContent = s.beat ? s.beat + ' ' + s.name : s.name;
     p.textContent = s.head + (s.sup ? ' — ' + s.sup : '') + (s.note ? ' ' + s.note : '') + infoText(s);
     li.appendChild(b); li.appendChild(p); list.appendChild(li);
   });

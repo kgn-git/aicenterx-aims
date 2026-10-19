@@ -1,7 +1,7 @@
 {
   "film": "Retail Credit Risk Scoring.html",
   "script": "Retail Credit Risk Scoring - Script and Protocols.md",
-  "totalWords": 297,
+  "totalWords": 300,
   "lines": [
     {
       "shot": 1,
@@ -19,11 +19,11 @@
       "shot": 2,
       "setting": "At home, in the banking app",
       "head": "Nadia needs a small loan to replace her broken-down car.",
-      "sup": "She applies in her banking app after a late shift.",
+      "sup": "She applies in her banking app one evening after work.",
       "headWords": 10,
       "supWords": 10,
       "gradeHead": 6.0,
-      "gradeSup": 4.8,
+      "gradeSup": 7.2,
       "wordsPerSecond": 5.0,
       "source": "AI Canvas: Business Problem"
     },
@@ -43,12 +43,12 @@
       "shot": 4,
       "setting": "Inside the scoring system",
       "head": "The model reads her credit file and how she uses her account.",
-      "sup": "It never uses data on health, religion or race.",
+      "sup": "It is never given data on health, religion or race.",
       "headWords": 12,
-      "supWords": 9,
+      "supWords": 10,
       "gradeHead": 5.8,
-      "gradeSup": 7.6,
-      "wordsPerSecond": 5.25,
+      "gradeSup": 7.2,
+      "wordsPerSecond": 5.5,
       "source": "AI Canvas: Data Strategy, Objective Function"
     },
     {
@@ -66,14 +66,14 @@
     {
       "shot": 6,
       "setting": "The underwriting desk",
-      "head": "Then an underwriter checks the score and the three main reasons for it.",
-      "sup": "That evening, Nadia's app tells her the answer is no.",
+      "head": "A clear yes goes out at once; anything else goes to an underwriter.",
+      "sup": "The underwriter checks the three main reasons, and her app says no.",
       "headWords": 13,
-      "supWords": 10,
-      "gradeHead": 5.8,
+      "supWords": 12,
+      "gradeHead": 7.6,
       "gradeSup": 4.8,
-      "wordsPerSecond": 4.6,
-      "source": "AI Canvas: Customer Value"
+      "wordsPerSecond": 5.0,
+      "source": "AI Canvas: Customer Value; system card oversight"
     },
     {
       "shot": 7,
@@ -91,23 +91,23 @@
       "shot": 8,
       "setting": "The model risk desk",
       "head": "After the June rate change, approvals drift by four points.",
-      "sup": "Between quarterly retrains, a shift like this can go unseen.",
+      "sup": "No alert fires; model risk finds it later in the monthly figures.",
       "headWords": 10,
-      "supWords": 10,
+      "supWords": 12,
       "gradeHead": 7.2,
-      "gradeSup": 7.2,
-      "wordsPerSecond": 5.0,
+      "gradeSup": 7.8,
+      "wordsPerSecond": 5.5,
       "source": "Incident log and risk register: model drift"
     },
     {
       "shot": 9,
       "setting": "The fair-lending test",
       "head": "A fairness test flags one group of applicants for a closer look.",
-      "sup": "Its approval rate is below four-fifths of the highest group's rate.",
+      "sup": "Its approval rate is below four-fifths of the top group's rate.",
       "headWords": 12,
       "supWords": 11,
       "gradeHead": 5.8,
-      "gradeSup": 8.0,
+      "gradeSup": 6.9,
       "wordsPerSecond": 4.6,
       "source": "Risk register and fair-lending test"
     },
@@ -121,24 +121,24 @@
       "gradeHead": 3.1,
       "gradeSup": 6.9,
       "wordsPerSecond": 4.8,
-      "source": "Controls: reasons on screen, human review"
+      "source": "AI Canvas: Customer Value; system card oversight"
     },
     {
       "shot": 11,
       "setting": "The model risk desk",
       "head": "A weekly check is planned to catch drift and unfair results between retrains.",
-      "sup": "A new model runs in the shadow before it can replace the old one.",
+      "sup": "A new model runs in the shadow, then needs model risk sign-off.",
       "headWords": 13,
-      "supWords": 14,
+      "supWords": 12,
       "gradeHead": 6.7,
-      "gradeSup": 7.6,
-      "wordsPerSecond": 5.4,
+      "gradeSup": 4.8,
+      "wordsPerSecond": 5.0,
       "source": "Planned control; AI Canvas: Model Training"
     },
     {
       "shot": 12,
       "setting": "The governance board",
-      "head": "The bank re-weights that group and tests again before the scale decision.",
+      "head": "The bank re-weights that group's training data and tests again before scaling.",
       "sup": "Progress is checked every 30 days, with the fairness test on file.",
       "headWords": 12,
       "supWords": 12,

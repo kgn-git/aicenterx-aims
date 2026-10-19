@@ -11,7 +11,8 @@ This test adds what is particular to this film and its approved script, "Fraud T
   - numbering convention: no digit in any on-screen line; the film accent is violet on every beat, neutral on the cards
   - staging: each shot is filmed in its own set (city block, flat, review desk, systems aisle, board room)
   - camera: at least 2.5 m from every collider and person in the exterior shots (open and close), 1.0 m inside
-  - the phone inset: shown only when her phone matters (shots 1.1, 3.3 and the cut-in in 4.1), never in other shots
+  - the phone inset: shown only when her phone matters (shots 1.1, 3.3 and the cut-in in 4.1), never in other shots; a short
+    checkout spinner in 1.1, the on-hold clock in 3.3 that becomes a tick in 4.1 (no spinner left turning while she waits)
   - determinism of the picture: the rendered frame at t is the same whatever was shown before (this also covers the film's
     own canvas screens, which FILM.signature does not see)
   - no console errors or warnings, no page errors
@@ -160,9 +161,12 @@ def main():
         inset_png = lambda t: (seek(t), pg.evaluate("() => document.getElementById('inset').toDataURL()"))[1]
         a1 = inset_png(48.6)
         b1 = inset_png(47.3)
-        inset_png(7.0)
+        spin1, spin2 = inset_png(7.0), inset_png(8.3)
         a2 = inset_png(48.6)
-        check('phone inset: the spinner becomes a green tick in the 4.1 cut-in, and its picture is a pure function of t', a1 == a2 and a1 != b1, f'same at 48.6: {a1 == a2}; tick differs from spinner: {a1 != b1}')
+        hold1, hold2, hold3 = inset_png(41.0), inset_png(43.0), inset_png(47.3)
+        check('phone inset: a turning checkout spinner in 1.1; in 3.3 a still on-hold clock (nothing left spinning), the same clock opens the 4.1 cut-in',
+              spin1 != spin2 and hold1 == hold2 == hold3 and hold1 != spin1, f'spinner turns: {spin1 != spin2}; clock still in 3.3: {hold1 == hold2}; same clock in 4.1: {hold2 == hold3}')
+        check('phone inset: the on-hold clock becomes a green tick in the 4.1 cut-in, and its picture is a pure function of t', a1 == a2 and a1 != b1, f'same at 48.6: {a1 == a2}; tick differs from clock: {a1 != b1}')
 
         # ------------------------------------------------------------ the rendered frame is a pure function of t (own canvases included)
         def frame(t):

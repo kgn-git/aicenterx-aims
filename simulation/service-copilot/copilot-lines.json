@@ -5,10 +5,12 @@
     "fk": "0.39*words/sentences + 11.8*syllables/words - 15.59; syllables = [aeiouy]+ groups, min 1; sentences at . ! ?",
     "limits": {
       "words_per_line": 14,
+      "source_words_per_line": 10,
       "fk_max": 8.0,
       "pace_max_wps": 5.0,
       "film_budget": 300
-    }
+    },
+    "note": "source lines are counted apart from the caption budget and the pace, as the script states"
   },
   "lines": [
     {
@@ -112,11 +114,11 @@
     {
       "shot": "2.3",
       "element": "support",
-      "text": "The customer's words are cleared when the call ends.",
-      "words": 9,
+      "text": "The copilot never talks to the customer.",
+      "words": 7,
       "limit": 14,
-      "fk": 5.0,
-      "pace": 4.75,
+      "fk": 7.4,
+      "pace": 4.25,
       "dur": 4.0
     },
     {
@@ -148,11 +150,11 @@
     {
       "shot": "3.2",
       "element": "support",
-      "text": "One channel had no filter, and the copilot let slip its own rules.",
-      "words": 13,
+      "text": "The chat had no filter, so part of the copilot's instructions reached the agent.",
+      "words": 14,
       "limit": 14,
-      "fk": 6.7,
-      "pace": 4.8,
+      "fk": 7.6,
+      "pace": 5.0,
       "dur": 5.0
     },
     {
@@ -212,7 +214,7 @@
     {
       "shot": "4.3",
       "element": "headline",
-      "text": "A sample of answers is checked against its sources.",
+      "text": "A sample of answers was checked against their sources.",
       "words": 9,
       "limit": 14,
       "fk": 6.3
@@ -220,7 +222,7 @@
     {
       "shot": "4.3",
       "element": "support",
-      "text": "Answers their source does not back up are sorted by cause.",
+      "text": "Answers their source did not back up were sorted by cause.",
       "words": 11,
       "limit": 14,
       "fk": 5.9,
@@ -230,18 +232,18 @@
     {
       "shot": "4.4",
       "element": "headline",
-      "text": "The board's sign-off covers the pilot only, not a wider rollout.",
-      "words": 11,
+      "text": "The board reopened its review of harms after two faults.",
+      "words": 10,
       "limit": 14,
-      "fk": 6.9
+      "fk": 4.8
     },
     {
       "shot": "4.4",
       "element": "support",
-      "text": "Before it grows, the risks must be checked again.",
-      "words": 9,
+      "text": "No more agents join until it is signed off again.",
+      "words": 10,
       "limit": 14,
-      "fk": 5.0,
+      "fk": 6.0,
       "pace": 5.0,
       "dur": 4.0
     },
@@ -264,5 +266,92 @@
       "dur": 4.0
     }
   ],
-  "total_words": 277
+  "total_words": 276,
+  "source_lines": [
+    {
+      "shot": "1.1",
+      "text": "From the AI Canvas: the business problem",
+      "words": 7,
+      "limit": 10,
+      "fk": 5.7
+    },
+    {
+      "shot": "1.2",
+      "text": "From the AI Canvas: the business problem and value",
+      "words": 9,
+      "limit": 10,
+      "fk": 6.3
+    },
+    {
+      "shot": "2.1",
+      "text": "From the AI Canvas: the data strategy",
+      "words": 7,
+      "limit": 10,
+      "fk": 5.7
+    },
+    {
+      "shot": "2.2",
+      "text": "From the AI Canvas: the modelling approach",
+      "words": 7,
+      "limit": 10,
+      "fk": 5.7
+    },
+    {
+      "shot": "2.3",
+      "text": "From the copilot's system card: who decides",
+      "words": 7,
+      "limit": 10,
+      "fk": 7.4
+    },
+    {
+      "shot": "3.1",
+      "text": "From the incident log: an old fee list, now closed",
+      "words": 10,
+      "limit": 10,
+      "fk": 3.7
+    },
+    {
+      "shot": "3.2",
+      "text": "From the incident log: a filter missing, still open",
+      "words": 9,
+      "limit": 10,
+      "fk": 6.3
+    },
+    {
+      "shot": "3.3",
+      "text": "From the incident log: titles shown across teams, still open",
+      "words": 10,
+      "limit": 10,
+      "fk": 6.0
+    },
+    {
+      "shot": "4.1",
+      "text": "From the AI Canvas: model training",
+      "words": 6,
+      "limit": 10,
+      "fk": 4.4
+    },
+    {
+      "shot": "4.2",
+      "text": "From the risk register: filter still in test",
+      "words": 8,
+      "limit": 10,
+      "fk": 3.8
+    },
+    {
+      "shot": "4.3",
+      "text": "From the evidence file: a check of sampled answers",
+      "words": 9,
+      "limit": 10,
+      "fk": 7.6
+    },
+    {
+      "shot": "4.4",
+      "text": "From the board minutes: the extra July session",
+      "words": 8,
+      "limit": 10,
+      "fk": 6.7
+    }
+  ],
+  "source_words": 97
 }

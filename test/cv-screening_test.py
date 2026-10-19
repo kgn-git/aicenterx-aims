@@ -7,6 +7,8 @@ film and its approved script ("CV Screening Assistant - Script and Protocols.md"
   - one CONFIG entry per shot of the script's shot table, in order, with the same start and dur
   - beat, setting, headline and support line copied verbatim from the script; scene name "<beat> - <setting>" for the fallback
   - the script's fixed overlay: top-right pill, People / HR violet accent on beats 1-4, neutral cards, fallback title, 0.6 m clearance
+  - the source line and navigation label of every beat shot copied verbatim from the script's source-line table
+    (Part 1, "Allowed overlay extras": shot | source line | records it names | navigation label)
   - readability, computed the script's way (whitespace tokens with a letter or digit; Flesch-Kincaid with vowel-group syllables,
     sentences at . ! ?): headline <= 14 words (the shot 3.1 safety question <= 20), support <= 14, grade <= 8 on every line,
     pace <= 5.5 words per second of shot, film total equal to the script's 278 words; source lines <= 10 words (template README)
@@ -62,6 +64,17 @@ def script_grades():
     return out
 
 
+def script_sources():
+    """Rows of the Part 1 source-line table: shot -> (source line, navigation label). Four columns, beat shots only."""
+    out = {}
+    for line in SCRIPT.read_text(encoding='utf-8').splitlines():
+        if re.match(r'^\| [1-4]\.[1-3] \|', line):
+            c = [x.strip() for x in line.strip().strip('|').split('|')]
+            if len(c) == 4:
+                out[c[0]] = (c[1], c[3])
+    return out
+
+
 def film_lines(beats):
     out = []
     for b in beats:
@@ -96,6 +109,12 @@ def main():
         if diff:
             bad.append({'shot': s['shot'], 'diff': diff})
     check('timing, beat, setting, headline, support and scene name match the script verbatim', not bad, bad or '13 shots')
+    srcs = script_sources()
+    beat_shots = [s['shot'] for s in shots if BEATS.get(s['beat'])]
+    check('script source-line table parsed: one row per beat shot', sorted(srcs) == sorted(beat_shots), sorted(srcs))
+    sbad = [{'shot': b['shot'], 'film': (b.get('source'), b.get('nav')), 'script': srcs.get(b['shot'])} for b in beats
+            if b['beat'] > 0 and (b.get('source'), b.get('nav')) != srcs.get(b['shot'])]
+    check("source line and navigation label match the script's source-line table verbatim", not sbad, sbad or f'{len(srcs)} beat shots')
     check('fixed overlay: top-right pill, title, fallback title',
           cfg['initiative'] == 'Held at the gate · made-up applicants' and cfg['title'] == 'CV Screening Assistant' and cfg['fallbackTitle'] == 'CV Screening Assistant, as it is proposed.',
           {k: cfg[k] for k in ('initiative', 'title', 'fallbackTitle')})

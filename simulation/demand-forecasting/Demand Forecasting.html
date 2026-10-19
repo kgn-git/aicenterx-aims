@@ -265,8 +265,9 @@ var CONFIG = {
   minClearance: 2.5,                                   // the script's rule: at least 2.5 m from every collider and figure
   env: { bg:0xD6E0E6, fogNear:150, fogFar:430, shadowHalf:62, sunDir:[-0.45, 0.85, 0.55], center:[2, 0, -22] },
   // One entry per shot of "Demand Forecasting - Script and Protocols.md", Part 1. Headlines and support lines are verbatim.
-  // The source line beside the numeral is taken from the script's Traceability table (canvas blocks and records per shot), in words:
-  // the script allows no digit on screen except the time readout, so record ids (r6, e4, A.10, F2, F3) are named, not numbered.
+  // The source line beside the numeral is verbatim from the script's "Source lines" table (canvas blocks and records per shot), in words:
+  // no headline, support line, setting or source line carries a digit (the beat numeral and the numbered dots are template furniture),
+  // so record ids (r6, e4, A.10) are named, not numbered.
   beats: [
     { beat:0, name:'Introduction', start:0, dur:4, setting:'A planning week',
       head:'A planner, a bought forecast, and a pilot that waits.', sup:'This is how it would work, and why it waits.',
@@ -289,17 +290,17 @@ var CONFIG = {
     { beat:3, name:'What can go wrong — The region line', nav:'The region line', start:28, dur:5, setting:'The region line', source:'Risk register: vendor data residency; AI Canvas: Data Strategy',
       head:'Our data may be handled in a region we have not approved.', sup:'That would break our own rules on where data may go.',
       cam:[[0, 50,14,-26, 24,0,-66, 0.25,0.25], [5, 64,22,-10, 24,0,-66, 0.25,0.25]] },
-    { beat:3, name:'What can go wrong — The vendor service', nav:'The vendor service', start:33, dur:4, setting:'The vendor service', source:'System card: limitations; AI Canvas: Modeling Approach',
-      head:'No one here can look inside the model.', sup:'How it was trained and tested is not ours to see.',
+    { beat:3, name:'What can go wrong — The vendor service', nav:'The vendor service', start:33, dur:4, setting:'The vendor service', source:'System card: limitations, training data, evaluation',
+      head:'No one here can look inside the model.', sup:'The vendor has not shown how it was trained or tested.',
       cam:[[0, -2.68,3.5,-40.8, 2,2.1,-46, 0.2,0.2], [4, 1.76,3.5,-39.0, 2,2.1,-46, 0.2,0.2]] },   // replaced by a true orbit in update()
-    { beat:3, name:'What can go wrong — The planning desk', nav:'The planning desk', start:37, dur:5, setting:'The planning desk', source:'AI Canvas: Model Training; seeded test faults',
+    { beat:3, name:'What can go wrong — The planning desk', nav:'The planning desk', start:37, dur:5, setting:'The planning desk', source:'AI Canvas: Model Training, Modeling Approach',
       head:'If the vendor retrains it, the forecast can shift without us knowing.', sup:'In our test we plant a wrong forecast on purpose.',
       cam:[[0, 9,9,12, 0,1,-1.5, -0.1,0], [2, 8.2,8.4,11, 0,1,-1.5, -0.1,0], [5, 0.5,3.0,1.0, 0,1.15,-3.25, 0.2,0.15]] },
     { beat:4, name:'How it is kept safe — The risk office', nav:'The risk office', start:42, dur:4.5, setting:'The risk office', source:'Evidence: supplier assessment; supply-chain control',
       head:'A supplier check covers service, data terms and who else gets the data.', sup:'Where the data is processed is still open.',
       cam:[[0, -13.6,3.3,-9.4, -14,0.85,-14.6, 0.25,0.0], [4.5, -13.2,3.3,-9.6, -14,0.85,-14.6, 0.25,0.0]] },   // aimed at +0.25 / 0, not +0.15: at +0.15 the 24-degree lens crops the Chief Risk Officer's head
     { beat:4, name:'How it is kept safe — The planning desk', nav:'The planning desk', start:46.5, dur:4.5, setting:'The planning desk', source:'AI Canvas: Model Training; system card oversight',
-      head:'The planner checks each forecast against what really sold.', sup:'Real sales are the one check we hold ourselves.',
+      head:'The planner checks each forecast against what sold in recent weeks.', sup:'Each week, last week\'s forecast is scored against what really sold.',
       cam:[[0, 0.6,3.2,0.9, 0,1.15,-3.25, 0.2,0.15], [4.5, 0.45,3.2,0.85, 0,1.15,-3.25, 0.2,0.15]] },
     { beat:4, name:'How it is kept safe — The region line', nav:'The region line', start:51, dur:5, setting:'The region line', source:'AI Canvas: Data Strategy; change plan briefing',
       head:'No sales data leaves until we know it stays in the approved region.', sup:'The pilot waits, and planners learn what the forecast cannot see.',
@@ -364,23 +365,35 @@ var CONFIG = {
       var m = new THREE.Mesh(k.UG.plane, new THREE.MeshBasicMaterial({ map:tx })); m.scale.set(w, h, 1);
       var p = { mesh:m, cv:cv, c:cv.getContext('2d'), tx:tx, paint:paint, def:def, want:def, key:'' }; o.panels.push(p); return p; }
     function rr(c, x, y, w, h, r){ c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); c.fill(); }
-    // the forecast screen: blue bars (forecast, north and south), white outlined bars (actual sales), red outline (planted wrong forecast), a stamp
+    // the forecast screen, one group per region (north, south): white outlined bars for the last four weeks' actual sales (s.a, one array
+    //   of four heights per region, oldest first), then the blue forecast bar for next week (s.f), a red outline on a planted wrong forecast
+    //   (s.red), a stamp (s.st), and under the bars the thin accuracy strip (s.acc): one step per past week, how far that week's forecast
+    //   was from what then sold; it draws in left to right (acc.k) and its last week steps up in red (acc.up)
     function paintForecast(c, W, H, s){
       c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.setLineDash([]);
       c.fillStyle = s.on ? '#14202a' : '#06080a'; c.fillRect(0, 0, W, H); if (!s.on) return;
       c.fillStyle = C.blue; c.fillRect(0, 0, W, H*0.12); c.fillStyle = 'rgba(255,255,255,.8)'; rr(c, W*0.05, H*0.04, W*0.22, H*0.04, H*0.02);
-      var base = H*0.84, ah = H*0.6, bw = W*0.13;
-      c.fillStyle = 'rgba(235,240,245,.3)'; c.fillRect(W*0.06, base, W*0.88, 3);
-      for (var i=0;i<2;i++){ var cx = W*(i ? 0.66 : 0.3);
-        c.fillStyle = 'rgba(235,240,245,.75)'; c.beginPath(); if (i === 0) { c.moveTo(cx, base + H*0.04); c.lineTo(cx - W*0.03, base + H*0.12); c.lineTo(cx + W*0.03, base + H*0.12); } else { c.moveTo(cx, base + H*0.13); c.lineTo(cx - W*0.03, base + H*0.05); c.lineTo(cx + W*0.03, base + H*0.05); } c.closePath(); c.fill();
-        if (s.f) { var fh = s.f[i]*ah; c.fillStyle = C.blue; c.fillRect(cx - bw - W*0.01, base - fh, bw, fh); if (s.red && s.red[i]) { c.strokeStyle = C.red; c.lineWidth = W*0.02; c.strokeRect(cx - bw - W*0.01, base - fh, bw, fh); } }
-        if (s.a) { var a = s.a[i]*ah; if (a > 1) { c.strokeStyle = C.paper; c.lineWidth = W*0.014; c.strokeRect(cx + W*0.01, base - a, bw, a); } } }
+      var base = H*0.7, ah = H*0.5, aw = W*0.034, ag = W*0.01, fw = W*0.085;
+      c.fillStyle = 'rgba(235,240,245,.3)'; c.fillRect(W*0.06, base, W*0.7, 3);
+      for (var i=0;i<2;i++){ var gx = W*(i ? 0.6 : 0.24), x0 = gx - W*0.135, fx = x0 + 4*(aw + ag) + W*0.01;
+        c.fillStyle = 'rgba(235,240,245,.75)'; c.beginPath(); if (i === 0) { c.moveTo(gx, base + H*0.03); c.lineTo(gx - W*0.03, base + H*0.11); c.lineTo(gx + W*0.03, base + H*0.11); } else { c.moveTo(gx, base + H*0.11); c.lineTo(gx - W*0.03, base + H*0.03); c.lineTo(gx + W*0.03, base + H*0.03); } c.closePath(); c.fill();
+        if (s.a) for (var w=0; w<4; w++){ var a = s.a[i][w]*ah; if (a > 1) { c.strokeStyle = C.paper; c.lineWidth = Math.max(2, W*0.011); c.strokeRect(x0 + w*(aw + ag), base - a, aw, a); } }
+        if (s.f) { var fh = s.f[i]*ah; c.fillStyle = C.blue; c.fillRect(fx, base - fh, fw, fh); if (s.red && s.red[i]) { c.strokeStyle = C.red; c.lineWidth = W*0.02; c.strokeRect(fx, base - fh, fw, fh); } } }
+      if (s.acc && s.acc.k > 0) { var sx0 = W*0.08, sx1 = W*0.74, sy0 = H*0.86, sy1 = H*0.96, sw = (sx1 - sx0)/4, lo = sy1 - H*0.022, hi = sy0 + H*0.012;
+        c.fillStyle = 'rgba(235,240,245,.08)'; c.fillRect(sx0, sy0, sx1 - sx0, sy1 - sy0);
+        c.save(); c.beginPath(); c.rect(sx0, sy0 - H*0.02, (sx1 - sx0)*s.acc.k, sy1 - sy0 + H*0.04); c.clip();
+        var yl = [lo, lo - H*0.012, lo + H*0.004, lo - H*0.006]; c.lineWidth = Math.max(2, H*0.022); c.lineCap = 'round'; c.strokeStyle = C.paper; c.beginPath();
+        for (w=0; w<3; w++){ if (w) c.lineTo(sx0 + w*sw, yl[w]); else c.moveTo(sx0, yl[0]); c.lineTo(sx0 + (w + 1)*sw, yl[w]); } c.stroke();
+        var yu = k.lerp(yl[3], hi, s.acc.up || 0); c.strokeStyle = (s.acc.up || 0) > 0.3 ? C.red : C.paper; c.beginPath(); c.moveTo(sx0 + 3*sw, yl[2]); c.lineTo(sx0 + 3*sw, yu); c.lineTo(sx1, yu); c.stroke();
+        c.restore(); }
       if (s.st) { var r = H*0.13*(s.sk || 1), x = W*0.86, y = H*0.32; c.globalAlpha = Math.min(1, 2.2 - (s.sk || 1)); c.fillStyle = s.st === 'tick' ? S.ok : C.amber; c.beginPath(); c.arc(x, y, r, 0, 2*PI); c.fill();
         c.strokeStyle = '#fff'; c.fillStyle = '#fff'; c.lineWidth = r*0.2; c.lineCap = 'round'; c.beginPath();
         if (s.st === 'tick') { c.moveTo(x - r*0.42, y); c.lineTo(x - r*0.1, y + r*0.32); c.lineTo(x + r*0.45, y - r*0.32); c.stroke(); } else { c.fillRect(x - r*0.36, y - r*0.42, r*0.24, r*0.84); c.fillRect(x + r*0.12, y - r*0.42, r*0.24, r*0.84); }
         c.globalAlpha = 1; }
     }
-    // the regional map: north up, south down; a pin per warehouse with its stock dots; an arrow for a move (green signed, red dashed proposed); a truck glyph
+    // the regional map: north up, south down; a pin per warehouse with its stock dots; the planning tool's suggested transfer as an arrow
+    //   ('ok': a pale arrow drawn in north to south, ak = how far it is drawn; 'bad': a red dashed arrow south to north, ak = opacity);
+    //   tk = the planner's green tick stamp landing on the transfer (scale, 1 = landed); a truck glyph
     function paintMap(c, W, H, s){
       c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1; c.setLineDash([]);
       c.fillStyle = '#06080a'; c.fillRect(0, 0, W, H); if (!(s.on > 0)) return;
@@ -392,12 +405,15 @@ var CONFIG = {
       function dots(p, n){ var sz = H*0.035, g = H*0.012; for (var j=0;j<n;j++){ var col = j % 4, row = Math.floor(j/4); c.fillStyle = '#9aa3ab'; c.fillRect(p[0] + pr*1.5 + col*(sz + g), p[1] - pr*1.9 + row*(sz + g), sz, sz); } }
       dots(N, s.n); dots(So, s.s); pin(N); pin(So);
       if (s.truck) { c.fillStyle = '#f3efe6'; var tx = N[0] - pr*4.2, ty = N[1] - pr*1.2; c.fillRect(tx, ty, pr*1.7, pr*1.1); c.fillRect(tx + pr*1.8, ty + pr*0.35, pr*0.75, pr*0.75); c.beginPath(); c.arc(tx + pr*0.45, ty + pr*1.2, pr*0.28, 0, 2*PI); c.arc(tx + pr*2.1, ty + pr*1.2, pr*0.28, 0, 2*PI); c.fill(); }
-      if (s.ar && s.ak > 0) { var from = s.ar === 'ok' ? N : So, to = s.ar === 'ok' ? So : N, col = s.ar === 'ok' ? S.ok : C.red;
-        var fx = from[0] - pr*0.2, fy = from[1] + (s.ar === 'ok' ? pr*0.9 : -pr*2.4), tx2 = to[0] + pr*0.2, ty2 = to[1] + (s.ar === 'ok' ? -pr*2.4 : pr*0.9);
-        c.globalAlpha = s.on*s.ak; c.strokeStyle = col; c.fillStyle = col; c.lineWidth = H*0.03; c.lineCap = 'round';
+      if (s.ar && s.ak > 0) { var ok = s.ar === 'ok', from = ok ? N : So, to = ok ? So : N, col = ok ? C.paper : C.red;
+        var fx = from[0] - pr*0.2, fy = from[1] + (ok ? pr*0.9 : -pr*2.4), tx2 = to[0] + pr*0.2, ty2 = to[1] + (ok ? -pr*2.4 : pr*0.9);
+        if (ok) { tx2 = fx + (tx2 - fx)*s.ak; ty2 = fy + (ty2 - fy)*s.ak; }
+        c.globalAlpha = s.on*(ok ? 1 : s.ak); c.strokeStyle = col; c.fillStyle = col; c.lineWidth = H*0.03; c.lineCap = 'round';
         if (s.ar === 'bad') c.setLineDash([H*0.05, H*0.04]);
         c.beginPath(); c.moveTo(fx, fy); c.lineTo(tx2, ty2); c.stroke(); c.setLineDash([]);
-        var ang = Math.atan2(ty2 - fy, tx2 - fx), hl = H*0.09; c.beginPath(); c.moveTo(tx2 + Math.cos(ang)*hl*0.3, ty2 + Math.sin(ang)*hl*0.3); c.lineTo(tx2 - Math.cos(ang - 0.5)*hl, ty2 - Math.sin(ang - 0.5)*hl); c.lineTo(tx2 - Math.cos(ang + 0.5)*hl, ty2 - Math.sin(ang + 0.5)*hl); c.closePath(); c.fill(); }
+        var ang = Math.atan2(ty2 - fy, tx2 - fx), hl = H*0.09; c.beginPath(); c.moveTo(tx2 + Math.cos(ang)*hl*0.3, ty2 + Math.sin(ang)*hl*0.3); c.lineTo(tx2 - Math.cos(ang - 0.5)*hl, ty2 - Math.sin(ang - 0.5)*hl); c.lineTo(tx2 - Math.cos(ang + 0.5)*hl, ty2 - Math.sin(ang + 0.5)*hl); c.closePath(); c.fill();
+        if (ok && s.tk) { var mx = (fx + tx2)/2 + H*0.1, my = (fy + ty2)/2 - H*0.04, tr = H*0.1*s.tk; c.globalAlpha = s.on*Math.min(1, 2.2 - s.tk); c.fillStyle = S.ok; c.beginPath(); c.arc(mx, my, tr, 0, 2*PI); c.fill();
+          c.strokeStyle = '#fff'; c.lineWidth = tr*0.22; c.beginPath(); c.moveTo(mx - tr*0.42, my); c.lineTo(mx - tr*0.1, my + tr*0.32); c.lineTo(mx + tr*0.45, my - tr*0.32); c.stroke(); } }
       c.globalAlpha = 1;
     }
 
@@ -612,14 +628,20 @@ var CONFIG = {
     // ---- the planning office: the map wall, the two monitors, the planner
     var on = ramp(t, 0.6, 1.6)*(1 - night);
     var moved = t >= 27.6, nN = moved ? 9 : 12, nS = moved ? 6 : 3;
+    //   2.3: the planning tool draws the suggested transfer (north to south) once the planner has compared the forecast with recent
+    //   sales; the planner taps and the green tick lands on the transfer. 3.3: the wrong suggested transfer, red and dashed, south to north.
     var MW = { on:on, n:nN, s:nS, ar:null, ak:0, truck:false };
-    if (t >= 24.9 && t < 37) { MW.ar = 'ok'; MW.ak = ramp(t, 24.9, 25.3); }
+    if (t >= 24.0 && t < 37) { MW.ar = 'ok'; MW.ak = ramp(t, 24.0, 24.45); if (t >= 24.6) MW.tk = lerp(1.8, 1, ramp(t, 24.6, 24.85)); }
     if (t >= 39.2) { MW.ar = 'bad'; MW.ak = ramp(t, 39.2, 39.6)*(1 - ramp(t, 49.5, 50.3)); MW.truck = true; if (MW.ak <= 0.001) MW.ar = null; }
-    o.mapWall.want = MW; o.monM.want = { on:on, n:nN, s:nS, ar:MW.ar, ak:MW.ak, truck:MW.truck };
+    o.mapWall.want = MW; o.monM.want = { on:on, n:nN, s:nS, ar:MW.ar, ak:MW.ak, tk:MW.tk, truck:MW.truck };
+    //   the forecast screen: in 2.3 the last four weeks' sales lean the same way as the forecast (north falling, south rising);
+    //   in 3.3 only the planted wrong forecast; in 4.2 four weeks of actuals rise beside it (north falling, far below the north
+    //   forecast), the accuracy strip draws in and steps up at the latest week, then the planner holds the forecast
     var F = { on:night < 0.5 ? 1 : 0, f:null };
-    if (t >= 23 && t < 37) { F.f = [0.32, 0.78]; if (t >= 24.6) { F.st = 'tick'; F.sk = lerp(1.8, 1, ramp(t, 24.6, 24.85)); } }
+    if (t >= 23 && t < 37) { F.f = [0.32, 0.78]; F.a = [[0.45, 0.41, 0.37, 0.34], [0.55, 0.62, 0.69, 0.74]]; }
     if (t >= 39.2) { var grow = ramp(t, 39.2, 39.9); F.f = [lerp(0.32, 0.94, grow), 0.3]; F.red = [grow > 0.6, false]; }
-    if (t >= 46.8) { var ak = ramp(t, 46.8, 47.8); F.a = [0.34*ak, 0.7*ak]; }
+    if (t >= 46.8) { var ak = ramp(t, 46.8, 47.8); F.a = [[0.44*ak, 0.4*ak, 0.36*ak, 0.32*ak], [0.5*ak, 0.58*ak, 0.66*ak, 0.72*ak]];
+      F.acc = { k:ramp(t, 47.8, 48.5), up:ramp(t, 48.5, 48.9) }; }
     if (t >= 49.5) { F.st = 'hold'; F.sk = lerp(1.8, 1, ramp(t, 49.5, 49.75)); }
     o.monF.want = F;
     // the planner: at the desk, away in the 3.3 night, at the briefing table from 4.3
@@ -628,7 +650,7 @@ var CONFIG = {
       [o.col1, o.col2].forEach(function(p, j){ var b = o.brief[j + 1]; p.visible = true; k.place(p, b[0], b[1], b[2]); k.sit(p, 1); k.look(p, j ? 0.25 : -0.25, -0.15); }); }
     else if (i === 8 && lt < 2) pl.visible = false;
     else { k.sit(pl, 1); k.typing(pl, t, 0.25);
-      if (i === 5) { k.look(pl, 0.35*ramp(lt, 0.2, 0.5)*(1 - ramp(lt, 0.7, 1.0)) - 0.35*ramp(lt, 0.7, 1.0)*(1 - ramp(lt, 1.1, 1.3)), -0.2); k.point(pl, ramp(lt, 1.15, 1.45)*(1 - ramp(lt, 1.8, 2.1))); }
+      if (i === 5) { k.look(pl, 0.35*ramp(lt, 0.1, 0.35)*(1 - ramp(lt, 0.55, 0.8)) - 0.35*ramp(lt, 0.55, 0.8)*(1 - ramp(lt, 1.0, 1.2)), -0.2); k.point(pl, ramp(lt, 1.3, 1.6)*(1 - ramp(lt, 1.95, 2.25))); }
       if (i === 10) { k.look(pl, 0.3*Math.sin(lin(lt, 1.2, 2.6)*PI*2), -0.2); k.point(pl, ramp(lt, 2.7, 3.0)*(1 - ramp(lt, 3.4, 3.7))); }
       if (i === 8) k.look(pl, 0, -0.25); }
 
@@ -641,10 +663,11 @@ var CONFIG = {
     sl.mesh.visible = true;
     sl.mesh.position.set(sl.x, lerp(0.74, sl.y, up), lerp(sl.z + 1.95, sl.z, into));
     // trucks: A drives north to south during the crane-up of 2.3 (accelerated time); B stands at the north bay afterwards
-    if (t >= 25.6) { var tp = k.polyAt(o.truckPath, k.smooth(lin(t, 25.6, 27.5))); k.place(o.truckA, tp.x, tp.z, tp.ry); }
+    //   it leaves only once the crane has risen far enough to show the road (about 26.6 s), so the trip is seen, not missed
+    if (t >= 26.5) { var tp = k.polyAt(o.truckPath, k.smooth(lin(t, 26.5, 27.75))); k.place(o.truckA, tp.x, tp.z, tp.ry); }
     if (t >= 28) o.truckB.visible = true;
     // south: the first empty bay fills once the truck is in, and its red marker goes out
-    if (t >= 27.6) { var s0 = o.emptyS[0]; s0.mesh.visible = true; s0.mesh.position.y = s0.y + 1.2*(1 - ramp(t, 27.6, 27.9)); if (t >= 27.85) o.markers[0].visible = false; }
+    if (t >= 27.7) { var s0 = o.emptyS[0]; s0.mesh.visible = true; s0.mesh.position.y = s0.y + 1.2*(1 - ramp(t, 27.7, 27.92)); if (t >= 27.9) o.markers[0].visible = false; }
     o.markers.forEach(function(m, j){ if (m.visible) m.material.emissiveIntensity = 0.55 + 0.35*k.tri(t*0.9 + j*0.3); });
 
     // ---- the south shop (1.2): the customer walks to the shelf, finds the slot empty, looks along it, walks out
@@ -667,7 +690,10 @@ var CONFIG = {
         var d = sTC < sv ? sv - sTC : Ltot - sTC + sv; order.push({ n:n, d:d, sTC:sTC }); }
       if (t >= TC) { order.sort(function(a, b){ return a.d - b.d; });
         order.forEach(function(e, rank){ var m = o.pk[e.n], adv = (t - TC)*v, free = sv - e.d + adv, slotS = sv - 0.4 - rank*0.42;
-          if (e.sTC >= sv && e.sTC + adv <= o.mainLen) { m.visible = true; o.polyPt(o.mainPath, e.sTC + adv, pos); m.position.copy(pos); return; }
+          //   the batch already past the valve finishes within 0.8 s (it shrinks away as it drains), so when the crane reaches the valve
+          //   the pipe beyond it is empty and nothing is seen still flowing out after the valve has shut
+          //   (once it has drained, the packet recycles to the cabinet as before and joins the queue behind the valve)
+          if (e.sTC >= sv && e.sTC + adv <= o.mainLen) { var drainK = ramp(t, TC, TC + 0.8); if (drainK < 0.98) { m.visible = true; m.scale.setScalar(0.3*(1 - drainK)); o.polyPt(o.mainPath, e.sTC + adv, pos); m.position.copy(pos); } return; }
           if (rank > 11 || free < 0.2) return;
           var s2 = Math.min(free, slotS); if (s2 < 0.2) return; m.visible = true; o.polyPt(o.mainPath, s2, pos); m.position.copy(pos); }); }
     }

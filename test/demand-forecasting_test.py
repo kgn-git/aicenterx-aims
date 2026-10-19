@@ -6,10 +6,12 @@ The shared test (test/film_controls_test.py) checks controls, layout, determinis
 the film against its approved script, "simulation/demand-forecasting/Demand Forecasting - Script and Protocols.md":
   - one scene per shot of the Part 1 shot table, with the same start, duration, beat, setting, headline and support line (verbatim)
   - scene names as the script sets them (Introduction, "<beat> - <setting>", What comes next) and the fallback title
+  - the source line of every beat shot verbatim from the script's "Source lines" table (at most 10 words), none on the cards
   - the script's beat accents and its 2.5 m camera clearance rule
   - the script's word and readability limits: headline and support line 14 words or fewer, Flesch-Kincaid grade 8 or lower,
     reading pace 5.0 words per second of shot or lower, 300 words in all (same formula as the script: vowel-group syllables)
-  - no digit in any overlay text the film sets (the script allows only the time readout; the beat numeral is template furniture)
+  - no digit in any overlay text the film sets (the beat numeral and the numbered navigation dots are template furniture,
+    and the time readout is a clock; no headline, support line, setting or source line carries a digit)
   - camera heights and distances at the script's design parameters (crane heights, the 1.6 m dolly, the orbit radii)
   - no Math.random or Date in the film's CONFIG (frames are a pure function of t)
 Prints a JSON report; exit code 1 on any failure.
@@ -44,6 +46,20 @@ def shot_rows():
     if len(rows) != 13:   # Open, eleven story shots, Close
         raise ValueError(f'expected 13 shot rows in the script, found {len(rows)}')
     return rows
+
+
+def source_rows():
+    """The Part 1 "Source lines" table: {shot id: exact source line}. Its rows are the only 4-column rows that start with a shot id."""
+    out = {}
+    for line in SCRIPT.read_text(encoding='utf-8').splitlines():
+        if not re.match(r'^\| \d\.\d \|', line):
+            continue
+        cells = [c.strip() for c in line.strip().strip('|').split(' | ')]
+        if len(cells) == 4:
+            out[cells[0]] = cells[1]
+    if len(out) != 11:   # one per story shot
+        raise ValueError(f'expected 11 source-line rows in the script, found {len(out)}')
+    return out
 
 
 def words(s):
@@ -92,6 +108,9 @@ def main():
         want_names = ['Introduction' if r['id'] == 'Open' else 'What comes next' if r['id'] == 'Close' else
                       f"{cfg['beatLabels'][r['beat'] - 1]} — {r['setting']}" for r in rows]
         check('scene names as the script sets them (Introduction, "<beat> — <setting>", What comes next)', [b['name'] for b in beats] == want_names, [b['name'] for b in beats])
+        srcs = source_rows()
+        src_diffs = [{'shot': r['id'], 'film': b.get('source', ''), 'script': srcs.get(r['id'], '')} for r, b in zip(rows, beats) if b.get('source', '') != srcs.get(r['id'], '')]
+        check('source line of every beat shot verbatim from the script (none on the open and close cards)', not src_diffs, src_diffs or f'{len(srcs)} source lines')
         check('fallback title is the open headline', cfg['fallbackTitle'] == rows[0]['head'], cfg['fallbackTitle'])
         check('initiative label', cfg['initiative'] == 'Demand Forecasting', cfg['initiative'])
         check('beat accents as the script sets them', all(cfg['accent'][str(n)].lower() == c for n, c in ACCENT.items()), cfg['accent'])
