@@ -1,4 +1,5 @@
-"""Check the built index.html in Chromium and save screenshots to tools/screenshots/ (git-ignored)."""
+"""Check the built index.html in Chromium and save screenshots to tools/screenshots/ (git-ignored). Exit code 1 on any failure."""
+import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -6,9 +7,12 @@ SCRATCH = Path(__file__).resolve().parent / "screenshots"
 SCRATCH.mkdir(exist_ok=True)
 URL = (Path(__file__).resolve().parent.parent / "index.html").as_uri()
 errors = []
+failures = []
 
 def check(cond, msg):
     print(("ok   " if cond else "FAIL ") + msg)
+    if not cond:
+        failures.append(msg)
 
 with sync_playwright() as p:
     b = p.chromium.launch()
@@ -61,3 +65,4 @@ with sync_playwright() as p:
     b.close()
 
 print("errors:", errors or "none")
+sys.exit(1 if failures or errors else 0)

@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "python tools/build.py",
+    "verify": "python tools/verify.py",
+    "test:films": "python tools/run_tests.py",
+    "check": "npm run verify && npm run test:films"
+  },
+  "dependencies": {
+    "@kgn-git/3c": "git+https://github.com/kgn-git/3C.git#2c990f1393f60470a65019e1d96c84a0b2"
+  }
+}

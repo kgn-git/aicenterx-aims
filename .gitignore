@@ -1,3 +1,6 @@
 tools/screenshots/
 __pycache__/
 test/shots/
+CLAUDE.local.md
+node_modules/
+.3c/telemetry/

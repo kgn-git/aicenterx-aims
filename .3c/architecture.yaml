@@ -1,0 +1,40 @@
+# Architecture boundary rules (VP-03-F05) — STARTER.
+# This gate is INERT until you uncomment and define layers below; an unedited
+# starter produces no violations. Check it with: arch-check check
+#
+# How this file is used:
+#   * `arch-check check` — repo-wide boundary gate (local runs and CI) that
+#     blocks imports crossing a 'deny' pair and records violations into
+#     the findings history the dashboard renders.
+#   * the post-edit hook — checks the imports of every file your coding
+#     assistant edits, live, against these same rules.
+#   * the architect agent — reads these layers when reviewing a diff's
+#     dependency direction.
+#   * coding assistants generally — the source of truth for which layer new
+#     code belongs in, so generated code lands on the right side of a boundary.
+#
+# Define 'layers' (directory globs per layer) and 'deny' (forbidden import
+# pairs as [from, to]). Example:
+#
+# layers:
+#   domain: ["src/domain/**"]
+#   app:    ["src/app/**"]
+#   infra:  ["src/infra/**"]
+# deny:
+#   - ["domain", "infra"]   # domain must not import from infra
+#   - ["domain", "app"]
+#
+# This map is a single ROOT block: it applies to every path in the
+# workspace. A monorepo whose packages have different internal layering needs
+# per-package overrides, which have to be written by hand:
+#
+# packages:
+#   "packages/api/**":
+#     layers:
+#       web:  ["packages/api/web/**"]
+#       core: ["packages/api/core/**"]
+#     deny:
+#       - ["web", "core"]
+#
+# The first matching glob wins, in the order written. A file matching no
+# package glob falls back to the root block above.

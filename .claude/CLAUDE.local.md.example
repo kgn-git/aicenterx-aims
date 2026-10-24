@@ -1,0 +1,4 @@
+# Local override (gitignored)
+
+This file is loaded by Claude Code on top of CLAUDE.md but is **not committed**
+to git. Put personal notes, scratchpad rules, or per-developer overrides here.
