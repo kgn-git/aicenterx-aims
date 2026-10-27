@@ -115,7 +115,9 @@ If the rules suggest the workspace lacks security or pattern coverage, you MAY s
 
 For each target file in your plan:
 
-a. Write the test FIRST, via the `/3c-test` sub-skill. Resolve the runner once:
+a. Write the test FIRST, via the `/3c-test` sub-skill. It drafts the body with the
+   test-author agent, writes it with `test write` and runs its RED, so when you use it, steps b–d
+   below are what to check in its result rather than steps to repeat. Resolve the runner once:
 
 ```bash
 3c test detect-framework
@@ -165,6 +167,17 @@ This applies to the inner loop **only**. The project-level verify gate before th
 e. Implement the minimum source code to make the test pass — use the Write tool. The team's rules in your context constrain HOW; the test constrains WHAT.
 
 f. Run the same selection again — confirm it PASSES (GREEN).
+
+   **Falsify each guard.** A test that guards a rule (a filter, a validator, a refusal, a
+   check that something is absent) is not trusted until you break the code it protects and
+   watch it go red. Run the selection on the unchanged tree first, so a red result means
+   something; then mutate the guarded path (delete the check, invert the condition, widen
+   the filter), confirm the test fails for that reason, restore the code and confirm it is
+   green again. A green mutation is a finding: the behaviour is unguarded. Where a test
+   asserts a filtered list is empty (`toEqual([])`, `not.toContain`), pair it with a positive
+   assertion that the same filter finds something known to be there; an empty result from a
+   filter that matches nothing proves nothing. Record each mutation and its red in the PR
+   description or the handover.
 
 g. Commit (the hook chain runs via Sprint-2 #2 orchestrator — let it):
 

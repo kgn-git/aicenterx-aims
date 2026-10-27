@@ -15,17 +15,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "3c hook run --event=PreToolUse",
+            "command": "npx --no-install 3c hook run --event=PreToolUse",
             "timeout": 12
           }
         ]
       },
       {
-        "matcher": "Read|Edit|Write",
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "3c hook path-guard",
+            "command": "npx --no-install 3c hook path-guard",
             "timeout": 12
           }
         ]
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "3c hook run --event=PostToolUse",
+            "command": "npx --no-install 3c hook run --event=PostToolUse",
             "timeout": 12
           }
         ]

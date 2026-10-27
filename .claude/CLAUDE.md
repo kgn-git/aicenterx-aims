@@ -68,7 +68,7 @@ Scope in this repo: there is no server, login or stored personal data, so A01, A
 
 <!-- 3C:DYNAMIC-LOAD-ANCHOR -->
 
-<!-- 3C:RULES-BEGIN schema=1 generated_at=2026-10-24T07:11:47.907Z rules_count=0 -->
+<!-- 3C:RULES-BEGIN schema=1 generated_at=2026-10-27T19:39:59.867Z rules_count=0 -->
 
 Rule packs kept on disk, loaded by Claude Code from `.claude/rules/` rather than copied here: quality/file-size-and-comments, quality/test-layering, security/cwe-top-25-2025, security/owasp-top-10, ux/tone-and-manner.
 <!-- 3C:RULES-END -->

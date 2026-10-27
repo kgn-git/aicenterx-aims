@@ -7,6 +7,6 @@
     "check": "npm run verify && npm run test:films"
   },
   "dependencies": {
-    "@kgn-git/3c": "git+https://github.com/kgn-git/3C.git#2c990f1393f60470a65019e1d96c84a0b2"
+    "@kgn-git/3c": "git+https://github.com/kgn-git/3C.git#b0badf18793be087c6fc86ef0cba4ecf3fb37033"
   }
 }
