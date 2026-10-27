@@ -1,6 +1,7 @@
 {
  "attribution": [
   {
+   "key": "mit",
    "source": "MIT AI Risk Repository",
    "licence": "CC BY 4.0",
    "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
@@ -9,6 +10,7 @@
    "changes": "Each suggestion is classified with the repository's Domain and Causal Taxonomies. The suggestion text is written for this prototype."
   },
   {
+   "key": "aiid",
    "source": "AI Incident Database",
    "licence": "CC BY-SA 4.0",
    "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -17,6 +19,7 @@
    "changes": "Incident titles are quoted verbatim and shared under CC BY-SA 4.0. No report text is copied."
   },
   {
+   "key": "aiindex",
    "source": "Stanford HAI AI Index",
    "licence": "CC BY-ND 4.0",
    "licenceUrl": "https://creativecommons.org/licenses/by-nd/4.0/",
@@ -125,7 +128,7 @@
     },
     {
      "id": "s-rcr-4",
-     "description": "Underwriters under time pressure confirm declines the score recommends without real review, so applicants lose the meaningful human check GDPR Article 22 requires.",
+     "description": "Underwriters under time pressure confirm declines the score recommends without real review, so applicants lose the meaningful human check that data protection law expects.",
      "harm": "autonomy",
      "likelihood": "likely",
      "severity": "moderate",
@@ -285,7 +288,7 @@
     },
     {
      "id": "s-chatbot-4",
-     "description": "A shared index without per-unit access filters shows agents restricted documents from other business units, exposing confidential terms to staff not entitled to see them.",
+     "description": "Retrieval over a shared index shows agents documents meant for other business units, so confidential terms reach staff not entitled to see them.",
      "harm": "security",
      "likelihood": "possible",
      "severity": "moderate",
@@ -309,7 +312,7 @@
       }
      ],
      "matchesRisk": null,
-     "why": "\"Retrieval-augmented generation over the versioned policy corpus\" does not say retrieval is limited to what the agent's own unit may see."
+     "why": "\"Retrieval-augmented generation over the versioned policy corpus\" does not limit retrieval to the agent's own business unit, and the copilot's shared index has already returned other units' document titles (incident n8)."
     },
     {
      "id": "s-chatbot-5",
@@ -337,11 +340,11 @@
       }
      ],
      "matchesRisk": null,
-     "why": "\"Shorter handling times ... without moving the decision away from the agent\" puts speed targets against the agent's own check."
+     "why": "\"Shorter handling times … without moving the decision away from the agent\" puts speed targets against the agent's own check."
     },
     {
      "id": "s-chatbot-6",
-     "description": "Agents paste customers' account and personal details into the copilot, and prompts kept in provider or debug logs break the promise that customer text is not retained.",
+     "description": "Agents paste customers' account and personal details into the copilot, and prompts kept in logs at the model provider break the promise that customer text is not retained.",
      "harm": "privacy",
      "likelihood": "possible",
      "severity": "major",
@@ -372,9 +375,9 @@
   "hiring": {
    "context": {
     "edition": "AI Index 2026",
-    "chapter": "Chapter 3: Responsible AI",
-    "url": "https://hai.stanford.edu/assets/files/ai_index_report_2026.pdf#page=134",
-    "statement": "This is due in part to responsible AI dimensions like fairness and bias being highly context-dependent, which makes universal scoring difficult. A fairness metric that works for a hiring tool may not apply in a clinical diagnostic setting."
+    "chapter": "Chapter 8: Policy and Governance",
+    "url": "https://hai.stanford.edu/assets/files/ai_index_report_2026.pdf#page=345",
+    "statement": "Colorado’s Artificial Intelligence Act, signed in May 2024, was among the first state laws targeting algorithmic discrimination in decisions such as hiring, housing, and medical care."
    },
    "suggestions": [
     {

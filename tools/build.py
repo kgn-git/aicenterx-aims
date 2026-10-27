@@ -5,6 +5,8 @@ Usage: python tools/build.py   then   python tools/verify.py   (needs: pip insta
 import json, re, sys
 from pathlib import Path
 
+from inline_json import script_literal
+
 SCRATCH = Path(__file__).resolve().parent
 ROOT = SCRATCH.parent
 SRC = ROOT / "backup" / "AI Center X prototype.html"
@@ -24,8 +26,7 @@ def sub(old, new, count=1):
     html = html.replace(old, new)
 
 def data_js(name):
-    """A curated tools/data/<name>.json as a JavaScript literal; escaping "</" keeps its text from closing the <script>."""
-    return json.dumps(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8"))).replace("</", "<\\/")
+    return script_literal(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8")))
 
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
@@ -222,7 +223,6 @@ sub('''    return ["val","amber",complete+"/"+INITIATIVES.length,"<strong>initia
 
 # Integration (issue #1): each initiative with a standalone film links to it right after its AI Canvas.
 # Hrefs are relative to index.html with spaces URL-encoded, opened in a new tab like "AI benchmarks".
-# The risk agent replays curated, cited suggestions; the data lives in tools/data so tests can read it as JSON.
 sub('''function pageInitiative(id){''',
     '''var FILMS={
   rcr:"simulation/credit-scoring/Retail%20Credit%20Risk%20Scoring.html",
@@ -233,7 +233,6 @@ sub('''function pageInitiative(id){''',
   churn:"simulation/churn-propensity/Churn%20Propensity.html",
   docai:"simulation/document-intelligence/Document%20Intelligence.html",
   pricing:"simulation/dynamic-pricing/Dynamic%20Pricing.html"};
-var RISK_SUGGESTIONS=''' + data_js("risk_suggestions") + ''';
 function filmLink(id){
   var href=FILMS[id]; if(!href) return "";
   return '<div class="mmd-toolbar" data-film="'+esc(id)+'">'+
@@ -249,6 +248,9 @@ function filmButton(id){
 function pageInitiative(id){''')
 sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+'</div>'+""",
     """    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+filmLink(id)+'</div>'+""")
+# The canvas agent replays curated, cited output; its data lives in tools/data so tests can read it as JSON.
+sub("function pageInitiative(id){",
+    "var RISK_SUGGESTIONS=" + data_js("risk_suggestions") + ";\nfunction pageInitiative(id){")
 # The AI Canvases register gets a "Simulation" column with the same film link.
 sub('''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}}],''',
     '''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}},

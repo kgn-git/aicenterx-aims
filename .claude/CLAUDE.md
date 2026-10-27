@@ -31,7 +31,7 @@ Tests run on Python Playwright (Chromium, SwiftShader WebGL):
 - A test MUST exit non-zero on any failure, so the aggregate scripts can gate on it.
 - Node Playwright is not installed; `test/controls-test.cjs` (Village Film) is kept for reference and is not part of the suite.
 
-Aggregate scripts (`package.json`): `npm run build`, then `npm run check` (`verify` for `index.html`, `test:films` for every film).
+Aggregate scripts (`package.json`): `npm run build`, then `npm run check` (`verify` for `index.html`, `test:films` for every film, then every other `test/*_test.py` once).
 
 ## Security
 
