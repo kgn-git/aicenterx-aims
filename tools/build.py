@@ -23,6 +23,10 @@ def sub(old, new, count=1):
         sys.exit(f"expected {count} of {old[:70]!r}, found {n}")
     html = html.replace(old, new)
 
+def data_js(name):
+    """A curated tools/data/<name>.json as a JavaScript literal; escaping "</" keeps its text from closing the <script>."""
+    return json.dumps(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8"))).replace("</", "<\\/")
+
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700'
@@ -218,6 +222,7 @@ sub('''    return ["val","amber",complete+"/"+INITIATIVES.length,"<strong>initia
 
 # Integration (issue #1): each initiative with a standalone film links to it right after its AI Canvas.
 # Hrefs are relative to index.html with spaces URL-encoded, opened in a new tab like "AI benchmarks".
+# The risk agent replays curated, cited suggestions; the data lives in tools/data so tests can read it as JSON.
 sub('''function pageInitiative(id){''',
     '''var FILMS={
   rcr:"simulation/credit-scoring/Retail%20Credit%20Risk%20Scoring.html",
@@ -228,6 +233,7 @@ sub('''function pageInitiative(id){''',
   churn:"simulation/churn-propensity/Churn%20Propensity.html",
   docai:"simulation/document-intelligence/Document%20Intelligence.html",
   pricing:"simulation/dynamic-pricing/Dynamic%20Pricing.html"};
+var RISK_SUGGESTIONS=''' + data_js("risk_suggestions") + ''';
 function filmLink(id){
   var href=FILMS[id]; if(!href) return "";
   return '<div class="mmd-toolbar" data-film="'+esc(id)+'">'+
