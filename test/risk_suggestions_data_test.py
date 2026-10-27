@@ -11,7 +11,8 @@ citation must point at the source it names. Checks:
     and its /cite/<id>/ url; matchesRisk null or a RISKS id of the same initiative; every url plain https on the host
     its source allows; an attribution (key, name, licence, licence link, source link, citation, changes) per source
   - the guard: one broken copy per rule above, each rejected by the validator for that rule
-  - the build: index.html carries RISK_SUGGESTIONS equal to the JSON
+  - the build: index.html carries RISK_SUGGESTIONS as exactly the escaped literal of the JSON (test/inline_json_test.py
+    holds the escaping rule)
 The prototype's lists and canvases are read from the built index.html source.
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -20,6 +21,9 @@ import json
 import re
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
+from inline_json import script_literal  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'tools' / 'data' / 'risk_suggestions.json'
@@ -68,7 +72,7 @@ def prototype(html):
             'triggers': re.findall(r'\{f:"(\w+)"', blocks.group(1)) if blocks else [],
             'risks': re.findall(r'\{id:"(r\d+)",init:"(\w+)"', html),
             'canvases': {i: canvas(i) for i in PILOTS},
-            'built': json.loads(built.group(1)) if built else None}
+            'built': built.group(1) if built else None}
 
 
 def url_ok(u, host):
@@ -162,7 +166,8 @@ def broken_copies(data, init, proto):
     other = next(p for p in PILOTS if p != init)
     first_incident = lambda s: s['incidents'][0]  # noqa: E731
     pad = lambda d: d['initiatives'][init]['suggestions'].extend(  # noqa: E731
-        dict(copy.deepcopy(d['initiatives'][init]['suggestions'][0]), id=f's-{init}-{100 + k}') for k in range(9))
+        dict(copy.deepcopy(d['initiatives'][init]['suggestions'][0]), id=f's-{init}-{100 + k}')
+        for k in range(9 - len(d['initiatives'][init]['suggestions'])))
     return {
         'unknown harm': (edit(lambda s, d: s.update(harm='bad-luck')), 'unknown harm'),
         'unknown likelihood': (edit(lambda s, d: s.update(likelihood='often')), 'unknown likelihood'),
@@ -186,6 +191,7 @@ def broken_copies(data, init, proto):
         'incident url on another host': (edit(lambda s, d: first_incident(s).update(url=f'https://example.com/cite/{first_incident(s)["id"]}/')), 'cite/<id>'),
         'incident url for another id': (edit(lambda s, d: first_incident(s).update(url=f'https://incidentdatabase.ai/cite/{first_incident(s)["id"] + 1}/')), 'cite/<id>'),
         'javascript incident url': (edit(lambda s, d: first_incident(s).update(url='javascript:alert(1)')), 'cite/<id>'),
+        'incident id as text': (edit(lambda s, d: first_incident(s).update(id=str(first_incident(s)['id']))), 'cite/<id>'),
         'incident with no title': (edit(lambda s, d: first_incident(s).update(title='')), 'cite/<id>'),
         'one incident, two titles': (edit(lambda s, d: d['initiatives'][init]['suggestions'][1]['incidents'].append(
             dict(first_incident(s), title=first_incident(s)['title'] + ' (edited)'))), 'different title'),
@@ -195,10 +201,14 @@ def broken_copies(data, init, proto):
         'duplicate id': (edit(lambda s, d: d['initiatives'][init]['suggestions'][1].update(id=s['id'])), 'duplicate'),
         'too few suggestions': (edit(lambda s, d: d['initiatives'][init].update(suggestions=d['initiatives'][init]['suggestions'][:4])), 'want 5-8'),
         'too many suggestions': (edit(lambda s, d: pad(d)), 'want 5-8'),
+        'context with no edition': (edit(lambda s, d: d['initiatives'][init]['context'].update(edition='')), 'AI Index context'),
+        'context with no chapter': (edit(lambda s, d: d['initiatives'][init]['context'].update(chapter='')), 'AI Index context'),
         'context with no statement': (edit(lambda s, d: d['initiatives'][init]['context'].update(statement='')), 'AI Index context'),
         'http context url': (edit(lambda s, d: d['initiatives'][init]['context'].update(url='http://hai.stanford.edu/ai-index')), 'AI Index context'),
         'context url on another host': (edit(lambda s, d: d['initiatives'][init]['context'].update(url='https://example.com/ai-index')), 'AI Index context'),
         'attribution missing a source': (edit(lambda s, d: d.update(attribution=d['attribution'][:2])), 'each source key once'),
+        'attribution with no licence': (edit(lambda s, d: d['attribution'][0].update(licence='')), 'citation and changes'),
+        'attribution under another name': (edit(lambda s, d: d['attribution'][0].update(source='Wrong name')), 'its own host'),
         'attribution without changes': (edit(lambda s, d: d['attribution'][0].pop('changes')), 'citation and changes'),
         'attribution without citation': (edit(lambda s, d: d['attribution'][0].update(citation='')), 'citation and changes'),
         'licence link on another host': (edit(lambda s, d: d['attribution'][0].update(licenceUrl='https://example.com/by/4.0/')), 'citation and changes'),
@@ -217,8 +227,11 @@ def main():
           all(proto[k] for k in ('harms', 'likelihoods', 'severities', 'stages', 'triggers', 'risks')) and all(proto['canvases'].values()),
           {k: len(v) for k, v in proto.items() if k != 'built'})
 
-    data = json.loads(DATA.read_text(encoding='utf-8')) if DATA.exists() else None
-    check('tools/data/risk_suggestions.json exists and parses', data is not None, str(DATA))
+    try:
+        data, why = json.loads(DATA.read_text(encoding='utf-8')), str(DATA)
+    except (OSError, ValueError) as e:
+        data, why = None, repr(e)
+    check('tools/data/risk_suggestions.json exists and parses', data is not None, why)
     if data is not None:
         try:
             problems = validate(data, proto)
@@ -230,8 +243,8 @@ def main():
                 missed = [rule for rule, (d, why) in broken_copies(data, init, proto).items()
                           if not any(why in p for p in validate(d, proto))]
                 check(f'validator rejects each broken copy for its own rule ({init})', not missed, missed or 'all rejected')
-        check('index.html carries RISK_SUGGESTIONS equal to the JSON', proto['built'] == data,
-              'missing: rebuild with npm run build' if proto['built'] is None else 'differs from the JSON: rebuild')
+        check('index.html carries RISK_SUGGESTIONS as the escaped literal of the JSON', proto['built'] == script_literal(data),
+              'missing: rebuild with npm run build' if proto['built'] is None else 'differs from script_literal(JSON): rebuild')
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))
