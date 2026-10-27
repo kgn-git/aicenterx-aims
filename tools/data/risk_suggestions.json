@@ -288,8 +288,8 @@
     },
     {
      "id": "s-chatbot-4",
-     "description": "Retrieval over a shared index shows agents documents meant for other business units, so confidential terms reach staff not entitled to see them.",
-     "harm": "security",
+     "description": "Retrieval over a shared index shows agents the titles and contents of documents meant for other business units, exposing them to staff with no need to see them.",
+     "harm": "privacy",
      "likelihood": "possible",
      "severity": "moderate",
      "lifecycleStage": "Develop",
@@ -312,7 +312,7 @@
       }
      ],
      "matchesRisk": null,
-     "why": "\"Retrieval-augmented generation over the versioned policy corpus\" does not limit retrieval to the agent's own business unit, and the copilot's shared index has already returned other units' document titles (incident n8)."
+     "why": "\"Retrieval-augmented generation over the versioned policy corpus\" does not limit retrieval to the agent's own business unit, and the shared index has already shown agents other units' document titles."
     },
     {
      "id": "s-chatbot-5",
