@@ -6,7 +6,7 @@ The model run replays this data, so its citations must be real: every cited benc
 that primary dimension, every raised or lowered risk can be selected on that initiative, and every source is a record
 of that initiative, a titled EUR-Lex link, or marked as written for this prototype. Checks:
   - 2-3 candidates per pilot, every cited benchmark carrying its row's name, each with a name, fit, gaps, and AC3/AC4's citations (chatbot: a G or X and an S or F
-    benchmark; hiring: an F benchmark and a gap naming G and X; rcr: a criterion and a gap naming tabular credit models)
+    benchmark; hiring: an F benchmark and a gap naming general-capability and sector-specific benchmarks; rcr: a criterion and a gap naming tabular credit models)
   - evidence (an R benchmark or a sourced criterion) for each control behind that initiative's curated mitigations
   - the guard: one broken copy per rule, each rejected for that rule
   - the build: index.html carries MODEL_SUGGESTIONS as exactly the escaped literal of the JSON
@@ -85,7 +85,7 @@ def validate(data, proto):
             dims = {b.get('dim') for b in c.get('benchmarks') or []}
             if init == 'chatbot' and not (dims & {'G', 'X'} and dims & {'S', 'F'}):
                 bad.append(f'{cid}: chatbot needs a G or X and an S or F benchmark')
-            if init == 'hiring' and ('F' not in dims or 'no G or X benchmark' not in str(c.get('gaps'))):
+            if init == 'hiring' and ('F' not in dims or 'no general-capability or sector-specific benchmark' not in str(c.get('gaps'))):
                 bad.append(f'{cid}: hiring needs an F benchmark and a gap naming G and X')
             if init == 'rcr' and (not c.get('criteria') or 'no benchmark for tabular credit models' not in str(c.get('gaps'))):
                 bad.append(f'{cid}: rcr needs a criterion and a gap naming tabular credit models')

@@ -5,9 +5,10 @@
 var MODEL_STEPS=["Read the AI Canvas objective","Read the selected risks","Match benchmark dimensions","Check the controls behind the mitigations","Draft model candidates"];
 var BENCH_PAGE="Periodic%20Table%20of%20AI%20Benchmarks.html";
 var BENCH_DIMS={G:"General capability",S:"Security / safety",F:"Fairness / bias",X:"Sector specific",R:"Regulatory"};
+var BENCH_SETS={s100:"Illustrative sample",s445:"Bean et al. review"};
 // The link is built from a known dataset and a plain number only, the same rule the benchmarks page applies to its hash.
 function benchLink(b){
-  var label=b.name+" ("+b.dataset+" #"+b.no+", "+(BENCH_DIMS[b.dim]||b.dim)+")";
+  var label=b.name+" ("+(BENCH_SETS[b.dataset]||b.dataset)+" #"+b.no+", "+(BENCH_DIMS[b.dim]||b.dim)+")";
   if(!/^(s445|s100)$/.test(b.dataset)||!/^(0|[1-9]\d{0,2})$/.test(String(b.no))) return esc(label);
   return '<a href="'+BENCH_PAGE+'#'+b.dataset+'-'+b.no+'" target="_blank" rel="noopener noreferrer">'+esc(label)+
     '<span aria-hidden="true"> ↗</span><span'+SR_ONLY+'> (opens in a new tab)</span></a>';
@@ -31,7 +32,7 @@ function modelItem(init,c){
       c.benchmarks.map(function(b){ return '<li>'+benchLink(b)+'</li>'; }).join("")+'</ul>':'<p class="muted-note" style="margin:0">None in the benchmarks table.</p>')+
     (c.criteria.length?'<p class="muted-note" style="margin:8px 0 2px">Criteria:</p><ul class="muted-note" style="margin:0;padding-left:18px">'+
       c.criteria.map(function(x){ return '<li>'+criterion(x)+'</li>'; }).join("")+'</ul>':'')+
-    '<p class="muted-note" style="margin:8px 0 0">What the table lacks: '+esc(c.gaps)+'</p></div>';
+    '<p class="muted-note" style="margin:8px 0 0">Gaps: '+esc(c.gaps)+'</p></div>';
 }
 function modelControls(init){
   var ctrl=MODEL_SUGGESTIONS.initiatives[init].controls, keys=[];
@@ -53,7 +54,11 @@ function modelResult(init){
     '<h4 class="sec-title" id="sugg-model-head-'+esc(init)+'" data-run-head tabindex="-1" style="margin-top:0">Suggested model approaches</h4>'+
     '<p class="muted-note" style="margin:0 0 12px">These are suggestions. They block nothing, and the AI Canvas\'s modelling approach is unchanged.</p>'+
     MODEL_SUGGESTIONS.initiatives[init].candidates.map(function(c){ return modelItem(init,c); }).join("")+
-    '<h5 style="font-size:13px;margin:14px 0 8px">Evidence for the controls behind your mitigations</h5>'+modelControls(init)+'</div>';
+    '<h5 style="font-size:13px;margin:14px 0 8px">Evidence for the controls behind your mitigations</h5>'+modelControls(init)+
+    '<h5 style="font-size:13px;margin:14px 0 8px">Sources and licences for models</h5>'+
+    '<ul data-attribution class="muted-note" style="margin:0;padding-left:18px;font-size:12px">'+MODEL_SUGGESTIONS.attribution.map(function(a){
+      return '<li>'+sourceLink(a.url,SOURCE_HOSTS[a.key],a.source)+', '+sourceLink(a.licenceUrl,SOURCE_HOSTS.eurlex,a.licence)+'. Changes: '+esc(a.changes)+'</li>';
+    }).join("")+'</ul></div>';
 }
 function modelSection(init){
   if(!Object.prototype.hasOwnProperty.call(MODEL_SUGGESTIONS.initiatives,init)) return "";

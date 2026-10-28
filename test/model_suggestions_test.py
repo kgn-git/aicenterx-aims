@@ -34,6 +34,7 @@ REGISTER = dict(re.findall(r'\{id:"(r\d+)",init:"\w+",description:"([^"]+)"', HT
 STEPS = ['Read the AI Canvas objective', 'Read the selected risks', 'Match benchmark dimensions',
          'Check the controls behind the mitigations', 'Draft model candidates']
 PAGE = 'Periodic%20Table%20of%20AI%20Benchmarks.html'
+SETS = {'s100': 'Illustrative sample', 's445': 'Bean et al. review'}
 NOTHING = 'You have not selected any risks yet. Select risks in the risk suggestions to get model suggestions. This blocks nothing.'
 
 RECORD = """sel => { window.__log = []; const seen = new Set();
@@ -122,8 +123,11 @@ def run(tmp):
                 'as => as.map(a => [a.getAttribute("href"), a.getAttribute("target"), a.getAttribute("rel"), a.textContent])')
             want = [f'{PAGE}#{x["dataset"]}-{x["no"]}' for x in c['benchmarks']]
             check('each benchmark citation names the benchmark, its dataset and number, and links into the benchmarks page in a new tab',
-                  [l[0] for l in links] == want and all(l[1] == '_blank' and l[2] == 'noopener noreferrer' and f'{x["dataset"]} #{x["no"]}' in l[3]
+                  [l[0] for l in links] == want and all(l[1] == '_blank' and l[2] == 'noopener noreferrer' and f'{SETS[x["dataset"]]} #{x["no"]}' in l[3]
                                                        and x['name'] in l[3] and '(opens in a new tab)' in l[3] for l, x in zip(links, c['benchmarks'])), links)
+            rows = pg.locator(f'{host("chatbot")} [data-attribution] li').evaluate_all('ls => ls.map(l => l.innerText)')
+            check('the result shows the attribution of each external source it cites',
+                  len(rows) == len(DATA['attribution']) and all(a['source'] in r and a['licence'] in r and a['changes'] in r for a, r in zip(DATA['attribution'], rows)), rows)
             words = pg.inner_text(host('chatbot')).lower()
             phrases = ['these are suggestions', 'block nothing', "the ai canvas's modelling approach is unchanged"]
             check('the copy says these are suggestions, block nothing, and leave the modelling approach unchanged',
@@ -131,8 +135,8 @@ def run(tmp):
             pg = open_page(b, '#/initiative/hiring')
             risks(pg, 'hiring', 'r1')
             models(pg, 'hiring')
-            check('hiring: each candidate states that the table has no G or X benchmark for ranking',
-                  all('no G or X benchmark' in pg.inner_text(cand('hiring', x['id'])) for x in DATA['initiatives']['hiring']['candidates']))
+            check('hiring: each candidate states that the table has no general-capability or sector-specific benchmark for ranking',
+                  all('no general-capability or sector-specific benchmark' in pg.inner_text(cand('hiring', x['id'])) for x in DATA['initiatives']['hiring']['candidates']))
 
         with section('AC4, AC5, AC6'):
             pg = open_page(b, '#/initiative/rcr')
@@ -161,6 +165,11 @@ def run(tmp):
             want = list(dict.fromkeys(m['controlKey'] for m in MITIG['risks']['s-rcr-3']))
             got = pg.locator(f'{host("rcr")} [data-model-control]').evaluate_all('es => es.map(e => e.getAttribute("data-model-control"))')
             check('after a mitigation run the block shows evidence for each control behind the mitigations shown', got == want, got)
+            pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-3"]')
+            gone = pg.locator(f'{host("rcr")} [data-model-controls-none]').count() == 1
+            pg.check('#sugg-risks-rcr [data-pick-risk="s-rcr-3"]')
+            back = pg.locator(f'{host("rcr")} [data-model-control]').evaluate_all('es => es.map(e => e.getAttribute("data-model-control"))')
+            check('unticking and ticking a covered risk updates the block without a re-run', gone and back == want, back)
             pg.check('#sugg-risks-rcr [data-pick-risk="r2"]')
             skip(pg, '[data-suggest-mitigations="rcr"]', '#sugg-mitig-rcr', '#sugg-mitig-head-rcr')
             want = list(dict.fromkeys(m['controlKey'] for r in ('s-rcr-3', 'r2') for m in MITIG['risks'][r]))

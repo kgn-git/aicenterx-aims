@@ -43,7 +43,7 @@
        }
       }
      ],
-     "gaps": "The benchmarks table has no benchmark for tabular credit models: DiscrimEval (s100 #64) tests language models making decisions, not a scoring model.",
+     "gaps": "The benchmarks table has no benchmark for tabular credit models: DiscrimEval (#64 in the illustrative sample) tests language models making decisions, not a scoring model.",
      "id": "md-rcr-1"
     },
     {
@@ -78,7 +78,7 @@
        }
       }
      ],
-     "gaps": "The benchmarks table has no benchmark for tabular credit models: DiscrimEval (s100 #64) tests language models making decisions, not a scoring model.",
+     "gaps": "The benchmarks table has no benchmark for tabular credit models: DiscrimEval (#64 in the illustrative sample) tests language models making decisions, not a scoring model.",
      "id": "md-rcr-2"
     }
    ],
@@ -143,11 +143,11 @@
      "name": "Hosted large language model with retrieval and citation checks",
      "fit": "Answers service agents' questions from the indexed policy library, with each answer tied to the passage it cites.",
      "raises": [
-      "s-chatbot-6"
+      "s-chatbot-6",
+      "s-chatbot-5"
      ],
      "lowers": [
-      "r5",
-      "s-chatbot-5"
+      "r5"
      ],
      "benchmarks": [
       {
@@ -235,18 +235,18 @@
    ],
    "controls": {
     "A.2": {
-     "benchmark": {
-      "dataset": "s100",
-      "no": 95,
-      "name": "COMPL-AI",
-      "dim": "R"
+     "criterion": {
+      "text": "An approved AI use policy that names the copilot, its permitted uses and what staff may not paste into it.",
+      "source": {
+       "prototype": true
+      }
      }
     },
     "A.6": {
      "benchmark": {
       "dataset": "s100",
-      "no": 94,
-      "name": "AIR-Bench 2024",
+      "no": 95,
+      "name": "COMPL-AI",
       "dim": "R"
      }
     },
@@ -281,7 +281,7 @@
    "candidates": [
     {
      "name": "Embedding similarity ranking with protected attributes masked",
-     "fit": "Ranks each application against the requisition by text similarity, after names, addresses and graduation years are masked.",
+     "fit": "Ranks each application against the requisition by text similarity, after names, addresses, graduation years and any mention of health, religion or union membership are masked.",
      "raises": [
       "s-hiring-4"
      ],
@@ -317,12 +317,12 @@
        }
       }
      ],
-     "gaps": "The benchmarks table has no G or X benchmark for ranking CVs against a requisition; the bias audit and recruiter review stand in for one.",
+     "gaps": "The benchmarks table has no general-capability or sector-specific benchmark for ranking CVs against a requisition; the bias audit and recruiter review stand in for one.",
      "id": "md-hiring-1"
     },
     {
-     "name": "Rules-based screening on stated requirements, ranked by recruiters",
-     "fit": "Screens only on requirements the requisition states, such as the right to work and certifications, and leaves the ranking to recruiters.",
+     "name": "Language-model extraction of stated requirements, ranked by recruiters",
+     "fit": "A language model reads each CV for the requirements the requisition states, such as the right to work and certifications; a candidate who fails one is rejected without a recruiter seeing the CV, and recruiters rank the rest.",
      "raises": [
       "s-hiring-7"
      ],
@@ -353,7 +353,7 @@
        }
       }
      ],
-     "gaps": "The benchmarks table has no G or X benchmark for ranking CVs against a requisition; the bias audit and recruiter review stand in for one.",
+     "gaps": "The benchmarks table has no general-capability or sector-specific benchmark for ranking CVs against a requisition; the bias audit and recruiter review stand in for one.",
      "id": "md-hiring-2"
     }
    ],
