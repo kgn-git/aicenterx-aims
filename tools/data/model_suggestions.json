@@ -1,0 +1,425 @@
+{
+ "attribution": [
+  {
+   "key": "eurlex",
+   "source": "EUR-Lex",
+   "licence": "Reuse under Commission Decision 2011/833/EU",
+   "licenceUrl": "https://eur-lex.europa.eu/eli/dec/2011/833/oj",
+   "url": "https://eur-lex.europa.eu/",
+   "changes": "Article numbers and titles are quoted; the criteria are written for this prototype. Only the text published in the Official Journal is authentic."
+  }
+ ],
+ "initiatives": {
+  "rcr": {
+   "candidates": [
+    {
+     "name": "Gradient-boosted trees with monotonic constraints",
+     "fit": "Predicts the probability of default from bureau and account-behaviour features with the accuracy of boosted trees, while monotonic constraints keep each feature's effect in the direction an underwriter expects.",
+     "raises": [
+      "r2"
+     ],
+     "lowers": [
+      "s-rcr-3"
+     ],
+     "benchmarks": [],
+     "criteria": [
+      {
+       "text": "Calibration: predicted default rates match observed rates in each score band on a held-out quarter.",
+       "source": {
+        "record": "e2"
+       }
+      },
+      {
+       "text": "Four-fifths rule on approval rates across the five protected attributes.",
+       "source": {
+        "record": "e1"
+       }
+      },
+      {
+       "text": "Reason codes come from each applicant's own feature contributions, so a declined applicant can contest them.",
+       "source": {
+        "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+        "title": "GDPR (Regulation (EU) 2016/679), Article 22: Automated individual decision-making, including profiling"
+       }
+      }
+     ],
+     "gaps": "The benchmarks table has no benchmark for tabular credit models: DiscrimEval (#64 in the illustrative sample) tests language models making decisions, not a scoring model.",
+     "id": "md-rcr-1"
+    },
+    {
+     "name": "Points-based logistic scorecard",
+     "fit": "A transparent scorecard whose points per attribute underwriters and applicants can read, at some cost in accuracy against the trees.",
+     "raises": [
+      "s-rcr-5"
+     ],
+     "lowers": [
+      "s-rcr-3",
+      "s-rcr-4"
+     ],
+     "benchmarks": [],
+     "criteria": [
+      {
+       "text": "Discrimination (Gini) within an agreed margin of the current model on the same held-out quarter.",
+       "source": {
+        "prototype": true
+       }
+      },
+      {
+       "text": "Points per attribute published in the model card.",
+       "source": {
+        "record": "e2"
+       }
+      },
+      {
+       "text": "A plain-language explanation of each decline that an applicant can act on.",
+       "source": {
+        "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+        "title": "EU AI Act (Regulation (EU) 2024/1689), Article 86: Right to explanation of individual decision-making"
+       }
+      }
+     ],
+     "gaps": "The benchmarks table has no benchmark for tabular credit models: DiscrimEval (#64 in the illustrative sample) tests language models making decisions, not a scoring model.",
+     "id": "md-rcr-2"
+    }
+   ],
+   "controls": {
+    "A.3": {
+     "criterion": {
+      "text": "The role charter names who confirms each decline and may overrule the score.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 26: Obligations of deployers of high-risk AI systems"
+      }
+     }
+    },
+    "A.5": {
+     "criterion": {
+      "text": "Four-fifths rule on approvals across protected attributes, re-run after each re-weighting.",
+      "source": {
+       "record": "e1"
+      }
+     }
+    },
+    "A.6": {
+     "criterion": {
+      "text": "Re-validation after each base-rate change, recorded against the model card.",
+      "source": {
+       "record": "e2"
+      }
+     }
+    },
+    "A.7": {
+     "criterion": {
+      "text": "A documented examination of bureau and behaviour features for proxies of protected traits.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance"
+      }
+     }
+    },
+    "A.8": {
+     "criterion": {
+      "text": "Reason codes tested against score contributions on a sample of declines.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 86: Right to explanation of individual decision-making"
+      }
+     }
+    },
+    "A.9": {
+     "criterion": {
+      "text": "A monthly sample of confirmed declines, checked for the depth of underwriter review.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 14: Human oversight"
+      }
+     }
+    }
+   }
+  },
+  "chatbot": {
+   "candidates": [
+    {
+     "name": "Hosted large language model with retrieval and citation checks",
+     "fit": "Answers service agents' questions from the indexed policy library, with each answer tied to the passage it cites.",
+     "raises": [
+      "s-chatbot-6",
+      "s-chatbot-5"
+     ],
+     "lowers": [
+      "r5"
+     ],
+     "benchmarks": [
+      {
+       "dataset": "s100",
+       "no": 14,
+       "name": "IFEval",
+       "dim": "G"
+      },
+      {
+       "dataset": "s100",
+       "no": 84,
+       "name": "FinanceBench",
+       "dim": "X"
+      },
+      {
+       "dataset": "s100",
+       "no": 31,
+       "name": "TruthfulQA",
+       "dim": "S"
+      },
+      {
+       "dataset": "s100",
+       "no": 42,
+       "name": "InjecAgent",
+       "dim": "S"
+      }
+     ],
+     "criteria": [
+      {
+       "text": "Citation-support rate on sampled answers, against the pilot baseline.",
+       "source": {
+        "record": "e6"
+       }
+      }
+     ],
+     "gaps": "The benchmarks table has no benchmark built on a bank's own policy library; the groundedness evaluation stands in for one.",
+     "id": "md-chatbot-1"
+    },
+    {
+     "name": "Smaller self-hosted model with the same retrieval",
+     "fit": "Keeps customer text inside the bank, at the cost of weaker reasoning on long or unusual policy questions.",
+     "raises": [
+      "r5"
+     ],
+     "lowers": [
+      "s-chatbot-6"
+     ],
+     "benchmarks": [
+      {
+       "dataset": "s100",
+       "no": 22,
+       "name": "MMLU-Pro",
+       "dim": "G"
+      },
+      {
+       "dataset": "s100",
+       "no": 79,
+       "name": "FLUE",
+       "dim": "X"
+      },
+      {
+       "dataset": "s100",
+       "no": 37,
+       "name": "AgentDojo",
+       "dim": "S"
+      },
+      {
+       "dataset": "s100",
+       "no": 59,
+       "name": "BBQ",
+       "dim": "F"
+      }
+     ],
+     "criteria": [
+      {
+       "text": "The same citation-support evaluation as the hosted model, run before switching.",
+       "source": {
+        "record": "e6"
+       }
+      }
+     ],
+     "gaps": "The benchmarks table has no benchmark built on a bank's own policy library; the groundedness evaluation stands in for one.",
+     "id": "md-chatbot-2"
+    }
+   ],
+   "controls": {
+    "A.2": {
+     "criterion": {
+      "text": "An approved AI use policy that names the copilot, its permitted uses and what staff may not paste into it.",
+      "source": {
+       "prototype": true
+      }
+     }
+    },
+    "A.6": {
+     "benchmark": {
+      "dataset": "s100",
+      "no": 95,
+      "name": "COMPL-AI",
+      "dim": "R"
+     }
+    },
+    "A.7": {
+     "criterion": {
+      "text": "A nightly check that every indexed policy is the current version.",
+      "source": {
+       "record": "e6"
+      }
+     }
+    },
+    "A.9": {
+     "criterion": {
+      "text": "Citation-support rate on sampled answers, reviewed weekly.",
+      "source": {
+       "record": "e6"
+      }
+     }
+    },
+    "A.10": {
+     "criterion": {
+      "text": "The provider contract states zero retention of prompts, checked in the supplier assessment.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+       "title": "GDPR (Regulation (EU) 2016/679), Article 5: Principles relating to processing of personal data"
+      }
+     }
+    }
+   }
+  },
+  "hiring": {
+   "candidates": [
+    {
+     "name": "Embedding similarity ranking with protected attributes masked",
+     "fit": "Ranks each application against the requisition by text similarity, after names, addresses, graduation years and any mention of health, religion or union membership are masked.",
+     "raises": [
+      "s-hiring-4"
+     ],
+     "lowers": [
+      "s-hiring-5"
+     ],
+     "benchmarks": [
+      {
+       "dataset": "s100",
+       "no": 58,
+       "name": "StereoSet",
+       "dim": "F"
+      },
+      {
+       "dataset": "s100",
+       "no": 64,
+       "name": "DiscrimEval",
+       "dim": "F"
+      }
+     ],
+     "criteria": [
+      {
+       "text": "Selection-rate ratio by group on held-out requisitions, within the four-fifths rule, in the independent bias audit.",
+       "source": {
+        "record": "d1"
+       }
+      },
+      {
+       "text": "Training and reference data examined for bias before each version.",
+       "source": {
+        "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+        "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance"
+       }
+      }
+     ],
+     "gaps": "The benchmarks table has no general-capability or sector-specific benchmark for ranking CVs against a requisition; the bias audit and recruiter review stand in for one.",
+     "id": "md-hiring-1"
+    },
+    {
+     "name": "Language-model extraction of stated requirements, ranked by recruiters",
+     "fit": "A language model reads each CV for the requirements the requisition states, such as the right to work and certifications; a candidate who fails one is rejected without a recruiter seeing the CV, and recruiters rank the rest.",
+     "raises": [
+      "s-hiring-7"
+     ],
+     "lowers": [
+      "s-hiring-4",
+      "s-hiring-6"
+     ],
+     "benchmarks": [
+      {
+       "dataset": "s100",
+       "no": 64,
+       "name": "DiscrimEval",
+       "dim": "F"
+      }
+     ],
+     "criteria": [
+      {
+       "text": "Selection-rate ratio by group on held-out requisitions, within the four-fifths rule, in the independent bias audit.",
+       "source": {
+        "record": "d1"
+       }
+      },
+      {
+       "text": "Each rejected candidate can be told which stated requirement was not met.",
+       "source": {
+        "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+        "title": "EU AI Act (Regulation (EU) 2024/1689), Article 86: Right to explanation of individual decision-making"
+       }
+      }
+     ],
+     "gaps": "The benchmarks table has no general-capability or sector-specific benchmark for ranking CVs against a requisition; the bias audit and recruiter review stand in for one.",
+     "id": "md-hiring-2"
+    }
+   ],
+   "controls": {
+    "A.3": {
+     "criterion": {
+      "text": "The hiring role charter names the recruiter accountable for each shortlist.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 26: Obligations of deployers of high-risk AI systems"
+      }
+     }
+    },
+    "A.5": {
+     "criterion": {
+      "text": "A signed-off fundamental-rights impact assessment before deployment.",
+      "source": {
+       "record": "e5"
+      }
+     }
+    },
+    "A.6": {
+     "criterion": {
+      "text": "A passed independent bias audit as a release condition.",
+      "source": {
+       "record": "d1"
+      }
+     }
+    },
+    "A.7": {
+     "criterion": {
+      "text": "Special-category data and its clear proxies removed before scoring.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+       "title": "GDPR (Regulation (EU) 2016/679), Article 9: Processing of special categories of personal data"
+      }
+     }
+    },
+    "A.8": {
+     "criterion": {
+      "text": "Rejected candidates told the main factors and offered a human review.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 86: Right to explanation of individual decision-making"
+      }
+     }
+    },
+    "A.9": {
+     "criterion": {
+      "text": "A sample of rejected applications checked for candidates the ranking missed.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 14: Human oversight"
+      }
+     }
+    },
+    "A.10": {
+     "criterion": {
+      "text": "The vendor documents the model's training data and design, as the contract requires.",
+      "source": {
+       "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+       "title": "EU AI Act (Regulation (EU) 2024/1689), Article 13: Transparency and provision of information to deployers"
+      }
+     }
+    }
+   }
+  }
+ }
+}

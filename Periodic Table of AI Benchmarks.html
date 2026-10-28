@@ -287,6 +287,15 @@ $('#play').onclick=()=>{
   timer=setInterval(()=>{ if(year>=mx){stop();return;} year++; yi.value=year; apply(!reduce); }, 850);
 };
 build();
+// Deep links from the AI Center X initiative page, #<dataset>-<no>. Anything else is ignored and never echoed, and the
+// number is checked before the dataset switches, so a bad link leaves the page as it was.
+function openFromHash(){
+  const m=/^#(s445|s100)-(0|[1-9]\d{0,2})$/.exec(location.hash), no=m&&+m[2];
+  if(!m||!DATA[m[1]].some(r=>r[0]===no)) return;
+  setDs(m[1]); openDetail(no);
+}
+window.addEventListener('hashchange', openFromHash);
+openFromHash();
 </script>
 
 </body></html>

@@ -110,6 +110,7 @@ function suggestMitigations(init){
     var btn=document.getElementById("sugg-mitig-btn-"+init), note=document.getElementById("sugg-mitig-fresh-"+init);
     if(btn) btn.textContent="Suggest mitigations again";
     if(note) note.textContent=freshNote(init);
+    selectionChanged(init);
     return mitigationResult(init);
   });
 }
