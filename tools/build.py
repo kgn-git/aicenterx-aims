@@ -25,8 +25,10 @@ def sub(old, new, count=1):
         sys.exit(f"expected {count} of {old[:70]!r}, found {n}")
     html = html.replace(old, new)
 
-# The canvas agent's scripts, injected in this order: the shared run first, then each suggester that calls it.
-AGENT_JS = ("agent-run.js", "risk-suggestions.js")
+# The canvas agent's data (name in the page, file in tools/data) and scripts, injected in this order: what the
+# suggesters share, the run, then each suggester.
+AGENT_DATA = (("RISK_SUGGESTIONS", "risk_suggestions"), ("MITIGATION_SUGGESTIONS", "mitigation_suggestions"))
+AGENT_JS = ("agent-shared.js", "agent-run.js", "risk-suggestions.js", "mitigation-suggestions.js")
 
 def data_js(name):
     return script_literal(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8")))
@@ -253,7 +255,7 @@ sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSecti
     """    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+filmLink(id)+riskSuggestSection(id)+'</div>'+""")
 # The canvas agent replays curated, cited output; its data lives in tools/data so tests can read it as JSON.
 sub("function pageInitiative(id){",
-    "var RISK_SUGGESTIONS=" + data_js("risk_suggestions") + ";\n" +
+    "".join(f"var {var}={data_js(name)};\n" for var, name in AGENT_DATA) +
     "".join((SCRATCH / f).read_text(encoding="utf-8") for f in AGENT_JS) +
     "function pageInitiative(id){")
 # The AI Canvases register gets a "Simulation" column with the same film link.

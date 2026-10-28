@@ -1,0 +1,557 @@
+{
+ "attribution": [
+  {
+   "key": "mit",
+   "source": "MIT AI Risk Mitigation Taxonomy (draft)",
+   "licence": "CC BY 4.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+   "url": "https://airisk.mit.edu/ai-risk-mitigations",
+   "citation": "MIT AI Risk Initiative (2025). Mapping AI Risk Mitigations: Evidence Scan & Draft Mitigation Taxonomy. https://airisk.mit.edu/blog/mapping-ai-risk-mitigations",
+   "changes": "Each mitigation is classified with one subcategory of the draft taxonomy, which was released for comment. The mitigation text is written for this prototype."
+  },
+  {
+   "key": "eurlex",
+   "source": "EUR-Lex",
+   "licence": "Reuse under Commission Decision 2011/833/EU",
+   "licenceUrl": "https://eur-lex.europa.eu/eli/dec/2011/833/oj",
+   "url": "https://eur-lex.europa.eu/",
+   "citation": "Regulation (EU) 2024/1689 (Artificial Intelligence Act) and Regulation (EU) 2016/679 (General Data Protection Regulation), Official Journal of the European Union.",
+   "changes": "Article numbers and titles are quoted; the mitigation text is written for this prototype. Only the text published in the Official Journal is authentic."
+  }
+ ],
+ "risks": {
+  "r2": [
+   {
+    "description": "Re-weight the flagged cohort, re-run the four-fifths test across all five protected attributes, and hold the scale decision until every cohort is within tolerance.",
+    "strategy": "mitigate",
+    "controlKey": "A.5",
+    "lifecycleStage": "Test & Evaluate",
+    "mit": "3.1 Testing & Auditing",
+    "why": "A.5 owns assessing impacts on groups, and the disparity test that flagged the cohort is filed under it.",
+    "sources": [
+     {
+      "record": "d2"
+     },
+     {
+      "record": "e1"
+     }
+    ],
+    "id": "m-r2-1"
+   },
+   {
+    "description": "Examine bureau and account-behaviour features for proxies of protected traits, and drop or constrain the ones that act as proxies.",
+    "strategy": "mitigate",
+    "controlKey": "A.7",
+    "lifecycleStage": "Data",
+    "mit": "3.2 Data Governance",
+    "why": "Proxies enter through the training data, whose provenance and preparation A.7 governs.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance"
+     },
+     {
+      "record": "e1"
+     }
+    ],
+    "id": "m-r2-2"
+   }
+  ],
+  "r3": [
+   {
+    "description": "Compare the score distribution and approval rates with the calibration baseline every month, and trigger a recalibration review when they move past a set threshold.",
+    "strategy": "mitigate",
+    "controlKey": "A.6",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "3.5 Post-deployment Monitoring",
+    "why": "Monitoring between reviews is part of running the model through its life cycle, which A.6 owns.",
+    "sources": [
+     {
+      "record": "e2"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 72: Post-market monitoring by providers and post-market monitoring plan for high-risk AI systems"
+     }
+    ],
+    "id": "m-r3-1"
+   },
+   {
+    "description": "Re-validate the model after every change in the bank base rate, not only at the quarterly review.",
+    "strategy": "mitigate",
+    "controlKey": "A.6",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "3.1 Testing & Auditing",
+    "why": "A rate change is the drift trigger the risk names, and re-validation is a life-cycle step under A.6.",
+    "sources": [
+     {
+      "record": "e2"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 15: Accuracy, robustness and cybersecurity"
+     }
+    ],
+    "id": "m-r3-2"
+   }
+  ],
+  "s-rcr-3": [
+   {
+    "description": "Build each decline's reason codes from that applicant's own score contributions, and test a sample of declines to check the stated reasons match what drove the score.",
+    "strategy": "mitigate",
+    "controlKey": "A.8",
+    "lifecycleStage": "Develop",
+    "mit": "4.6 User Rights & Recourse",
+    "why": "Reason codes are the information an applicant is given, which A.8 covers.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 22: Automated individual decision-making, including profiling"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 86: Right to explanation of individual decision-making"
+     },
+     {
+      "record": "e2"
+     }
+    ],
+    "id": "m-s-rcr-3-1"
+   }
+  ],
+  "s-rcr-4": [
+   {
+    "description": "Ask underwriters to record their own reason when they confirm a decline, and sample confirmed declines each month for the depth of review.",
+    "strategy": "mitigate",
+    "controlKey": "A.9",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "3.5 Post-deployment Monitoring",
+    "why": "A.9 owns how the system is used, including the human oversight of each decline.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 22: Automated individual decision-making, including profiling"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 14: Human oversight"
+     }
+    ],
+    "id": "m-s-rcr-4-1"
+   },
+   {
+    "description": "Name underwriting in the role charter as accountable for every decline, with the authority and time to overturn the score.",
+    "strategy": "mitigate",
+    "controlKey": "A.3",
+    "lifecycleStage": "Plan & Design",
+    "mit": "1.5 Safety Decision Frameworks",
+    "why": "Who holds the decision and the authority to overrule the model is a matter of roles, which A.3 sets.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 26: Obligations of deployers of high-risk AI systems"
+     }
+    ],
+    "id": "m-s-rcr-4-2"
+   }
+  ],
+  "s-rcr-5": [
+   {
+    "description": "Report accuracy separately for thin-file, young and recently moved applicants, and send low-confidence thin-file scores to manual underwriting instead of an automatic decline.",
+    "strategy": "mitigate",
+    "controlKey": "A.5",
+    "lifecycleStage": "Test & Evaluate",
+    "mit": "3.1 Testing & Auditing",
+    "why": "Unequal accuracy across groups is an impact on those groups, which A.5 assesses.",
+    "sources": [
+     {
+      "record": "e1"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance"
+     }
+    ],
+    "id": "m-s-rcr-5-1"
+   }
+  ],
+  "r5": [
+   {
+    "description": "Hold back any answer for which the groundedness check finds no supporting passage, and show the service agent the cited source beside every answer.",
+    "strategy": "mitigate",
+    "controlKey": "A.9",
+    "lifecycleStage": "Deploy",
+    "mit": "2.4 Content Safety Controls",
+    "why": "The guardrail sits where service agents use the system, which A.9 governs.",
+    "sources": [
+     {
+      "record": "e6"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 15: Accuracy, robustness and cybersecurity"
+     }
+    ],
+    "id": "m-r5-1"
+   },
+   {
+    "description": "Track the citation-support rate weekly on sampled answers, and re-open the impact assessment if it falls below the pilot baseline.",
+    "strategy": "mitigate",
+    "controlKey": "A.6",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "3.5 Post-deployment Monitoring",
+    "why": "Ongoing evaluation after release is a life-cycle duty under A.6.",
+    "sources": [
+     {
+      "record": "e6"
+     },
+     {
+      "record": "d6"
+     }
+    ],
+    "id": "m-r5-2"
+   }
+  ],
+  "r9": [
+   {
+    "description": "Treat customer text as data, not instructions: keep it apart from the system prompt, filter known injection patterns, and limit what the assistant can retrieve in that session.",
+    "strategy": "mitigate",
+    "controlKey": "A.6",
+    "lifecycleStage": "Develop",
+    "mit": "2.1 Model & Infrastructure Security",
+    "why": "Input handling is designed into the system, which is life-cycle work under A.6.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 15: Accuracy, robustness and cybersecurity"
+     },
+     {
+      "record": "d6"
+     }
+    ],
+    "id": "m-r9-1"
+   },
+   {
+    "description": "Run an injection test suite before each release, and log suspected injections for incident review.",
+    "strategy": "mitigate",
+    "controlKey": "A.6",
+    "lifecycleStage": "Test & Evaluate",
+    "mit": "3.1 Testing & Auditing",
+    "why": "Release testing is a life-cycle gate under A.6.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 15: Accuracy, robustness and cybersecurity"
+     },
+     {
+      "record": "d6"
+     }
+    ],
+    "id": "m-r9-2"
+   }
+  ],
+  "s-chatbot-3": [
+   {
+    "description": "Remove withdrawn and replaced documents from the index on the day they change, and check each night that every indexed policy is the current version.",
+    "strategy": "mitigate",
+    "controlKey": "A.7",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "3.2 Data Governance",
+    "why": "The index is the data the copilot answers from, and its currency is a data-quality matter for A.7.",
+    "sources": [
+     {
+      "record": "e6"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 15: Accuracy, robustness and cybersecurity"
+     }
+    ],
+    "id": "m-s-chatbot-3-1"
+   }
+  ],
+  "s-chatbot-4": [
+   {
+    "description": "Filter retrieval by the service agent's business-unit permissions, so documents and their titles from other units never reach the prompt or the answer.",
+    "strategy": "mitigate",
+    "controlKey": "A.7",
+    "lifecycleStage": "Develop",
+    "mit": "3.3 Access Management",
+    "why": "Which documents may feed an answer is a question of data access, which A.7 governs.",
+    "sources": [
+     {
+      "record": "d6"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 25: Data protection by design and by default"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 32: Security of processing"
+     }
+    ],
+    "id": "m-s-chatbot-4-1"
+   }
+  ],
+  "s-chatbot-5": [
+   {
+    "description": "Ask service agents to open the cited source before sending an answer about fees, terms or eligibility, and sample sent answers for unchecked use.",
+    "strategy": "mitigate",
+    "controlKey": "A.9",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "3.5 Post-deployment Monitoring",
+    "why": "A.9 owns how service agents use the system and keep human oversight over it.",
+    "sources": [
+     {
+      "record": "e6"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 14: Human oversight"
+     }
+    ],
+    "id": "m-s-chatbot-5-1"
+   },
+   {
+    "description": "State in the AI use policy that a copilot answer is a draft the service agent remains accountable for.",
+    "strategy": "mitigate",
+    "controlKey": "A.2",
+    "lifecycleStage": "Deploy",
+    "mit": "1.5 Safety Decision Frameworks",
+    "why": "Rules for staff use of AI belong in the AI policy set, which A.2 holds.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 26: Obligations of deployers of high-risk AI systems"
+     }
+    ],
+    "id": "m-s-chatbot-5-2"
+   }
+  ],
+  "s-chatbot-6": [
+   {
+    "description": "State in the AI use policy that customers' account and personal details are never pasted into the copilot.",
+    "strategy": "mitigate",
+    "controlKey": "A.2",
+    "lifecycleStage": "Deploy",
+    "mit": "3.2 Data Governance",
+    "why": "What staff may put into an AI tool is an AI policy rule, which A.2 holds.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 5: Principles relating to processing of personal data"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 25: Data protection by design and by default"
+     }
+    ],
+    "id": "m-s-chatbot-6-1"
+   },
+   {
+    "description": "Agree zero retention of prompts with the model provider, and check it in the provider's supplier assessment.",
+    "strategy": "transfer",
+    "controlKey": "A.10",
+    "lifecycleStage": "Deploy",
+    "mit": "1.2 Risk Management",
+    "why": "Retention at the provider is a supplier commitment, which A.10's third-party controls cover.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 5: Principles relating to processing of personal data"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 32: Security of processing"
+     }
+    ],
+    "id": "m-s-chatbot-6-2"
+   }
+  ],
+  "r1": [
+   {
+    "description": "Keep the initiative held at the gate until the fundamental-rights impact assessment is signed off, completed with the affected groups and the bias-audit results.",
+    "strategy": "avoid",
+    "controlKey": "A.5",
+    "lifecycleStage": "Plan & Design",
+    "mit": "1.7 Societal Impact Assessment",
+    "why": "The fundamental-rights impact assessment is an impact assessment, which A.5 owns, and the board made it a gate condition.",
+    "sources": [
+     {
+      "record": "d1"
+     },
+     {
+      "record": "e5"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 27: Fundamental rights impact assessment for high-risk AI systems"
+     }
+    ],
+    "id": "m-r1-1"
+   }
+  ],
+  "r4": [
+   {
+    "description": "Commission an independent bias audit of the ranking before any shortlist is produced, and repeat it for each new model version.",
+    "strategy": "mitigate",
+    "controlKey": "A.6",
+    "lifecycleStage": "Develop",
+    "mit": "3.1 Testing & Auditing",
+    "why": "Auditing before release is a life-cycle step under A.6, where the risk is recorded.",
+    "sources": [
+     {
+      "record": "d1"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance"
+     }
+    ],
+    "id": "m-r4-1"
+   },
+   {
+    "description": "Review the CV fields the ranking uses for proxies of protected traits, such as names, addresses and graduation years, and exclude them before ranking.",
+    "strategy": "mitigate",
+    "controlKey": "A.7",
+    "lifecycleStage": "Data",
+    "mit": "3.2 Data Governance",
+    "why": "Which CV fields reach the model is a data-preparation choice under A.7.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 9: Processing of special categories of personal data"
+     }
+    ],
+    "id": "m-r4-2"
+   }
+  ],
+  "s-hiring-3": [
+   {
+    "description": "Keep past recruiter shortlists out of retraining until they are audited for bias, and compare each new version's shortlist rates by group before release.",
+    "strategy": "mitigate",
+    "controlKey": "A.7",
+    "lifecycleStage": "Data",
+    "mit": "3.2 Data Governance",
+    "why": "Which past decisions become training data is a data-preparation choice under A.7.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance"
+     },
+     {
+      "record": "e5"
+     }
+    ],
+    "id": "m-s-hiring-3-1"
+   }
+  ],
+  "s-hiring-4": [
+   {
+    "description": "Give each rejected candidate the main factors behind their ranking and a way to ask for a human review.",
+    "strategy": "mitigate",
+    "controlKey": "A.8",
+    "lifecycleStage": "Deploy",
+    "mit": "4.6 User Rights & Recourse",
+    "why": "What candidates are told is information for interested parties, which A.8 covers.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 86: Right to explanation of individual decision-making"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 22: Automated individual decision-making, including profiling"
+     }
+    ],
+    "id": "m-s-hiring-4-1"
+   }
+  ],
+  "s-hiring-5": [
+   {
+    "description": "Strip special-category data and its clear proxies from CV text before scoring, and record the lawful basis for anything that remains in the data protection impact assessment.",
+    "strategy": "mitigate",
+    "controlKey": "A.7",
+    "lifecycleStage": "Data",
+    "mit": "3.2 Data Governance",
+    "why": "Preparing the CV data before it is scored is data work under A.7.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 9: Processing of special categories of personal data"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2016/679/oj",
+      "title": "GDPR (Regulation (EU) 2016/679), Article 35: Data protection impact assessment"
+     },
+     {
+      "record": "e5"
+     }
+    ],
+    "id": "m-s-hiring-5-1"
+   }
+  ],
+  "s-hiring-6": [
+   {
+    "description": "Make documentation of the vendor model's training data and design a contract condition before the pilot, and audit the model against it.",
+    "strategy": "transfer",
+    "controlKey": "A.10",
+    "lifecycleStage": "Plan & Design",
+    "mit": "4.1 System Documentation",
+    "why": "The duty sits with the vendor, so it is secured through the third-party controls of A.10.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 13: Transparency and provision of information to deployers"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 26: Obligations of deployers of high-risk AI systems"
+     }
+    ],
+    "id": "m-s-hiring-6-1"
+   }
+  ],
+  "s-hiring-7": [
+   {
+    "description": "Name the recruiter accountable for each shortlist in the hiring role charter, and require them to review every rejection below the cut-off.",
+    "strategy": "mitigate",
+    "controlKey": "A.3",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "1.5 Safety Decision Frameworks",
+    "why": "Accountability for each shortlist is a role assignment, which A.3 sets.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 14: Human oversight"
+     },
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 26: Obligations of deployers of high-risk AI systems"
+     }
+    ],
+    "id": "m-s-hiring-7-1"
+   },
+   {
+    "description": "Limit how many applications each recruiter reviews a day, and sample rejected applications for candidates the ranking missed.",
+    "strategy": "mitigate",
+    "controlKey": "A.9",
+    "lifecycleStage": "Operate & Monitor",
+    "mit": "3.5 Post-deployment Monitoring",
+    "why": "A.9 owns how recruiters use the ranking and keep oversight of it.",
+    "sources": [
+     {
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj",
+      "title": "EU AI Act (Regulation (EU) 2024/1689), Article 14: Human oversight"
+     }
+    ],
+    "id": "m-s-hiring-7-2"
+   }
+  ]
+ }
+}

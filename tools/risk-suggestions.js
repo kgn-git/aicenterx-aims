@@ -1,23 +1,10 @@
 /* ---- Risk and harm suggestions on the initiative page: the agent replays the curated, cited RISK_SUGGESTIONS ----
-   The selection lives in SUGG, keyed by initiative so one initiative's picks never feed another's mitigations, until
-   reload. It never writes to RISKS: nothing enters the register until a person adds it. A suggestion that matches a
-   register risk has no checkbox of its own, so the selection holds each risk once: a register risk by its register
-   id, any other suggestion by its suggestion id. */
-var SUGG=Object.create(null);
-function suggOf(init){ return SUGG[init]||(SUGG[init]={selected:{},runs:{}}); }
+   It never writes to RISKS: nothing enters the register until a person adds it. A suggestion that matches a register
+   risk has no checkbox of its own, so the selection holds each risk once: a register risk by its register id, any
+   other suggestion by its suggestion id. Later steps add their sections to the end of the result through
+   RISK_RESULT_PARTS, so this file names none of them. The result is drawn from curated data and the live selection,
+   so it carries one state stamp, "risks": a page rebuilt mid-run already shows all of it. */
 var RISK_STEPS=["Read the AI Canvas","Search the MIT AI Risk Repository","Match AI incidents","Add AI Index context","Draft suggestions"];
-var SOURCE_HOSTS={mit:"airisk.mit.edu",aiid:"incidentdatabase.ai",aiindex:"hai.stanford.edu",licence:"creativecommons.org"};
-// The data test's url_ok rule, applied again at render: a fixed prefix rather than a parsed hostname, because parsers
-// and browsers read userinfo, ports and backslashes differently.
-function sourceUrlOk(url,host){
-  var known=Object.keys(SOURCE_HOSTS).some(function(k){ return SOURCE_HOSTS[k]===host; }), head="https://"+host;
-  return known&&typeof url==="string"&&url.indexOf(head)===0&&/^(?:[\/?#]\S*)?$/.test(url.slice(head.length));
-}
-function sourceLink(url,host,text){
-  if(!sourceUrlOk(url,host)) return esc(text);
-  return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+esc(text)+
-    '<span aria-hidden="true"> ↗</span><span'+SR_ONLY+'> (opens in a new tab)</span></a>';
-}
 function blockLabel(f){ var b=CANVAS_BLOCKS.filter(function(x){return x.f===f;})[0]; return b?b.l:"AI Canvas"; }
 function suggCount(init){ return Object.keys(suggOf(init).selected).length+" selected"; }
 function suggLabel(init,id,label){
@@ -51,7 +38,7 @@ function riskSuggestResult(init){
   var d=RISK_SUGGESTIONS.initiatives[init], ctx=d.context;
   var mine=RISKS.filter(function(r){return r.init===init;});
   var sub='display:block;font-size:13px;margin:14px 0 8px';
-  return '<div class="surface pad" style="margin-top:12px">'+
+  return '<div class="surface pad" data-run-state="risks" style="margin-top:12px">'+
     '<h3 class="sec-title" id="sugg-risks-head-'+esc(init)+'" data-run-head tabindex="-1" style="margin-top:0">Suggested risks and harms</h3>'+
     '<p class="muted-note" style="margin:0 0 12px">These are suggestions. They block nothing, and nothing enters the risk register until a person adds it.</p>'+
     '<blockquote data-sugg-context style="margin:0 0 14px;padding-left:12px;border-left:3px solid var(--hairline);font-size:13px">'+
@@ -68,7 +55,8 @@ function riskSuggestResult(init){
     '<h4 style="'+sub+'">Sources and licences</h4>'+
     '<ul data-attribution class="muted-note" style="margin:0;padding-left:18px;font-size:12px">'+RISK_SUGGESTIONS.attribution.map(function(a){
       return '<li>'+sourceLink(a.url,SOURCE_HOSTS[a.key],a.source)+', '+sourceLink(a.licenceUrl,SOURCE_HOSTS.licence,a.licence)+'. Changes: '+esc(a.changes)+'</li>';
-    }).join("")+'</ul></div>';
+    }).join("")+'</ul>'+
+    RISK_RESULT_PARTS.map(function(part){ return part(init); }).join("")+'</div>';
 }
 function riskSuggestEmpty(init){
   return '<div class="surface" data-sugg-empty style="margin-top:12px"><div class="empty">'+
@@ -108,4 +96,5 @@ document.addEventListener("change",function(e){
   if(el.checked) sel[id]=true; else delete sel[id];
   var c=document.getElementById("sugg-count-"+init);
   if(c) c.textContent=suggCount(init);
+  selectionChanged(init);
 });
