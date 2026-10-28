@@ -254,6 +254,7 @@ sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSecti
 # The canvas agent replays curated, cited output; its data lives in tools/data so tests can read it as JSON.
 sub("function pageInitiative(id){",
     "var RISK_SUGGESTIONS=" + data_js("risk_suggestions") + ";\n" +
+    "var MITIGATION_SUGGESTIONS=" + data_js("mitigation_suggestions") + ";\n" +
     "".join((SCRATCH / f).read_text(encoding="utf-8") for f in AGENT_JS) +
     "function pageInitiative(id){")
 # The AI Canvases register gets a "Simulation" column with the same film link.
