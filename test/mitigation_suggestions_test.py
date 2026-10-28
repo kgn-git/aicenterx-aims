@@ -36,6 +36,7 @@ HTML = INDEX.read_text(encoding='utf-8')
 DATA = json.loads((ROOT / 'tools' / 'data' / 'mitigation_suggestions.json').read_text(encoding='utf-8'))
 RISK_DATA = json.loads((ROOT / 'tools' / 'data' / 'risk_suggestions.json').read_text(encoding='utf-8'))
 CONTROLS = {k: (o, c, w) for k, o, c, w in re.findall(r'\{key:"(A\.\d+)",objective:"([^"]*)",closure:"([\w-]+)",owner:"(\w+)"', HTML)}
+REGISTER = re.findall(r'\{id:"(r\d+)",init:"(\w+)",description:"([^"]+)"', HTML)
 TREATMENT = {m.group(1): m.group(2, 3) for m in (re.match(r'\{id:"(r\d+)",init:"\w+".*?treatment:(?:null|\{strategy:"(\w+)",owner:"(\w+)")', c, re.S)
                                                  for c in re.split(r'(?=\{id:"r\d+",init:)', HTML)[1:]) if m}
 EVIDENCE = dict(re.findall(r'\{id:"(e\d+)",init:"\w+",kind:"[\w-]+",title:"([^"]+)"', HTML))
@@ -46,6 +47,7 @@ STEPS = ['Read the selected risks', "Check the register's treatments", 'Match th
 FREE = {i: [s['id'] for s in RISK_DATA['initiatives'][i]['suggestions'] if not s['matchesRisk']] for i in RISK_DATA['initiatives']}
 NOTHING = 'You have not selected any risks yet. Select risks in the risk suggestions to get mitigations. This blocks nothing.'
 FRESH = '#sugg-mitig-fresh-rcr'
+CC_SOURCE = 'https://creativecommons.org/tampered-source'
 
 # Records, in the page, when each step is first marked done and when the result heading appears.
 RECORD = """([sel, head]) => { window.__log = []; window.__headT = null; const seen = new Set();
@@ -59,11 +61,12 @@ RECORD = """([sel, head]) => { window.__log = []; window.__headT = null; const s
 
 
 def tampered():
-    """rcr's mitigations with markup in every rendered text field, an EUR-Lex lookalike source and a bad EUR-Lex licence
-    link. The url rule's own cases (javascript:, quotes, userinfo) are pinned in test/risk_suggestions_test.py."""
+    """rcr's mitigations with markup in every rendered text field, an EUR-Lex lookalike source, a source on the licence
+    host, and a bad EUR-Lex licence link. The url rule's own cases (javascript:, quotes, userinfo) are pinned in test/risk_suggestions_test.py."""
     d = copy.deepcopy(DATA)
     shown = []
     d['risks']['s-rcr-3'][0]['sources'].append({'url': 'https://eur-lex.europa.eu.evil.example/x', 'title': 'lookalike'})
+    d['risks']['s-rcr-3'][0]['sources'].append({'url': CC_SOURCE, 'title': 'licence host'})
     d['attribution'][1]['licenceUrl'] = 'https://eur-lex.europa.eu.evil.example/licence'
 
     def mark(obj, key):
@@ -203,7 +206,8 @@ def run(tmp):
                   first.get_attribute('data-in-register') is not None and f'Treatment in the register: {strategy.capitalize()}' in reg.inner_text()
                   and reg.locator(f'[data-open="person:{t_owner}"]').count() >= 1
                   and reg.locator(f'[data-gap] [data-open="person:{r2_owner}"]').count() == 1
-                  and reg.locator('[data-open="risk:r2"]').get_attribute('aria-describedby') == 'sugg-mitig-risk-rcr-r2')
+                  and reg.locator('[data-open="risk:r2"]').get_attribute('aria-describedby') == 'sugg-mitig-risk-rcr-r2'
+                  and pg.locator(f'{block("rcr", "r2")} #sugg-mitig-risk-rcr-r2').inner_text().strip() == next(d for r, i, d in REGISTER if r == 'r2'))
             check('a suggested risk has no "In the register" row', pg.locator(f'{block("rcr", "s-rcr-4")} [data-in-register]').count() == 0)
             links = pg.locator(f'{host("rcr")} a').evaluate_all(
                 'as => as.map(a => [a.getAttribute("href"), a.getAttribute("target"), a.getAttribute("rel"), a.textContent])')
@@ -232,8 +236,9 @@ def run(tmp):
             mitigate(pg, 'hiring')
             reg = pg.locator(f'{block("hiring", "r4")} [data-in-register]')
             r4_control = re.search(r'\{id:"r4",.*?controlKey:"(A\.\d+)"', HTML, re.S).group(1)
-            check('a register risk with no treatment shows "No treatment recorded" as its one gap, and still names its control',
-                  'No treatment recorded' in reg.inner_text() and reg.locator('[data-gap]').count() == 1
+            check('a register risk with no treatment says so, shows "No treatment recorded" as its one gap, and still names its control',
+                  'No treatment in the register' in reg.inner_text() and 'Treatment in the register' not in reg.inner_text()
+                  and 'No treatment recorded' in reg.inner_text() and reg.locator('[data-gap]').count() == 1
                   and 'Gap' in reg.locator('[data-gap]').inner_text() and reg.locator(f'[data-open="control:{r4_control}"]').count() == 1)
 
         with section('AC5'):
@@ -267,6 +272,11 @@ def run(tmp):
             check('two risks ticked after the run are counted in the note',
                   pg.inner_text(FRESH).strip() == 'You selected 2 risks after the last run. Suggest mitigations again to add their mitigations.')
             pg.uncheck('#sugg-risks-rcr [data-pick-risk="r3"]')
+            pg.evaluate("""sel => { window.__said = 0; new MutationObserver(() => window.__said++)
+              .observe(document.querySelector(sel), {childList: true, characterData: true, subtree: true}); }""", FRESH)
+            pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-3"]')
+            pick(pg, 'rcr', 's-rcr-3')
+            check('ticks that leave the note unchanged do not rewrite its live region', pg.evaluate('window.__said') == 0)
             go(pg, '#/portfolio', '#page')
             go(pg, '#/initiative/rcr', '#sugg-mitig-head-rcr')
             check('the result survives moving to another page and back',
@@ -291,8 +301,8 @@ def run(tmp):
             pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-3"]')
             pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-5"]')
             pick(pg, 'rcr', 's-rcr-4')
-            check('with every covered risk unticked and a new one ticked, the result keeps its heading and the note',
-                  pg.locator('#sugg-mitig-head-rcr').count() == 1 and pg.locator(f'{host("rcr")} [data-mitig-risk]').count() == 0
+            check('with every covered risk unticked and a new one ticked, the result keeps its heading, says why it is empty, and shows the note',
+                  pg.locator('#sugg-mitig-head-rcr').count() == 1 and pg.locator(f'{host("rcr")} [data-mitig-empty]').count() == 1 and pg.locator(f'{host("rcr")} [data-mitig-risk]').count() == 0
                   and 'You selected 1 risk' in pg.inner_text(FRESH))
             pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-4"]')
             check('unticking every risk shows the nothing-selected message',
@@ -327,8 +337,8 @@ def run(tmp):
             check('every curated text field reaches the page as text, never as markup',
                   pg.locator(f'{host("rcr")} [data-xss]').count() == 0 and all(s in text for s in shown), [s for s in shown if s not in text])
             hrefs = pg.locator(f'{host("rcr")} a').evaluate_all('as => as.map(a => a.getAttribute("href"))')
-            check('an EUR-Lex lookalike source or licence link is not linked',
-                  hrefs and all(any(url_ok(h, x) for x in HOSTS) for h in hrefs) and not any('evil' in h for h in hrefs), hrefs)
+            check('an EUR-Lex lookalike, a bad EUR-Lex licence link, and a source on a host mitigations may not cite are not linked',
+                  CC_SOURCE not in hrefs and hrefs and all(any(url_ok(h, x) for x in HOSTS) for h in hrefs) and not any('evil' in h for h in hrefs), hrefs)
 
         b.close()
 

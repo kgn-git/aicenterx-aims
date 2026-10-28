@@ -2,9 +2,9 @@
    It never writes to RISKS: nothing enters the register until a person adds it. A suggestion that matches a register
    risk has no checkbox of its own, so the selection holds each risk once: a register risk by its register id, any
    other suggestion by its suggestion id. Later steps add their sections to the end of the result through
-   RISK_RESULT_PARTS, so this file names none of them. */
+   RISK_RESULT_PARTS, so this file names none of them. The result is drawn from curated data and the live selection,
+   so it carries one state stamp, "risks": a page rebuilt mid-run already shows all of it. */
 var RISK_STEPS=["Read the AI Canvas","Search the MIT AI Risk Repository","Match AI incidents","Add AI Index context","Draft suggestions"];
-var RISK_RESULT_PARTS=[];
 function blockLabel(f){ var b=CANVAS_BLOCKS.filter(function(x){return x.f===f;})[0]; return b?b.l:"AI Canvas"; }
 function suggCount(init){ return Object.keys(suggOf(init).selected).length+" selected"; }
 function suggLabel(init,id,label){
@@ -38,7 +38,7 @@ function riskSuggestResult(init){
   var d=RISK_SUGGESTIONS.initiatives[init], ctx=d.context;
   var mine=RISKS.filter(function(r){return r.init===init;});
   var sub='display:block;font-size:13px;margin:14px 0 8px';
-  return '<div class="surface pad" style="margin-top:12px">'+
+  return '<div class="surface pad" data-run-state="risks" style="margin-top:12px">'+
     '<h3 class="sec-title" id="sugg-risks-head-'+esc(init)+'" data-run-head tabindex="-1" style="margin-top:0">Suggested risks and harms</h3>'+
     '<p class="muted-note" style="margin:0 0 12px">These are suggestions. They block nothing, and nothing enters the risk register until a person adds it.</p>'+
     '<blockquote data-sugg-context style="margin:0 0 14px;padding-left:12px;border-left:3px solid var(--hairline);font-size:13px">'+

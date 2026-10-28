@@ -64,7 +64,7 @@ UNIT = """async ([mode, steps]) => {
     if (out.done === 1) { const ls = [...runHost.querySelectorAll('[data-step]')];
       out.statesAtDone = ls.map(e => e.dataset.state); out.textsAtDone = ls.map(e => e.textContent);
       out.skipAtDone = !!runHost.querySelector('[data-run-skip]'); }
-    return mode === 'nohtml' ? undefined : '<h3 data-run-head tabindex="-1">Result</h3>'; };
+    return mode === 'nohtml' ? undefined : '<h3 data-run-head tabindex="-1" data-run-state="v1">Result</h3>'; };
   out.started = agentRun('unit-host', steps, cb);
   out.items = runHost.querySelectorAll('[data-step]').length;
   const st = runHost.querySelector('[role=status]');
@@ -82,7 +82,8 @@ UNIT = """async ([mode, steps]) => {
   if (mode === 'plain' || mode === 'reduced' || mode === 'none') { await wait(30); out.early = out.done; await wait(2600); }
   if (mode.startsWith('rebuilt') || mode === 'newer') {
     await wait(100); runHost.remove();
-    host = mk(mode === 'rebuilt-same' ? '<h3 data-run-head tabindex="-1">Result</h3>' : mode === 'rebuilt-stale' ? '<h3 data-run-head>Stale</h3>' : '');
+    host = mk({'rebuilt-same': '<h3 data-run-head data-run-state="v1">Edited since</h3>', 'rebuilt-stale': '<h3 data-run-head data-run-state="v0">Stale</h3>',
+               'rebuilt-busy': '<div data-run-state="v0"><div data-run-busy></div></div>'}[mode] || '');
     const before = host.firstChild;
     if (mode === 'newer') agentRun('unit-host', steps, cb);
     await settle(); await wait(50); out.afterOld = out.done; out.sameNode = !!before && host.firstChild === before;
@@ -244,8 +245,11 @@ def run(tmp):
                 check('a rebuilt, empty host gets the result without taking focus',
                       r['afterOld'] == 1 and r['freshHead'] == 'Result' and not r['focusedFresh'], r)
                 r = unit(pg, 'rebuilt-same', five)
-                check('a rebuilt host that already shows this same result keeps it untouched',
-                      r['afterOld'] == 1 and r['freshHead'] == 'Result' and r['sameNode'], r)
+                check('a rebuilt host that shows a result from the same state keeps it untouched, edits included',
+                      r['afterOld'] == 1 and r['freshHead'] == 'Edited since' and r['sameNode'], r)
+                r = unit(pg, 'rebuilt-busy', five)
+                check('a rebuilt host with a newer run inside it is left alone', r['afterOld'] == 1 and r['sameNode']
+                      and r['freshHead'] is None, r)
                 r = unit(pg, 'rebuilt-stale', five)
                 check('a rebuilt host that shows an older result gets the new one',
                       r['afterOld'] == 1 and r['freshHead'] == 'Result' and not r['focusedFresh'], r)
@@ -383,11 +387,13 @@ def run(tmp):
                 pg.wait_for_selector(f'{host("rcr")} [data-step]', timeout=1000)
                 go(pg, '#/portfolio', '#page')
                 go(pg, '#/initiative/rcr', '#sugg-risks-head-rcr')
-                pg.focus(pick('rcr', FREE[1]))
+                pg.check(pick('rcr', FREE[0]))
+                pg.focus(pick('rcr', FREE[0]))
                 pg.wait_for_timeout(2600)  # the run left behind ends meanwhile; it must not repaint the result under the user
-                check('leaving during "Run again" and coming back shows the result and the selection, and keeps focus',
-                      pg.locator('#sugg-risks-head-rcr').count() == 1 and pg.is_checked(pick('rcr', FREE[1]))
-                      and pg.evaluate('sel => document.activeElement === document.querySelector(sel)', pick('rcr', FREE[1])))
+                check('leaving during "Run again", coming back and ticking a box keeps the result, the ticks and focus',
+                      pg.locator('#sugg-risks-head-rcr').count() == 1 and pg.is_checked(pick('rcr', FREE[1])) and pg.is_checked(pick('rcr', FREE[0]))
+                      and pg.evaluate('sel => document.activeElement === document.querySelector(sel)', pick('rcr', FREE[0])))
+                pg.uncheck(pick('rcr', FREE[0]))
                 go(pg, '#/initiative/chatbot', '[data-suggest-risks="chatbot"]')
                 skip_to_result(pg, 'chatbot')
                 check('the selection is kept per initiative', '0 selected' in pg.inner_text(f'{host("chatbot")} [data-sugg-count]'))

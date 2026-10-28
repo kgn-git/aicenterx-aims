@@ -3214,13 +3214,15 @@ var MITIGATION_SUGGESTIONS={"attribution": [{"key": "mit", "source": "MIT AI Ris
 /* ---- What the suggesters on the initiative page share: the selection, and how they cite external sources ----
    SUGG[init] = {selected, runs} lives until reload, keyed by initiative so one initiative's picks never feed another's
    suggestions. Whoever changes the selection calls selectionChanged(init), and each suggester that reads it registers
-   in SELECTION_HOOKS, so none depends on another's event listener or load order. Every host a citation may link to is
-   declared once, in SOURCE_HOSTS. */
+   in SELECTION_HOOKS, so none depends on another's event listener. A later step adds its section to the end of the
+   risk result through RISK_RESULT_PARTS; the parts, like the scripts, come in the order AGENT_JS in tools/build.py
+   gives. Every host a citation may link to is declared once, in SOURCE_HOSTS. */
 var SR_ONLY=' style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"';
 var SUGG=Object.create(null);
 function suggOf(init){ return SUGG[init]||(SUGG[init]={selected:{},runs:{}}); }
 var SELECTION_HOOKS=[];
 function selectionChanged(init){ SELECTION_HOOKS.forEach(function(f){ f(init); }); }
+var RISK_RESULT_PARTS=[];
 var SOURCE_HOSTS={mit:"airisk.mit.edu",aiid:"incidentdatabase.ai",aiindex:"hai.stanford.edu",eurlex:"eur-lex.europa.eu",licence:"creativecommons.org"};
 // The data tests' url_ok rule, applied again at render: a fixed prefix rather than a parsed hostname, because parsers
 // and browsers read userinfo, ports and backslashes differently.
@@ -3233,16 +3235,17 @@ function sourceLink(url,host,text){
   return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+esc(text)+
     '<span aria-hidden="true"> ↗</span><span'+SR_ONLY+'> (opens in a new tab)</span></a>';
 }
-function anySourceLink(url,text){
-  var host=Object.keys(SOURCE_HOSTS).map(function(k){ return SOURCE_HOSTS[k]; }).filter(function(h){ return sourceUrlOk(url,h); })[0];
+function anySourceLink(url,text,keys){
+  var host=keys.map(function(k){ return SOURCE_HOSTS[k]; }).filter(function(h){ return sourceUrlOk(url,h); })[0];
   return host?sourceLink(url,host,text):esc(text);
 }
 /* ---- agentRun: the simulated agent's visible run, reused by every suggester on the initiative page ----
    It owns the run and its ending: the steps, the busy guard, the skip control, reduced motion, and painting the
    result. onDone records the caller's state and returns the result's HTML; its first [data-run-head], with
-   tabindex="-1", takes focus, and anything but a string paints nothing. Navigation can rebuild the page mid-run, so
-   the result goes to whichever element now has hostId, unless that element is running a newer run or the rebuilt page
-   already shows this same result. Focus moves to the result only if it was on the skip control or nowhere. */
+   tabindex="-1", takes focus, and anything but a string paints nothing. The result's first [data-run-state] names the
+   state it was drawn from. Navigation can rebuild the page mid-run, so the result goes to whichever element now has
+   hostId, unless that element, or anything inside it, is running a newer run, or it already shows a result drawn from
+   the same state. Focus moves to the result only if it was on the skip control or nowhere. */
 // The whole run, including one beat on the finished list, fits inside the 2.5 s it is allowed for any step count.
 var AGENT_RUN_MS=2160;
 function agentStep(li,state){
@@ -3250,8 +3253,9 @@ function agentStep(li,state){
   li.firstChild.textContent=state==="done"?"✓":state==="active"?"…":"○";
   li.lastChild.textContent=state==="done"?" (done)":state==="active"?" (in progress)":" (to do)";
 }
-// Compared as parsed markup, because the browser's serialisation of a string differs from the string itself.
-function sameMarkup(el,html){ var t=document.createElement("div"); t.innerHTML=html; return t.innerHTML===el.innerHTML; }
+// A state stamp, not the markup: a rebuilt page the user has since ticked or focused differs in markup, not in state.
+function runStateOf(html){ var t=document.createElement("template"); t.innerHTML=html; var s=t.content.querySelector("[data-run-state]"); return s&&s.getAttribute("data-run-state"); }
+function showsState(el,state){ var s=el.querySelector("[data-run-state]"); return state!==null&&!!s&&s.getAttribute("data-run-state")===state; }
 function agentRun(hostId,steps,onDone){
   var host=document.getElementById(hostId);
   if(!host||host.hasAttribute("data-run-busy")) return false;
@@ -3274,7 +3278,8 @@ function agentRun(hostId,steps,onDone){
     skip.remove();
     host.removeAttribute("data-run-busy");
     var html=onDone(), now=document.getElementById(hostId);
-    if(typeof html!=="string"||!now||now.hasAttribute("data-run-busy")||(now!==host&&sameMarkup(now,html))) return;
+    if(typeof html!=="string"||!now||now.hasAttribute("data-run-busy")) return;
+    if(now!==host&&(now.querySelector("[data-run-busy]")||showsState(now,runStateOf(html)))) return;
     now.innerHTML=html;
     var head=now.querySelector("[data-run-head]");
     if(now===host&&mine&&head) head.focus();
@@ -3297,9 +3302,9 @@ function agentRun(hostId,steps,onDone){
    It never writes to RISKS: nothing enters the register until a person adds it. A suggestion that matches a register
    risk has no checkbox of its own, so the selection holds each risk once: a register risk by its register id, any
    other suggestion by its suggestion id. Later steps add their sections to the end of the result through
-   RISK_RESULT_PARTS, so this file names none of them. */
+   RISK_RESULT_PARTS, so this file names none of them. The result is drawn from curated data and the live selection,
+   so it carries one state stamp, "risks": a page rebuilt mid-run already shows all of it. */
 var RISK_STEPS=["Read the AI Canvas","Search the MIT AI Risk Repository","Match AI incidents","Add AI Index context","Draft suggestions"];
-var RISK_RESULT_PARTS=[];
 function blockLabel(f){ var b=CANVAS_BLOCKS.filter(function(x){return x.f===f;})[0]; return b?b.l:"AI Canvas"; }
 function suggCount(init){ return Object.keys(suggOf(init).selected).length+" selected"; }
 function suggLabel(init,id,label){
@@ -3333,7 +3338,7 @@ function riskSuggestResult(init){
   var d=RISK_SUGGESTIONS.initiatives[init], ctx=d.context;
   var mine=RISKS.filter(function(r){return r.init===init;});
   var sub='display:block;font-size:13px;margin:14px 0 8px';
-  return '<div class="surface pad" style="margin-top:12px">'+
+  return '<div class="surface pad" data-run-state="risks" style="margin-top:12px">'+
     '<h3 class="sec-title" id="sugg-risks-head-'+esc(init)+'" data-run-head tabindex="-1" style="margin-top:0">Suggested risks and harms</h3>'+
     '<p class="muted-note" style="margin:0 0 12px">These are suggestions. They block nothing, and nothing enters the risk register until a person adds it.</p>'+
     '<blockquote data-sugg-context style="margin:0 0 14px;padding-left:12px;border-left:3px solid var(--hairline);font-size:13px">'+
@@ -3398,6 +3403,7 @@ document.addEventListener("change",function(e){
    so unticking removes a risk's mitigations at once, and a risk ticked since then waits for the next run. Nothing here
    writes to RISKS or CONTROLS: no control or treatment changes until a person acts. */
 var LICENCE_HOSTS={mit:SOURCE_HOSTS.licence,eurlex:SOURCE_HOSTS.eurlex};
+var MITIGATION_SOURCE_KEYS=["mit","aiid","eurlex"];
 var MITIGATION_STEPS=["Read the selected risks","Check the register's treatments","Match the controls","Search mitigation sources","Draft mitigations"];
 function controlOf(key){ return CONTROLS.filter(function(c){return c.key===key;})[0]; }
 function hasMitigations(rid){ return Object.prototype.hasOwnProperty.call(MITIGATION_SUGGESTIONS.risks,rid); }
@@ -3421,7 +3427,7 @@ function controlButton(c){
 function inRegister(init,r){
   var c=controlOf(r.controlKey), t=r.treatment;
   return '<div class="surface pad" data-in-register style="margin:0 0 8px;border-left:3px solid var(--hairline)">'+
-    '<div class="m-badges" style="margin-top:0"><span class="pill">Treatment in the register'+(t?': '+esc(titleCase(t.strategy)):'')+'</span></div>'+
+    '<div class="m-badges" style="margin-top:0"><span class="pill">'+(t?'Treatment in the register: '+esc(titleCase(t.strategy)):'No treatment in the register')+'</span></div>'+
     (t?'<p class="muted-note" style="margin:8px 0 0">Treatment owner:</p>'+(PEOPLE[t.owner]?personChip(PEOPLE[t.owner]):esc(t.owner))
       :'<div data-gap style="margin-top:8px"><span class="pill" data-tone="red">Gap<span'+SR_ONLY+'>:</span></span> <span class="muted-note">No treatment recorded.</span></div>')+
     (c?'<div style="margin-top:8px">'+controlButton(c)+'</div>':'')+(t?gapRow(c,"treatment"):'')+
@@ -3435,9 +3441,9 @@ function mitigationItem(m){
     '<div class="m-badges"><span class="pill">'+esc(titleCase(m.strategy))+'</span><span class="pill">'+esc(m.lifecycleStage)+'</span></div>'+
     (c?'<div style="margin-top:8px">'+controlButton(c)+'</div>':'')+
     '<p class="muted-note" style="margin:8px 0 0">Why this control: '+esc(m.why)+'</p>'+
-    '<p class="muted-note" style="margin:6px 0 0">MIT AI Risk Mitigation Taxonomy (draft): '+anySourceLink("https://airisk.mit.edu/ai-risk-mitigations",m.mit)+'</p>'+
+    '<p class="muted-note" style="margin:6px 0 0">MIT AI Risk Mitigation Taxonomy (draft): '+anySourceLink("https://airisk.mit.edu/ai-risk-mitigations",m.mit,MITIGATION_SOURCE_KEYS)+'</p>'+
     '<p class="muted-note" style="margin:6px 0 2px">Sources:</p><ul class="muted-note" style="margin:0;padding-left:18px">'+m.sources.map(function(s){
-      return '<li>'+(s.record?recordLink(s.record):anySourceLink(s.url,s.title))+'</li>'; }).join("")+'</ul>'+
+      return '<li>'+(s.record?recordLink(s.record):anySourceLink(s.url,s.title,MITIGATION_SOURCE_KEYS))+'</li>'; }).join("")+'</ul>'+
     gapRow(c,"mitigation")+'</div>';
 }
 function riskLabel(init,rid){
@@ -3447,7 +3453,7 @@ function riskLabel(init,rid){
   return s?s.description:rid;
 }
 function mitigationNone(init){
-  return '<div class="surface" data-mitig-none style="margin-top:12px"><div class="empty">'+
+  return '<div class="surface" data-mitig-none data-run-state="none" style="margin-top:12px"><div class="empty">'+
     '<p tabindex="-1" data-run-head style="margin:0">You have not selected any risks yet. Select risks in the risk suggestions to get mitigations. This blocks nothing.</p>'+
     '<button class="btn-ghost" type="button" data-mitig-goto="'+esc(init)+'" style="margin-top:10px">Go to the risk suggestions</button></div></div>';
 }
@@ -3464,24 +3470,26 @@ function freshNote(init){
 function mitigationResult(init){
   var st=mitigationState(init);
   if(!st.shown.length&&!st.fresh.length) return mitigationNone(init);
-  return '<div class="surface pad" style="margin-top:12px">'+
-    '<h3 class="sec-title" id="sugg-mitig-head-'+esc(init)+'" data-run-head tabindex="-1" style="margin-top:0">Suggested mitigations</h3>'+
+  return '<div class="surface pad" data-run-state="'+esc((suggOf(init).runs.mitigations||[]).join(" "))+'" style="margin-top:12px">'+
+    '<h4 class="sec-title" id="sugg-mitig-head-'+esc(init)+'" data-run-head tabindex="-1" style="margin-top:0">Suggested mitigations</h4>'+
     '<p class="muted-note" style="margin:0 0 12px">These are suggestions. They block nothing, and no control or treatment changes until a person acts.</p>'+
+    (st.shown.length?'':'<p class="muted-note" data-mitig-empty>No mitigations to show for your current selection yet. Suggest mitigations again to get them.</p>')+
     st.shown.map(function(rid){
       var r=RISKS.filter(function(x){return x.id===rid;})[0];
       return '<section data-mitig-risk="'+esc(rid)+'" style="margin:0 0 14px">'+
-        '<h4 id="sugg-mitig-risk-'+esc(init)+'-'+esc(rid)+'" style="font-size:14.5px;margin:0 0 8px">'+esc(riskLabel(init,rid))+'</h4>'+
+        '<h5 id="sugg-mitig-risk-'+esc(init)+'-'+esc(rid)+'" style="font-size:14.5px;margin:0 0 8px">'+esc(riskLabel(init,rid))+'</h5>'+
         (r?inRegister(init,r):'')+'<p class="muted-note" style="margin:0 0 6px">Suggested by the agent:</p>'+
         MITIGATION_SUGGESTIONS.risks[rid].map(mitigationItem).join("")+'</section>';
     }).join("")+
-    '<h4 style="font-size:13px;margin:14px 0 8px">Sources and licences for mitigations</h4>'+
+    '<h5 style="font-size:13px;margin:14px 0 8px">Sources and licences for mitigations</h5>'+
     '<ul data-attribution class="muted-note" style="margin:0;padding-left:18px;font-size:12px">'+MITIGATION_SUGGESTIONS.attribution.map(function(a){
       return '<li>'+sourceLink(a.url,SOURCE_HOSTS[a.key],a.source)+', '+sourceLink(a.licenceUrl,LICENCE_HOSTS[a.key],a.licence)+'. Changes: '+esc(a.changes)+'</li>';
     }).join("")+'</ul></div>';
 }
 function mitigationSection(init){
   var ran=suggOf(init).runs.mitigations;
-  return '<div class="mmd-toolbar" style="margin-top:14px">'+
+  return '<h3 class="sec-title" style="margin:18px 0 0">Mitigations</h3>'+
+    '<div class="mmd-toolbar" style="margin-top:8px">'+
     '<button class="btn-ghost" type="button" id="sugg-mitig-btn-'+esc(init)+'" data-suggest-mitigations="'+esc(init)+'">'+(ran?"Suggest mitigations again":"Suggest mitigations")+'</button>'+
     '<span class="block-hint">An agent suggests mitigations for the risks you selected, mapped to the controls you already run. It blocks nothing.</span></div>'+
     '<p class="muted-note" data-mitig-fresh id="sugg-mitig-fresh-'+esc(init)+'" aria-live="polite" style="margin:6px 0 0">'+freshNote(init)+'</p>'+
@@ -3506,8 +3514,8 @@ function suggestMitigations(init){
   });
 }
 SELECTION_HOOKS.push(function(init){
-  var host=document.getElementById("sugg-mitig-"+init), note=document.getElementById("sugg-mitig-fresh-"+init);
-  if(note) note.textContent=freshNote(init);
+  var host=document.getElementById("sugg-mitig-"+init), note=document.getElementById("sugg-mitig-fresh-"+init), text=freshNote(init);
+  if(note&&note.textContent!==text) note.textContent=text;
   if(!host||host.hasAttribute("data-run-busy")) return;
   if(suggOf(init).runs.mitigations) host.innerHTML=mitigationResult(init);
   else if(host.querySelector("[data-mitig-none]")&&Object.keys(suggOf(init).selected).length) host.innerHTML="";
