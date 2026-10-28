@@ -247,10 +247,12 @@ function filmButton(id){
 }
 function pageInitiative(id){''')
 sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+'</div>'+""",
-    """    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+filmLink(id)+'</div>'+""")
+    """    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+filmLink(id)+riskSuggestSection(id)+'</div>'+""")
 # The canvas agent replays curated, cited output; its data lives in tools/data so tests can read it as JSON.
 sub("function pageInitiative(id){",
-    "var RISK_SUGGESTIONS=" + data_js("risk_suggestions") + ";\nfunction pageInitiative(id){")
+    "var RISK_SUGGESTIONS=" + data_js("risk_suggestions") + ";\n" +
+    "".join((SCRATCH / f).read_text(encoding="utf-8") for f in ("agent-run.js", "risk-suggestions.js")) +
+    "function pageInitiative(id){")
 # The AI Canvases register gets a "Simulation" column with the same film link.
 sub('''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}}],''',
     '''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}},

@@ -9,17 +9,30 @@ keyboard use and "Run again", the fields of a suggestion, "Already in the regist
 register risks, the copy, the empty state of the other initiatives, attribution and AI Index context, escaping and
 the render-time url check on tampered data, and leaving mid-run.
 test/risk_suggestions_data_test.py holds the rules of the curated data itself.
+The prototype's script runs inside one closure, so its names are out of the page's reach: the agentRun and tampered-data
+checks load a copy of index.html with agentRun exposed or the data literal swapped, and register risks are read from
+the index.html source.
 Prints a JSON report; exit code 1 on any failure.
 """
+import copy
 import json
+import re
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
+from inline_json import script_literal  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
-URL = (ROOT / 'index.html').as_uri()
+INDEX = ROOT / 'index.html'
+URL = INDEX.as_uri()
 DATA = json.loads((ROOT / 'tools' / 'data' / 'risk_suggestions.json').read_text(encoding='utf-8'))
+REGISTER = re.findall(r'\{id:"(r\d+)",init:"(\w+)",description:"([^"]+)"', INDEX.read_text(encoding='utf-8'))
+BOOT = '\nrenderNav();\nrender();\n})();'
 PILOTS = ('rcr', 'chatbot', 'hiring')
 UNCURATED = ('fraud', 'forecast', 'churn', 'docai', 'pricing')
 STEPS = ['Read the AI Canvas', 'Search the MIT AI Risk Repository', 'Match AI incidents', 'Add AI Index context',
@@ -55,18 +68,49 @@ UNIT = """async ([mode]) => {
   host.remove(); return out; }"""
 
 
+def variant(folder, name, old, new):
+    """A copy of index.html with old replaced once by new, as a file url; None when old is not there exactly once."""
+    html = INDEX.read_text(encoding='utf-8')
+    if html.count(old) != 1:
+        return None
+    out = folder / f'{name}.html'
+    out.write_text(html.replace(old, new), encoding='utf-8')
+    return out.as_uri()
+
+
+def tampered():
+    d = copy.deepcopy(DATA)
+    s = d['initiatives']['rcr']['suggestions'][0]
+    s['description'] = '<img src=x data-xss>'
+    s['incidents'][0]['url'] = 'javascript:alert(1)'
+    s['incidents'][1]['url'] = 'https://incidentdatabase.ai.evil.example/cite/1/'
+    s['mit']['url'] = 'https://airisk.mit.edu/risks"onmouseover="alert(1)'
+    d['initiatives']['rcr']['context']['url'] = 'http://hai.stanford.edu/report'
+    d['attribution'][0]['licenceUrl'] = 'https://evil.example\\@creativecommons.org/'
+    d['attribution'][1]['url'] = 'https://incidentdatabase.ai:8443/'
+    return d
+
+
 def main():
+    tmp = Path(tempfile.mkdtemp(prefix='risk-suggestions-'))
+    try:
+        return run(tmp)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def run(tmp):
     checks = {}
     errors = []
 
     def check(name, ok, detail=''):
         checks[name] = {'ok': bool(ok), 'detail': detail if isinstance(detail, str) else json.dumps(detail)[:1500]}
 
-    def open_page(browser, route, **ctx):
+    def open_page(browser, route, url=URL, **ctx):
         pg = browser.new_context(viewport={'width': 1280, 'height': 900}, **ctx).new_page()
         pg.on('console', lambda m: m.type == 'error' and errors.append(m.text))
         pg.on('pageerror', lambda e: errors.append(str(e)))
-        pg.goto(URL + route)
+        pg.goto(url + route)
         pg.wait_for_timeout(400)
         return pg
 
@@ -87,7 +131,9 @@ def main():
         b = p.chromium.launch()
 
         # agentRun, the shared run component
-        pg = open_page(b, '#/home')
+        exposed = variant(tmp, 'exposed', BOOT, '\nwindow.agentRun=agentRun;' + BOOT)
+        check('a copy of index.html can expose agentRun', exposed)
+        pg = open_page(b, '#/home', exposed or URL)
         check('agentRun is defined', pg.evaluate('typeof agentRun') == 'function')
         if pg.evaluate('typeof agentRun') == 'function':
             plain = pg.evaluate(UNIT, ['plain'])
@@ -101,7 +147,7 @@ def main():
                   and skip['allDone'], skip)
             gone = pg.evaluate(UNIT, ['gone'])
             check('agentRun finishes early, once, when its host leaves the page', gone['afterGone'] == 1 and gone['done'] == 1, gone)
-        rm = open_page(b, '#/home', reduced_motion='reduce')
+        rm = open_page(b, '#/home', exposed or URL, reduced_motion='reduce')
         if rm.evaluate('typeof agentRun') == 'function':
             red = rm.evaluate(UNIT, ['reduced'])
             check('with reduced motion agentRun finishes at once', red['early'] == 1 and red['done'] == 1 and red['allDone'], red)
@@ -176,8 +222,8 @@ def main():
             if matched:
                 pg.click(f'{host("rcr")} [data-sugg="{matched[0]["id"]}"] [data-open="risk:{matched[0]["matchesRisk"]}"]')
                 pg.wait_for_timeout(300)
-                check('"Already in the register" opens that risk', pg.is_visible('#modal')
-                      and pg.evaluate('ui.stack.length && ui.stack[ui.stack.length-1].id') == matched[0]['matchesRisk'])
+                want = next(d for r, i, d in REGISTER if r == matched[0]['matchesRisk'])
+                check('"Already in the register" opens that risk', pg.is_visible('#modal') and want in pg.inner_text('#modal'), want)
                 pg.keyboard.press('Escape')
                 pg.wait_for_timeout(200)
 
@@ -204,7 +250,7 @@ def main():
         pg = open_page(b, '#/initiative/rcr')
         if pg.locator('[data-suggest-risks="rcr"]').count():
             skip_to_result(pg, 'rcr')
-            reg = pg.evaluate('RISKS.filter(r => r.init === "rcr").map(r => r.id)')
+            reg = [r for r, i, _ in REGISTER if i == 'rcr']
             check('the initiative\'s register risks are listed with the suggestions and selectable',
                   reg and all(pg.locator(f'{host("rcr")} [data-pick="{r}"]').count() == 1 for r in reg), reg)
             pg.check(f'{host("rcr")} [data-pick="s-rcr-2"]')
@@ -240,6 +286,13 @@ def main():
             pg.evaluate('location.hash = "#/initiative/hiring"'); pg.wait_for_timeout(2500)
             check('leaving during a first run and coming back shows the finished result',
                   pg.locator('#sugg-risks-head-hiring').count() == 1)
+            # In one script, so the second run surely starts before the first run's next step.
+            steps, head = pg.evaluate("""async () => { const w = ms => new Promise(r => setTimeout(r, ms));
+              const go = () => document.querySelector('[data-suggest-risks="hiring"]').click();
+              go(); await w(50); location.hash = '#/portfolio'; await w(30); location.hash = '#/initiative/hiring'; await w(30);
+              go(); await w(450);
+              return [document.querySelectorAll('#sugg-risks-hiring [data-step]').length, !!document.getElementById('sugg-risks-head-hiring')]; }""")
+            check('the run left behind does not paint over a newer run', steps == 5 and not head, [steps, head])
 
         # AC7: the other initiatives
         for init in UNCURATED:
@@ -253,20 +306,15 @@ def main():
             ok = empty.count() == 1 and 'no curated suggestions' in empty.inner_text().lower() and log.count() == 1
             if ok:
                 log.click(); pg.wait_for_timeout(300)
-                ok = pg.is_visible('#modal') and pg.evaluate('ui.stack.length && ui.stack[ui.stack.length-1].form') == 'risk'
+                ok = pg.is_visible('#modal') and pg.inner_text('#modalTitle').strip() == 'Log a risk'
             check(f'{init}: shows the button and an empty state with "Log a risk"', ok)
 
         # AC9, AC11: tampered data is escaped, and a url that fails the check is not linked
-        pg = open_page(b, '#/initiative/rcr')
-        if pg.locator('[data-suggest-risks="rcr"]').count():
-            pg.evaluate("""() => { const s = RISK_SUGGESTIONS.initiatives.rcr.suggestions[0];
-              s.description = '<img src=x data-xss>';
-              s.incidents[0].url = 'javascript:alert(1)';
-              s.incidents[1].url = 'https://incidentdatabase.ai.evil.example/cite/1/';
-              s.mit.url = 'https://airisk.mit.edu/risks"onmouseover="alert(1)';
-              RISK_SUGGESTIONS.initiatives.rcr.context.url = 'http://hai.stanford.edu/report';
-              RISK_SUGGESTIONS.attribution[0].licenceUrl = 'https://evil.example\\\\@creativecommons.org/';
-              RISK_SUGGESTIONS.attribution[1].url = 'https://incidentdatabase.ai:8443/'; }""")
+        bent = variant(tmp, 'tampered', 'var RISK_SUGGESTIONS=' + script_literal(DATA) + ';',
+                       'var RISK_SUGGESTIONS=' + script_literal(tampered()) + ';')
+        check('a copy of index.html can carry tampered data', bent)
+        pg = open_page(b, '#/initiative/rcr', bent or URL)
+        if bent and pg.locator('[data-suggest-risks="rcr"]').count():
             skip_to_result(pg, 'rcr')
             check('curated text reaches the page as text, never as markup',
                   pg.locator(f'{host("rcr")} img[data-xss]').count() == 0
