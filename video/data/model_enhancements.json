@@ -1,0 +1,48 @@
+{
+  "enhancements": [
+    {
+      "id": "enh-fairness-fine-tuning",
+      "kind": "fine-tuning",
+      "name": "Fairness-aware fine-tuning on audited shortlists",
+      "how": "Once the bias audit clears, fine-tune only on audited shortlists, penalising unequal shortlist rates between candidate groups.",
+      "mitigationId": "m-s-hiring-3-1",
+      "source": {
+        "title": "EU AI Act (Regulation (EU) 2024/1689), Article 10: Data and data governance",
+        "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+      }
+    },
+    {
+      "id": "enh-bias-check-agent",
+      "kind": "agent workflow",
+      "name": "Bias-check agent before every shortlist",
+      "how": "An agent compares shortlist rates across candidate groups and holds any shortlist whose gaps exceed the agreed threshold.",
+      "mitigationId": "m-r4-1",
+      "source": {
+        "title": "MIT AI Risk Mitigation Taxonomy (draft), 3.1 Testing & Auditing",
+        "url": "https://airisk.mit.edu/ai-risk-mitigations"
+      }
+    },
+    {
+      "id": "enh-missed-candidate-agent",
+      "kind": "agent workflow",
+      "name": "Missed-candidate sampling agent",
+      "how": "Each day an agent samples rejected applications and flags strong candidates the ranking missed for a recruiter to check.",
+      "mitigationId": "m-s-hiring-7-2",
+      "source": {
+        "title": "MIT AI Risk Mitigation Taxonomy (draft), 3.5 Post-deployment Monitoring",
+        "url": "https://airisk.mit.edu/ai-risk-mitigations"
+      }
+    },
+    {
+      "id": "enh-recruiter-review",
+      "kind": "human review",
+      "name": "Recruiter review of every rejection",
+      "how": "The named recruiter reviews each rejection below the cut-off and records why before the candidate is told.",
+      "mitigationId": "m-s-hiring-7-1",
+      "source": {
+        "title": "EU AI Act (Regulation (EU) 2024/1689), Article 14: Human oversight",
+        "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+      }
+    }
+  ]
+}

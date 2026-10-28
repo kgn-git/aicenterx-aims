@@ -70,9 +70,7 @@ def validate(data, hiring):
 def broken_copies(data, hiring, mitigation_data):
     """{rule: data breaking only that rule, and a fragment its rejection must contain}."""
     foreign = next(m['id'] for k, ms in mitigation_data['risks'].items() if k == 'r2' for m in ms)
-    used = {hiring[e['mitigationId']] for e in data['enhancements']}
-    spare = sorted(k for k in set(hiring.values()) - used)
-    spread = [next(m for m, k in hiring.items() if k == r) for r in spare[:MAX_RISKS + 1 - len(used)]]
+    spread = [next(m for m, k in hiring.items() if k == r) for r in sorted(set(hiring.values()))[:MAX_RISKS + 1]]
 
     def edit(fn):
         d = copy.deepcopy(data)
@@ -80,8 +78,7 @@ def broken_copies(data, hiring, mitigation_data):
         return d
 
     def widen(es):
-        for e, mid in zip(es, spread):
-            e['mitigationId'] = mid
+        es[:] = [dict(es[i % len(es)], id=f'enh-spread-{i}', mitigationId=mid) for i, mid in enumerate(spread)]
 
     return {
         'unknown mitigation': (edit(lambda es: es[0].update(mitigationId='m-r4-9')), 'is not a mitigation'),
