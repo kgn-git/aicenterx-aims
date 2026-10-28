@@ -1,4 +1,5 @@
-"""The rule linking a CV Screening Assistant risk to its mitigations, shared by the marketing video's tests."""
+"""The rule linking a CV Screening Assistant risk to its mitigations, shared by the marketing video's tests.
+Its cases are pinned in test/marketing_video_enhancements_data_test.py."""
 
 
 def mitigation_key(suggestion):
@@ -7,6 +8,7 @@ def mitigation_key(suggestion):
 
 
 def hiring_mitigations(risk_data, mitigation_data):
-    """{mitigation id: the key of the CV Screening Assistant risk it belongs to}."""
-    keys = {mitigation_key(s) for s in risk_data['initiatives']['hiring']['suggestions']}
-    return {m['id']: k for k in keys for m in mitigation_data['risks'].get(k, [])}
+    """{mitigation id: id of the CV Screening Assistant risk suggestion it answers}, so the video names risks the way
+    the agent shows them."""
+    return {m['id']: s['id'] for s in risk_data['initiatives']['hiring']['suggestions']
+            for m in mitigation_data['risks'].get(mitigation_key(s), [])}

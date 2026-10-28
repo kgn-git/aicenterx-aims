@@ -30,8 +30,9 @@ HOSTS = ('eur-lex.europa.eu', 'airisk.mit.edu')
 MAX_RISKS = 3
 
 
-def words(s):
-    return len(str(s).split())
+def text_of(s, most):
+    """A string of 1 to most words."""
+    return isinstance(s, str) and 1 <= len(s.split()) <= most
 
 
 def validate(data, hiring):
@@ -43,7 +44,7 @@ def validate(data, hiring):
     ids = [str(e.get('id')) for e in items]
     if len(set(ids)) != len(ids):
         bad.append('duplicate enhancement ids')
-    if sorted({e.get('kind') for e in items} & set(KINDS)) != sorted(KINDS):
+    if not set(KINDS) <= {e.get('kind') for e in items}:
         bad.append(f'every kind must be used at least once: {KINDS}')
     for e in items:
         eid = str(e.get('id'))
@@ -51,14 +52,14 @@ def validate(data, hiring):
             bad.append(f'id {eid!r} is not enh-<slug>')
         if e.get('kind') not in KINDS:
             bad.append(f'{eid}: unknown kind {e.get("kind")!r}')
-        if not e.get('name') or words(e.get('name')) > 6:
+        if not text_of(e.get('name'), 6):
             bad.append(f'{eid}: name must have 1-6 words')
-        if not e.get('how') or words(e.get('how')) > 20:
+        if not text_of(e.get('how'), 20):
             bad.append(f'{eid}: how must have 1-20 words')
         if e.get('mitigationId') not in hiring:
             bad.append(f'{eid}: {e.get("mitigationId")!r} is not a mitigation of a CV Screening Assistant risk')
         s = e.get('source')
-        if s != {'illustrative': True} and not (isinstance(s, dict) and set(s) == {'title', 'url'} and s['title']
+        if s != {'illustrative': True} and not (isinstance(s, dict) and set(s) == {'title', 'url'} and text_of(s['title'], 99)
                                                 and any(url_ok(s['url'], h) for h in HOSTS)):
             bad.append(f'{eid}: source must be a titled https url on {HOSTS} or exactly {{"illustrative": true}}')
     risks = {hiring[e.get('mitigationId')] for e in items if e.get('mitigationId') in hiring}
@@ -69,7 +70,7 @@ def validate(data, hiring):
 
 def broken_copies(data, hiring, mitigation_data):
     """{rule: data breaking only that rule, and a fragment its rejection must contain}."""
-    foreign = next(m['id'] for k, ms in mitigation_data['risks'].items() if k == 'r2' for m in ms)
+    foreign = mitigation_data['risks']['r2'][0]['id']
     spread = [next(m for m, k in hiring.items() if k == r) for r in sorted(set(hiring.values()))[:MAX_RISKS + 1]]
 
     def edit(fn):
@@ -83,7 +84,7 @@ def broken_copies(data, hiring, mitigation_data):
     return {
         'unknown mitigation': (edit(lambda es: es[0].update(mitigationId='m-r4-9')), 'is not a mitigation'),
         "another initiative's mitigation": (edit(lambda es: es[0].update(mitigationId=foreign)), 'is not a mitigation'),
-        'more than 3 risks': (edit(widen), 'at most 3'),
+        f'more than {MAX_RISKS} risks': (edit(widen), f'at most {MAX_RISKS}'),
     }
 
 
@@ -97,9 +98,9 @@ def main():
     mitigation_data = json.loads(MITIGATION_DATA.read_text(encoding='utf-8'))
     hiring = hiring_mitigations(risk_data, mitigation_data)
     by_id = {s['id']: s for s in risk_data['initiatives']['hiring']['suggestions']}
-    check('a matched suggestion resolves to its register risk, any other to its own id',
+    check('a matched suggestion keeps its mitigations under its register risk, any other under its own id',
           mitigation_key(by_id['s-hiring-1']) == 'r4' and mitigation_key(by_id['s-hiring-3']) == 's-hiring-3'
-          and hiring.get('m-r4-1') == 'r4' and 'm-r2-1' not in hiring, sorted(set(hiring.values())))
+          and hiring.get('m-r4-1') == 's-hiring-1' and 'm-r2-1' not in hiring, sorted(set(hiring.values())))
     try:
         data, why = json.loads(DATA.read_text(encoding='utf-8')), str(DATA)
     except (OSError, ValueError) as e:
@@ -113,8 +114,8 @@ def main():
         check('curated enhancements pass every rule', not problems, problems or 'sound')
         if not problems:
             missed = [rule for rule, (d, why) in broken_copies(data, hiring, mitigation_data).items()
-                      if not any(why in x for x in validate(d, hiring))]
-            check('validator rejects each broken copy for its own rule', not missed, missed or 'all rejected')
+                      if [why in x for x in validate(d, hiring)] != [True]]
+            check('validator rejects each broken copy for its own rule and no other', not missed, missed or 'all rejected')
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))
