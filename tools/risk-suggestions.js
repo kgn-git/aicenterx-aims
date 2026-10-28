@@ -1,7 +1,8 @@
 /* ---- Risk and harm suggestions on the initiative page: the agent replays the curated, cited RISK_SUGGESTIONS ----
    The selection lives in SUGG, keyed by initiative so one initiative's picks never feed another's mitigations, until
    reload. It never writes to RISKS: nothing enters the register until a person adds it. A suggestion that matches a
-   register risk has no checkbox of its own, so the selection holds each risk once, by its register id. */
+   register risk has no checkbox of its own, so the selection holds each risk once: a register risk by its register
+   id, any other suggestion by its suggestion id. */
 var SUGG=Object.create(null);
 function suggOf(init){ return SUGG[init]||(SUGG[init]={selected:{},runs:{}}); }
 var RISK_STEPS=["Read the AI Canvas","Search the MIT AI Risk Repository","Match AI incidents","Add AI Index context","Draft suggestions"];
