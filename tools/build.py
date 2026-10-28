@@ -25,6 +25,9 @@ def sub(old, new, count=1):
         sys.exit(f"expected {count} of {old[:70]!r}, found {n}")
     html = html.replace(old, new)
 
+# The canvas agent's scripts, injected in this order: the shared run first, then each suggester that calls it.
+AGENT_JS = ("agent-run.js", "risk-suggestions.js")
+
 def data_js(name):
     return script_literal(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8")))
 
@@ -251,7 +254,7 @@ sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSecti
 # The canvas agent replays curated, cited output; its data lives in tools/data so tests can read it as JSON.
 sub("function pageInitiative(id){",
     "var RISK_SUGGESTIONS=" + data_js("risk_suggestions") + ";\n" +
-    "".join((SCRATCH / f).read_text(encoding="utf-8") for f in ("agent-run.js", "risk-suggestions.js")) +
+    "".join((SCRATCH / f).read_text(encoding="utf-8") for f in AGENT_JS) +
     "function pageInitiative(id){")
 # The AI Canvases register gets a "Simulation" column with the same film link.
 sub('''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}}],''',

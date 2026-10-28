@@ -3,12 +3,13 @@
 Usage:  python test/risk_suggestions_test.py
 
 agentRun (tools/agent-run.js) is checked directly, on a host the test builds, because #15 and #16 reuse it: steps in
-order, the busy guard, the skip control and its focus, reduced motion, and finishing when its host is gone.
-The initiative page is checked through its "Suggest risks and harms" button: the run and its result for each pilot,
-keyboard use and "Run again", the fields of a suggestion, "Already in the register", selecting suggestions and
+order and announced, the busy guard, the skip control and its focus, reduced motion, no steps, finishing when its host
+is gone, and where the result goes when navigation has rebuilt the host.
+The initiative page is checked through its "Suggest risks and harms" button: one timed run and its result for each
+pilot, keyboard use and "Run again", the fields of a suggestion, "Already in the register", selecting suggestions and
 register risks, the copy, the empty state of the other initiatives, attribution and AI Index context, escaping and
 the render-time url check on tampered data, and leaving mid-run.
-test/risk_suggestions_data_test.py holds the rules of the curated data itself.
+test/risk_suggestions_data_test.py holds the rules of the curated data itself, and its url_ok is the link rule here.
 The prototype's script runs inside one closure, so its names are out of the page's reach: the agentRun and tampered-data
 checks load a copy of index.html with agentRun exposed or the data literal swapped, and register risks are read from
 the index.html source.
@@ -24,6 +25,8 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
+from risk_suggestions_data_test import url_ok
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
 from inline_json import script_literal  # noqa: E402
 
@@ -37,35 +40,58 @@ PILOTS = ('rcr', 'chatbot', 'hiring')
 UNCURATED = ('fraud', 'forecast', 'churn', 'docai', 'pricing')
 STEPS = ['Read the AI Canvas', 'Search the MIT AI Risk Repository', 'Match AI incidents', 'Add AI Index context',
          'Draft suggestions']
-ALLOWED = ('https://airisk.mit.edu', 'https://incidentdatabase.ai', 'https://hai.stanford.edu', 'https://creativecommons.org')
+HOSTS = ('airisk.mit.edu', 'incidentdatabase.ai', 'hai.stanford.edu', 'creativecommons.org')
+RCR = DATA['initiatives']['rcr']['suggestions']
+FREE = [x['id'] for x in RCR if not x['matchesRisk']]
 
-# Records the order and time at which each step is first marked done, whether the run re-paints or sets attributes.
-RECORD = """sel => { window.__log = []; const seen = new Set();
-  const scan = () => document.querySelectorAll('[data-step][data-state="done"]').forEach(el => {
-    const k = el.textContent.trim(); if (!seen.has(k)) { seen.add(k); window.__log.push({step: k, t: performance.now() - window.__t0}); } });
+# Records, in the page, when each step is first marked done and when the result heading appears.
+RECORD = """([sel, head]) => { window.__log = []; window.__headT = null; const seen = new Set();
+  const scan = () => { document.querySelectorAll('[data-step][data-state="done"]').forEach(el => {
+      const k = el.textContent.trim(); if (!seen.has(k)) { seen.add(k); window.__log.push({step: k, t: performance.now() - window.__t0}); } });
+    if (window.__headT === null && document.getElementById(head)) window.__headT = performance.now() - window.__t0; };
   if (window.__obs) window.__obs.disconnect();
   window.__obs = new MutationObserver(scan);
   window.__obs.observe(document.body, {subtree: true, childList: true, attributes: true, attributeFilter: ['data-state']});
   window.__t0 = performance.now(); document.querySelector(sel).click(); }"""
 
-# agentRun on a detached-from-the-page host the test owns; returns what onDone saw and when.
-UNIT = """async ([mode]) => {
-  const host = document.createElement('div'); document.body.appendChild(host);
-  const out = {done: 0, at: []}; const t0 = performance.now();
-  const steps = ['One', 'Two', 'Three', 'Four', 'Five'];
-  const cb = () => { out.done++; out.at.push(performance.now() - t0); };
+# agentRun on a host the test owns; returns what onDone saw and when, and where the result went.
+UNIT = """async ([mode, steps]) => {
   const wait = ms => new Promise(r => setTimeout(r, ms));
-  agentRun(host, steps, cb);
-  out.items = host.querySelectorAll('[data-step]').length;
-  out.live = !!host.querySelector('[aria-live]');
-  const skip = host.querySelector('[data-run-skip]');
+  const mk = html => { const h = document.createElement('div'); h.id = 'unit-host'; h.innerHTML = html; document.body.appendChild(h); return h; };
+  const runHost = mk(''); const out = {done: 0, at: []}; const t0 = performance.now();
+  const cb = () => { out.done++; out.at.push(performance.now() - t0);
+    if (out.done === 1) { out.statesAtDone = [...runHost.querySelectorAll('[data-step]')].map(e => e.dataset.state);
+      const st = runHost.querySelector('[role=status]'); out.statusAtDone = st && st.textContent;
+      out.skipAtDone = !!runHost.querySelector('[data-run-skip]'); }
+    return '<h3 data-run-head tabindex="-1">Result</h3>'; };
+  out.started = agentRun('unit-host', steps, cb);
+  out.items = runHost.querySelectorAll('[data-step]').length;
+  const st = runHost.querySelector('[role=status]'); out.firstStatus = st && st.textContent;
+  const skip = runHost.querySelector('[data-run-skip]');
   out.skipFocused = !!skip && document.activeElement === skip;
-  if (mode === 'busy') { await wait(900); agentRun(host, steps, cb); await wait(2600); }
+  let host = runHost;
+  if (mode === 'busy') { await wait(900); out.second = agentRun('unit-host', steps, cb); await wait(2600); }
   if (mode === 'skip') { skip.click(); await wait(30); out.afterSkip = out.done; await wait(2600); }
-  if (mode === 'gone') { await wait(100); host.remove(); await wait(800); out.afterGone = out.done; await wait(2000); }
-  if (mode === 'plain' || mode === 'reduced') { await wait(30); out.early = out.done; await wait(2600); }
-  out.allDone = [...host.querySelectorAll('[data-step]')].every(e => e.dataset.state === 'done');
+  if (mode === 'gone') { await wait(100); runHost.remove(); await wait(800); out.afterGone = out.done; await wait(2000); }
+  if (mode === 'plain' || mode === 'reduced' || mode === 'none') { await wait(30); out.early = out.done; await wait(2600); }
+  if (mode.startsWith('rebuilt') || mode === 'newer') {
+    await wait(100); runHost.remove(); host = mk(mode === 'rebuilt-result' ? '<h3 data-run-head>Kept</h3>' : '');
+    if (mode === 'newer') agentRun('unit-host', steps, cb);
+    await wait(500); out.afterOld = out.done;
+    out.freshSteps = host.querySelectorAll('[data-step]').length;
+    const h = host.querySelector('[data-run-head]'); out.freshHead = h && h.textContent;
+    out.focusedFresh = !!h && document.activeElement === h;
+    await wait(2600);
+  }
+  const head = host.querySelector('[data-run-head]');
+  out.painted = head && head.textContent; out.headFocused = !!head && document.activeElement === head;
   host.remove(); return out; }"""
+
+
+class Out(dict):
+    """An agentRun result whose missing fields read as None, so a run that threw fails its checks instead of the test."""
+    def __missing__(self, key):
+        return None
 
 
 def variant(folder, name, old, new):
@@ -79,16 +105,37 @@ def variant(folder, name, old, new):
 
 
 def tampered():
+    """rcr's data with markup in every rendered text field and urls that the render-time check must refuse or quote."""
     d = copy.deepcopy(DATA)
-    s = d['initiatives']['rcr']['suggestions'][0]
-    s['description'] = '<img src=x data-xss>'
-    s['incidents'][0]['url'] = 'javascript:alert(1)'
-    s['incidents'][1]['url'] = 'https://incidentdatabase.ai.evil.example/cite/1/'
-    s['mit']['url'] = 'https://airisk.mit.edu/risks"onmouseover="alert(1)'
-    d['initiatives']['rcr']['context']['url'] = 'http://hai.stanford.edu/report'
+    shown = []
+
+    def mark(obj, key):
+        obj[key] = f'<i data-xss>{key} {len(shown)}</i>'
+        shown.append(obj[key])
+
+    rcr = d['initiatives']['rcr']
+    for s in rcr['suggestions']:
+        for key in ('description', 'lifecycleStage'):
+            mark(s, key)
+        mark(s['mit'], 'domain')
+        mark(s['mit'], 'subdomain')
+        for n in s['incidents']:
+            mark(n, 'title')
+    for key in ('statement', 'edition', 'chapter'):
+        mark(rcr['context'], key)
+    for a in d['attribution']:
+        for key in ('source', 'licence', 'changes'):
+            mark(a, key)
+    s0, s1 = rcr['suggestions'][0], rcr['suggestions'][1]
+    s0['incidents'][0]['url'] = 'javascript:alert(1)'
+    s0['incidents'][1]['url'] = 'https://incidentdatabase.ai.evil.example/cite/1/'
+    s0['mit']['url'] = 'https://airisk.mit.edu/risks"onmouseover="alert(1)'
+    s1['mit']['url'] = "https://airisk.mit.edu/risks'onfocus='alert(1)"
+    rcr['context']['url'] = 'http://hai.stanford.edu/report'
     d['attribution'][0]['licenceUrl'] = 'https://evil.example\\@creativecommons.org/'
     d['attribution'][1]['url'] = 'https://incidentdatabase.ai:8443/'
-    return d
+    d['attribution'][2].update(key='unknown', url='https://undefined/')
+    return d, shown, (s0['mit']['url'], s1['mit']['url'])
 
 
 def main():
@@ -111,13 +158,18 @@ def run(tmp):
         pg.on('console', lambda m: m.type == 'error' and errors.append(m.text))
         pg.on('pageerror', lambda e: errors.append(str(e)))
         pg.goto(url + route)
-        pg.wait_for_timeout(400)
+        pg.wait_for_selector('#page')
         return pg
 
-    def run_to_result(pg, init):
-        pg.evaluate(RECORD, f'[data-suggest-risks="{init}"]')
-        pg.wait_for_function(f'document.getElementById("sugg-risks-head-{init}")', timeout=4000)
-        return pg.evaluate('performance.now() - window.__t0'), [x['step'] for x in pg.evaluate('window.__log')]
+    def unit(pg, mode, steps):
+        try:
+            return Out(pg.evaluate(UNIT, [mode, steps]))
+        except Exception as e:  # noqa: BLE001 - a throw inside agentRun is reported as that check's failure
+            return Out(error=str(e)[:300])
+
+    def go(pg, route, sel):
+        pg.evaluate(f'location.hash = "{route}"')
+        pg.wait_for_selector(sel, timeout=2000)
 
     def skip_to_result(pg, init):
         pg.click(f'[data-suggest-risks="{init}"]')
@@ -126,6 +178,9 @@ def run(tmp):
 
     def host(init):
         return f'#sugg-risks-{init}'
+
+    def pick(init, rid):
+        return f'{host(init)} [data-pick-risk="{rid}"]'
 
     with sync_playwright() as p:
         b = p.chromium.launch()
@@ -136,23 +191,37 @@ def run(tmp):
         pg = open_page(b, '#/home', exposed or URL)
         check('agentRun is defined', pg.evaluate('typeof agentRun') == 'function')
         if pg.evaluate('typeof agentRun') == 'function':
-            plain = pg.evaluate(UNIT, ['plain'])
-            check('agentRun shows every step, announces them, focuses the skip control and finishes once with all steps done',
-                  plain['items'] == 5 and plain['live'] and plain['skipFocused'] and plain['early'] == 0
-                  and plain['done'] == 1 and plain['allDone'] and plain['at'][0] <= 2500, plain)
-            busy = pg.evaluate(UNIT, ['busy'])
-            check('agentRun ignores a second start on a busy host', busy['done'] == 1 and busy['at'][0] <= 2500, busy)
-            skip = pg.evaluate(UNIT, ['skip'])
-            check('"Show all now" finishes the run at once, and only once', skip['afterSkip'] == 1 and skip['done'] == 1
-                  and skip['allDone'], skip)
-            gone = pg.evaluate(UNIT, ['gone'])
-            check('agentRun finishes early, once, when its host leaves the page', gone['afterGone'] == 1 and gone['done'] == 1, gone)
+            five = ['One', 'Two', 'Three', 'Four', 'Five']
+            r = unit(pg, 'plain', five)
+            check('agentRun shows every step, focuses the skip control, and plays for 1.5-2.5 s',
+                  r['started'] and r['items'] == 5 and r['skipFocused'] and r['early'] == 0 and r['done'] == 1
+                  and 1500 <= r['at'][0] <= 2500, r)
+            check('agentRun announces the step in progress and the end of the run, and removes the skip control',
+                  'Step 1 of 5: One' in (r['firstStatus'] or '') and r['statusAtDone'] == 'All 5 steps done.'
+                  and r['statesAtDone'] == ['done'] * 5 and not r['skipAtDone'], r)
+            check('agentRun paints what onDone returns and focuses its heading', r['painted'] == 'Result' and r['headFocused'], r)
+            r = unit(pg, 'busy', five)
+            check('agentRun ignores a second start on a busy host', r['second'] is False and r['done'] == 1, r)
+            r = unit(pg, 'skip', five)
+            check('"Show all now" finishes the run at once, and only once', r['afterSkip'] == 1 and r['done'] == 1, r)
+            r = unit(pg, 'none', [])
+            check('agentRun with no steps finishes at once', r['started'] and r['early'] == 1 and r['painted'] == 'Result', r)
+            r = unit(pg, 'gone', five)
+            check('agentRun finishes early, once, when its host leaves the page', r['afterGone'] == 1 and r['done'] == 1, r)
+            r = unit(pg, 'rebuilt-empty', five)
+            check('a rebuilt, empty host gets the result without taking focus',
+                  r['afterOld'] == 1 and r['freshHead'] == 'Result' and not r['focusedFresh'], r)
+            r = unit(pg, 'rebuilt-result', five)
+            check('a rebuilt host that already shows a result keeps it', r['afterOld'] == 1 and r['freshHead'] == 'Kept', r)
+            r = unit(pg, 'newer', five)
+            check('the run left behind does not paint over a newer run',
+                  r['afterOld'] == 1 and r['freshSteps'] == 5 and r['freshHead'] is None and r['done'] == 2, r)
         rm = open_page(b, '#/home', exposed or URL, reduced_motion='reduce')
         if rm.evaluate('typeof agentRun') == 'function':
-            red = rm.evaluate(UNIT, ['reduced'])
-            check('with reduced motion agentRun finishes at once', red['early'] == 1 and red['done'] == 1 and red['allDone'], red)
+            r = unit(rm, 'reduced', ['One', 'Two'])
+            check('with reduced motion agentRun finishes at once', r['early'] == 1 and r['done'] == 1, r)
 
-        # AC1: the run on each pilot
+        # AC1: one timed run wires RISK_STEPS to agentRun; every pilot shows its suggestions
         for init in PILOTS:
             pg = open_page(b, f'#/initiative/{init}')
             btn = pg.locator(f'[data-suggest-risks="{init}"]')
@@ -161,14 +230,19 @@ def run(tmp):
                   and pg.locator(f'[data-film="{init}"]').count() == 1)
             if btn.count() != 1:
                 continue
-            took, order = run_to_result(pg, init)
-            check(f'{init}: the five steps run in order, then the result shows within 2.5 s',
-                  [next((s for s in STEPS if s in o), o) for o in order] == STEPS and took <= 2500, {'took': took, 'order': order})
+            if init == 'rcr':
+                pg.evaluate(RECORD, ['[data-suggest-risks="rcr"]', 'sugg-risks-head-rcr'])
+                pg.wait_for_selector('#sugg-risks-head-rcr', timeout=4000)
+                took, order = pg.evaluate('window.__headT'), [x['step'] for x in pg.evaluate('window.__log')]
+                check('rcr: the five steps run in order, then the result shows within 2.5 s',
+                      [next((s for s in STEPS if s in o), o) for o in order] == STEPS and took <= 2500, {'took': took, 'order': order})
+            else:
+                skip_to_result(pg, init)
             n = len(DATA['initiatives'][init]['suggestions'])
             check(f'{init}: the result lists all {n} suggestions',
                   pg.locator(f'{host(init)} [data-sugg^="s-{init}-"]').count() == n)
 
-        # AC2: keyboard, focus, "Run again" and the busy button
+        # AC2: keyboard, focus and "Run again"
         pg = open_page(b, '#/initiative/rcr')
         if pg.locator('[data-suggest-risks="rcr"]').count():
             pg.focus('[data-suggest-risks="rcr"]')
@@ -176,70 +250,72 @@ def run(tmp):
             check('Enter on the button starts the run and focuses "Show all now"',
                   pg.evaluate('document.activeElement && document.activeElement.hasAttribute("data-run-skip")'))
             pg.keyboard.press('Enter')
-            pg.wait_for_timeout(100)
+            pg.wait_for_selector('#sugg-risks-head-rcr', timeout=1000)
             check('Enter on "Show all now" shows the result and focuses its heading',
                   pg.evaluate('document.activeElement && document.activeElement.id') == 'sugg-risks-head-rcr')
             check('after a run the button reads "Run again"', pg.inner_text('[data-suggest-risks="rcr"]').strip() == 'Run again')
-            pg.focus(f'{host("rcr")} [data-pick="s-rcr-1"]')
+            pg.focus(pick('rcr', FREE[0]))
             pg.keyboard.press('Space')
-            check('Space selects a suggestion from the keyboard', pg.is_checked(f'{host("rcr")} [data-pick="s-rcr-1"]'))
-            pg.evaluate(RECORD, '[data-suggest-risks="rcr"]')
-            pg.wait_for_timeout(900)
-            pg.click('[data-suggest-risks="rcr"]')
-            pg.wait_for_function('document.getElementById("sugg-risks-head-rcr")', timeout=4000)
-            took = pg.evaluate('performance.now() - window.__t0')
-            check('"Run again" replays the steps, and a click during the run does not restart it',
-                  len(pg.evaluate('window.__log')) == 5 and took <= 2500, {'took': took})
-            check('"Run again" keeps the selection', pg.is_checked(f'{host("rcr")} [data-pick="s-rcr-1"]'))
+            check('Space selects a suggestion from the keyboard', pg.is_checked(pick('rcr', FREE[0])))
+            pg.evaluate(RECORD, ['[data-suggest-risks="rcr"]', 'sugg-risks-head-rcr'])
+            pg.wait_for_function('window.__headT !== null', timeout=4000)
+            log = pg.evaluate('window.__log')
+            check('"Run again" replays the five steps over time', len(log) == 5 and log[-1]['t'] - log[0]['t'] >= 1000, log)
+            check('"Run again" keeps the selection', pg.is_checked(pick('rcr', FREE[0])))
 
         # AC3, AC4, AC6, AC8 on rcr
         pg = open_page(b, '#/initiative/rcr')
         if pg.locator('[data-suggest-risks="rcr"]').count():
             skip_to_result(pg, 'rcr')
-            s = DATA['initiatives']['rcr']['suggestions'][0]
+            s = RCR[0]
             item = pg.locator(f'{host("rcr")} [data-sugg="{s["id"]}"]')
+            pills = item.locator('.m-badges').inner_text()
+            want = ['Discrimination', 'Likelihood: Possible', 'Severity: Major', s['lifecycleStage']]
+            check('a suggestion shows harm, likelihood, severity and stage as its tags', all(w in pills for w in want), pills)
             text = item.inner_text()
-            want = [s['description'], 'Discrimination', 'Possible', 'Major', s['lifecycleStage'], 'Data Strategy',
-                    s['mit']['domain'], s['mit']['subdomain']]
-            check('a suggestion shows description, harm, likelihood, severity, stage, canvas block, MIT domain and subdomain',
+            want = [s['description'], 'Raised by the Data Strategy block', s['mit']['domain'], s['mit']['subdomain']]
+            check('a suggestion shows its description, canvas block by label, MIT domain and subdomain',
                   all(w in text for w in want) and 'dataStrategy' not in text, [w for w in want if w not in text])
             hrefs = item.locator('a').evaluate_all('as => as.map(a => a.getAttribute("href"))')
             check('a suggestion links each of its incidents', all(i['url'] in hrefs for i in s['incidents']), hrefs)
             links = pg.locator(f'{host("rcr")} a').evaluate_all(
-                'as => as.map(a => [a.getAttribute("href"), a.getAttribute("target"), a.getAttribute("rel")])')
-            check('every link in the result is allow-listed https, opens in a new tab with noopener noreferrer',
-                  links and all(h.startswith(ALLOWED) and t == '_blank' and r == 'noopener noreferrer' for h, t, r in links),
-                  [l for l in links if not (l[0].startswith(ALLOWED) and l[1] == '_blank' and l[2] == 'noopener noreferrer')])
+                'as => as.map(a => [a.getAttribute("href"), a.getAttribute("target"), a.getAttribute("rel"), a.textContent])')
+            bad = [l for l in links if not (any(url_ok(l[0], h) for h in HOSTS) and l[1] == '_blank'
+                                            and l[2] == 'noopener noreferrer' and '(opens in a new tab)' in l[3])]
+            check('every link in the result is allow-listed https and opens in a new tab, says so, with noopener noreferrer',
+                  links and not bad, bad)
 
-            matched = [x for x in DATA['initiatives']['rcr']['suggestions'] if x['matchesRisk']]
-            unmatched = [x for x in DATA['initiatives']['rcr']['suggestions'] if not x['matchesRisk']]
-            def match_link(x):
-                return pg.locator(f'{host("rcr")} [data-sugg="{x["id"]}"] [data-open="risk:{x["matchesRisk"]}"]')
-            check('a suggestion that matches a register risk says "Already in the register"', matched and all(
-                match_link(x).count() == 1 and 'Already in the register' in match_link(x).inner_text() for x in matched))
-            check('a suggestion with no match does not', all('Already in the register' not in
-                  pg.inner_text(f'{host("rcr")} [data-sugg="{x["id"]}"]') for x in unmatched))
+            matched = [x for x in RCR if x['matchesRisk']]
+            ok = all(pg.locator(f'{host("rcr")} [data-sugg="{x["id"]}"] [data-pick-risk]').count() == 0
+                     and 'Already in the register' in pg.inner_text(f'{host("rcr")} [data-sugg="{x["id"]}"] .m-badges')
+                     and pg.inner_text(f'{host("rcr")} [data-sugg="{x["id"]}"] [data-open="risk:{x["matchesRisk"]}"]').strip() == 'Open the risk →'
+                     for x in matched)
+            check('a suggestion that matches a register risk says "Already in the register", opens it, and has no checkbox of its own',
+                  matched and ok)
+            check('a suggestion with no match has a checkbox and no "Already in the register"', all(
+                  'Already in the register' not in pg.inner_text(f'{host("rcr")} [data-sugg="{x}"]')
+                  and pg.locator(pick('rcr', x)).count() == 1 for x in FREE))
             if matched:
                 pg.click(f'{host("rcr")} [data-sugg="{matched[0]["id"]}"] [data-open="risk:{matched[0]["matchesRisk"]}"]')
-                pg.wait_for_timeout(300)
+                pg.wait_for_selector('#modal', state='visible', timeout=1000)
                 want = next(d for r, i, d in REGISTER if r == matched[0]['matchesRisk'])
-                check('"Already in the register" opens that risk', pg.is_visible('#modal') and want in pg.inner_text('#modal'), want)
+                check('"Open the risk" opens the matching register risk', want in pg.inner_text('#modal'), want)
                 pg.keyboard.press('Escape')
-                pg.wait_for_timeout(200)
+                pg.wait_for_selector('#modal', state='hidden', timeout=1000)
 
-            copy = pg.inner_text(host('rcr')).lower()
+            words = pg.inner_text(host('rcr')).lower()
             phrases = ['these are suggestions', 'block nothing', 'nothing enters the risk register until a person adds it',
                        'kept until you reload', 'suggests mitigations']
             check('the copy says suggestions block nothing, nothing enters the register, and what the selection is for',
-                  all(ph in copy for ph in phrases), [ph for ph in phrases if ph not in copy])
+                  all(ph in words for ph in phrases), [ph for ph in phrases if ph not in words])
 
-            attr = pg.locator(f'{host("rcr")} [data-attribution] li')
-            rows = attr.evaluate_all('ls => ls.map(l => ({text: l.innerText, links: [...l.querySelectorAll("a")].map(a => [a.getAttribute("href"), a.innerText.replace(/\\u2197/g, "").trim()])}))')
+            rows = pg.locator(f'{host("rcr")} [data-attribution] li').evaluate_all(
+                'ls => ls.map(l => ({text: l.innerText, links: [...l.querySelectorAll("a")].map(a => [a.getAttribute("href"), a.firstChild.textContent])}))')
             def shown(a):
                 return any([a['url'], a['source']] in r['links'] and [a['licenceUrl'], a['licence']] in r['links']
                            and a['changes'] in r['text'] for r in rows)
             check('each source shows its linked name, linked licence and changes note',
-                  len(rows) == 3 and all(shown(a) for a in DATA['attribution']), rows)
+                  len(rows) == len(DATA['attribution']) and all(shown(a) for a in DATA['attribution']), rows)
             ctx = DATA['initiatives']['rcr']['context']
             box = pg.locator(f'{host("rcr")} [data-sugg-context]')
             check('the AI Index statement shows verbatim with its chapter and link', box.count() == 1
@@ -252,47 +328,43 @@ def run(tmp):
             skip_to_result(pg, 'rcr')
             reg = [r for r, i, _ in REGISTER if i == 'rcr']
             check('the initiative\'s register risks are listed with the suggestions and selectable',
-                  reg and all(pg.locator(f'{host("rcr")} [data-pick="{r}"]').count() == 1 for r in reg), reg)
-            pg.check(f'{host("rcr")} [data-pick="s-rcr-2"]')
-            pg.check(f'{host("rcr")} [data-pick="{reg[0]}"]')
+                  reg and all(pg.locator(pick('rcr', r)).count() == 1 for r in reg), reg)
+            pg.check(pick('rcr', FREE[1]))
+            pg.check(pick('rcr', reg[0]))
             two = pg.inner_text(f'{host("rcr")} [data-sugg-count]')
-            pg.uncheck(f'{host("rcr")} [data-pick="{reg[0]}"]')
+            pg.uncheck(pick('rcr', reg[0]))
             one = pg.inner_text(f'{host("rcr")} [data-sugg-count]')
             check('selecting and deselecting either kind updates the "N selected" count', '2 selected' in two and '1 selected' in one,
                   [two, one])
-            pg.evaluate('location.hash = "#/portfolio"'); pg.wait_for_timeout(300)
-            pg.evaluate('location.hash = "#/initiative/rcr"'); pg.wait_for_timeout(300)
-            check('the result and the selection survive moving to another page and back',
-                  pg.locator('#sugg-risks-head-rcr').count() == 1 and pg.is_checked(f'{host("rcr")} [data-pick="s-rcr-2"]'))
-            pg.click('[data-suggest-risks="rcr"]'); pg.wait_for_timeout(500)
-            pg.evaluate('location.hash = "#/portfolio"'); pg.wait_for_timeout(300)
-            pg.evaluate('location.hash = "#/initiative/rcr"'); pg.wait_for_timeout(2500)
+            go(pg, '#/portfolio', '#page')
+            go(pg, '#/initiative/rcr', '#sugg-risks-head-rcr')
+            check('the result and the selection survive moving to another page and back', pg.is_checked(pick('rcr', FREE[1])))
+            pg.click('[data-suggest-risks="rcr"]')
+            pg.wait_for_selector(f'{host("rcr")} [data-step]', timeout=1000)
+            go(pg, '#/portfolio', '#page')
+            go(pg, '#/initiative/rcr', '#sugg-risks-head-rcr')
+            pg.wait_for_timeout(2600)  # the run left behind ends meanwhile; the page must still hold the result
             check('leaving during "Run again" and coming back shows the result and the selection',
-                  pg.locator('#sugg-risks-head-rcr').count() == 1 and pg.is_checked(f'{host("rcr")} [data-pick="s-rcr-2"]'))
-            pg.evaluate('location.hash = "#/initiative/chatbot"'); pg.wait_for_timeout(300)
+                  pg.locator('#sugg-risks-head-rcr').count() == 1 and pg.is_checked(pick('rcr', FREE[1])))
+            go(pg, '#/initiative/chatbot', '[data-suggest-risks="chatbot"]')
             skip_to_result(pg, 'chatbot')
             check('the selection is kept per initiative', '0 selected' in pg.inner_text(f'{host("chatbot")} [data-sugg-count]'))
-            pg.evaluate('location.hash = "#/initiative/rcr"'); pg.wait_for_timeout(200)
-            pg.reload(); pg.wait_for_timeout(400)
+            go(pg, '#/initiative/rcr', '#sugg-risks-head-rcr')
+            pg.reload()
+            pg.wait_for_selector('[data-suggest-risks="rcr"]')
             check('reload clears the result', pg.locator('#sugg-risks-head-rcr').count() == 0
                   and pg.inner_text('[data-suggest-risks="rcr"]').strip() == 'Suggest risks and harms')
             skip_to_result(pg, 'rcr')
-            check('reload clears the selection', not pg.is_checked(f'{host("rcr")} [data-pick="s-rcr-2"]'))
+            check('reload clears the selection', not pg.is_checked(pick('rcr', FREE[1])))
 
         pg = open_page(b, '#/initiative/hiring')
         if pg.locator('[data-suggest-risks="hiring"]').count():
-            pg.click('[data-suggest-risks="hiring"]'); pg.wait_for_timeout(500)
-            pg.evaluate('location.hash = "#/portfolio"'); pg.wait_for_timeout(300)
-            pg.evaluate('location.hash = "#/initiative/hiring"'); pg.wait_for_timeout(2500)
-            check('leaving during a first run and coming back shows the finished result',
-                  pg.locator('#sugg-risks-head-hiring').count() == 1)
-            # In one script, so the second run surely starts before the first run's next step.
-            steps, head = pg.evaluate("""async () => { const w = ms => new Promise(r => setTimeout(r, ms));
-              const go = () => document.querySelector('[data-suggest-risks="hiring"]').click();
-              go(); await w(50); location.hash = '#/portfolio'; await w(30); location.hash = '#/initiative/hiring'; await w(30);
-              go(); await w(450);
-              return [document.querySelectorAll('#sugg-risks-hiring [data-step]').length, !!document.getElementById('sugg-risks-head-hiring')]; }""")
-            check('the run left behind does not paint over a newer run', steps == 5 and not head, [steps, head])
+            pg.click('[data-suggest-risks="hiring"]')
+            pg.wait_for_selector(f'{host("hiring")} [data-step]', timeout=1000)
+            go(pg, '#/portfolio', '#page')
+            go(pg, '#/initiative/hiring', '[data-suggest-risks="hiring"]')
+            pg.wait_for_selector('#sugg-risks-head-hiring', timeout=3000)
+            check('leaving during a first run and coming back shows the finished result', True)
 
         # AC7: the other initiatives
         for init in UNCURATED:
@@ -300,29 +372,35 @@ def run(tmp):
             if not pg.locator(f'[data-suggest-risks="{init}"]').count():
                 check(f'{init}: shows the button and an empty state with "Log a risk"', False, 'no button')
                 continue
-            pg.click(f'[data-suggest-risks="{init}"]'); pg.wait_for_timeout(300)
+            pg.click(f'[data-suggest-risks="{init}"]')
             empty = pg.locator(f'{host(init)} [data-sugg-empty]')
             log = empty.locator(f'[data-form="risk"][data-ctx="initiative:{init}"]')
             ok = empty.count() == 1 and 'no curated suggestions' in empty.inner_text().lower() and log.count() == 1
+            focused = ok and pg.evaluate(f'document.querySelector("{host(init)} [data-sugg-empty]").contains(document.activeElement)')
             if ok:
-                log.click(); pg.wait_for_timeout(300)
-                ok = pg.is_visible('#modal') and pg.inner_text('#modalTitle').strip() == 'Log a risk'
-            check(f'{init}: shows the button and an empty state with "Log a risk"', ok)
+                log.click()
+                pg.wait_for_selector('#modal', state='visible', timeout=1000)
+                ok = pg.inner_text('#modalTitle').strip() == 'Log a risk'
+            check(f'{init}: shows the button and an empty state with "Log a risk", and moves focus to it', ok and focused)
 
         # AC9, AC11: tampered data is escaped, and a url that fails the check is not linked
+        data, shown, quoted = tampered()
         bent = variant(tmp, 'tampered', 'var RISK_SUGGESTIONS=' + script_literal(DATA) + ';',
-                       'var RISK_SUGGESTIONS=' + script_literal(tampered()) + ';')
+                       'var RISK_SUGGESTIONS=' + script_literal(data) + ';')
         check('a copy of index.html can carry tampered data', bent)
         pg = open_page(b, '#/initiative/rcr', bent or URL)
         if bent and pg.locator('[data-suggest-risks="rcr"]').count():
             skip_to_result(pg, 'rcr')
-            check('curated text reaches the page as text, never as markup',
-                  pg.locator(f'{host("rcr")} img[data-xss]').count() == 0
-                  and '<img src=x data-xss>' in pg.inner_text(f'{host("rcr")} [data-sugg="s-rcr-1"]'))
-            check('a quote in a url cannot add an attribute', pg.locator(f'{host("rcr")} [onmouseover]').count() == 0)
+            text = pg.inner_text(host('rcr'))
+            check('every curated text field reaches the page as text, never as markup',
+                  pg.locator(f'{host("rcr")} [data-xss]').count() == 0 and all(s in text for s in shown),
+                  [s for s in shown if s not in text])
             hrefs = pg.locator(f'{host("rcr")} a').evaluate_all('as => as.map(a => a.getAttribute("href"))')
-            bad = [h for h in hrefs if not h.startswith(ALLOWED) or 'evil' in h or ':8443' in h or h.startswith('http:')]
-            check('a url that fails the render-time check is not linked', not bad and len(hrefs) > 3, bad or hrefs)
+            check('a quote in a url stays inside its double-quoted href', all(q in hrefs for q in quoted)
+                  and pg.locator(f'{host("rcr")} [onmouseover], {host("rcr")} [onfocus]').count() == 0, hrefs)
+            bad = [h for h in hrefs if not any(url_ok(h, x) for x in HOSTS)]
+            check('a url that fails the render-time check is not linked, an unknown source included', not bad and len(hrefs) > 3,
+                  bad or hrefs)
 
         b.close()
 
