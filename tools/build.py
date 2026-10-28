@@ -26,7 +26,7 @@ def sub(old, new, count=1):
     html = html.replace(old, new)
 
 # The canvas agent's scripts, injected in this order: the shared run first, then each suggester that calls it.
-AGENT_JS = ("agent-run.js", "risk-suggestions.js")
+AGENT_JS = ("agent-run.js", "risk-suggestions.js", "mitigation-suggestions.js")
 
 def data_js(name):
     return script_literal(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8")))

@@ -65,6 +65,7 @@ function riskSuggestResult(init){
     }).join("")+'</ul>'+
     '<p style="margin:12px 0 2px;font-weight:600"><span data-sugg-count id="sugg-count-'+esc(init)+'" aria-live="polite">'+suggCount(init)+'</span></p>'+
     '<p class="muted-note" style="margin:0 0 14px">Your selection is kept until you reload the page. The next step suggests mitigations for it.</p>'+
+    mitigationSection(init)+
     '<h4 style="'+sub+'">Sources and licences</h4>'+
     '<ul data-attribution class="muted-note" style="margin:0;padding-left:18px;font-size:12px">'+RISK_SUGGESTIONS.attribution.map(function(a){
       return '<li>'+sourceLink(a.url,SOURCE_HOSTS[a.key],a.source)+', '+sourceLink(a.licenceUrl,SOURCE_HOSTS.licence,a.licence)+'. Changes: '+esc(a.changes)+'</li>';

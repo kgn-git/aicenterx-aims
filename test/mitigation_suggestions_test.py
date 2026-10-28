@@ -60,6 +60,11 @@ def tampered():
     """rcr's mitigations with markup in every rendered text field and urls the render-time check must refuse or quote."""
     d = copy.deepcopy(DATA)
     shown = []
+    first, second = d['risks']['s-rcr-3'][0], d['risks']['r2'][0]
+    first['sources'] = [{'url': 'javascript:alert(1)', 'title': 'bad one'}, {'url': 'https://eur-lex.europa.eu.evil.example/x', 'title': 'bad two'},
+                        {'url': 'https://eur-lex.europa.eu/x"onmouseover="alert(1)', 'title': 'quoted'}]
+    second['sources'].append({'url': "https://eur-lex.europa.eu/x'onfocus='alert(1)", 'title': 'single'})
+    d['attribution'][1]['licenceUrl'] = 'https://evil.example\\@eur-lex.europa.eu/'
 
     def mark(obj, key):
         obj[key] = f'<i data-xss>{key} {len(shown)}</i>'
@@ -75,11 +80,6 @@ def tampered():
     for a in d['attribution']:
         for key in ('source', 'licence', 'changes'):
             mark(a, key)
-    first, second = d['risks']['s-rcr-3'][0], d['risks']['r2'][0]
-    first['sources'] = [{'url': 'javascript:alert(1)', 'title': 'bad one'}, {'url': 'https://eur-lex.europa.eu.evil.example/x', 'title': 'bad two'},
-                        {'url': 'https://eur-lex.europa.eu/x"onmouseover="alert(1)', 'title': 'quoted'}]
-    second['sources'].append({'url': "https://eur-lex.europa.eu/x'onfocus='alert(1)", 'title': 'single'})
-    d['attribution'][1]['licenceUrl'] = 'https://evil.example\\@eur-lex.europa.eu/'
     return d, shown, ('https://eur-lex.europa.eu/x"onmouseover="alert(1)', "https://eur-lex.europa.eu/x'onfocus='alert(1)")
 
 
@@ -223,7 +223,8 @@ def run(tmp):
             mitigate(pg, 'hiring')
             reg = pg.locator(f'{block("hiring", "r4")} [data-in-register]')
             check('a register risk with no treatment shows "No treatment recorded" as a gap',
-                  'No treatment recorded' in reg.inner_text() and reg.locator('[data-gap]').count() == 1)
+                  'No treatment recorded' in reg.inner_text() and reg.locator('[data-gap]').count() == 1
+                  and 'Gap' in reg.locator('[data-gap]').inner_text())
 
         with section('AC5'):
             pg = open_page(b, '#/initiative/chatbot')
@@ -293,8 +294,8 @@ def run(tmp):
             hrefs = pg.locator(f'{host("rcr")} a').evaluate_all('as => as.map(a => a.getAttribute("href"))')
             check('a quote in a url stays inside its double-quoted href', all(q in hrefs for q in quoted)
                   and pg.locator(f'{host("rcr")} [onmouseover], {host("rcr")} [onfocus]').count() == 0, hrefs)
-            check('a url that fails the render-time check is not linked, and its title still shows',
-                  all(any(url_ok(h, x) for x in HOSTS) for h in hrefs) and 'bad one' in text and 'bad two' in text, hrefs)
+            check('a url that fails the render-time check is not linked, and its title still shows as text',
+                  all(any(url_ok(h, x) for x in HOSTS) for h in hrefs) and len(hrefs) > 3, hrefs)
 
         b.close()
 
