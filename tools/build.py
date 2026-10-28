@@ -5,6 +5,8 @@ Usage: python tools/build.py   then   python tools/verify.py   (needs: pip insta
 import json, re, sys
 from pathlib import Path
 
+from inline_json import script_literal
+
 SCRATCH = Path(__file__).resolve().parent
 ROOT = SCRATCH.parent
 SRC = ROOT / "backup" / "AI Center X prototype.html"
@@ -22,6 +24,9 @@ def sub(old, new, count=1):
     if n != count:
         sys.exit(f"expected {count} of {old[:70]!r}, found {n}")
     html = html.replace(old, new)
+
+def data_js(name):
+    return script_literal(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8")))
 
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n'
          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
@@ -243,6 +248,9 @@ function filmButton(id){
 function pageInitiative(id){''')
 sub("""    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+'</div>'+""",
     """    '<div><h2 class="sec-title" id="s-canvas">AI Canvas</h2>'+canvasSection(id)+filmLink(id)+'</div>'+""")
+# The canvas agent replays curated, cited output; its data lives in tools/data so tests can read it as JSON.
+sub("function pageInitiative(id){",
+    "var RISK_SUGGESTIONS=" + data_js("risk_suggestions") + ";\nfunction pageInitiative(id){")
 # The AI Canvases register gets a "Simulation" column with the same film link.
 sub('''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}}],''',
     '''        {h:"Business problem",f:function(c){return esc(c.businessProblem||"—");}},

@@ -1,7 +1,8 @@
-"""Run every film's shared controls test and its own test, then report. Exit code 1 if any run fails.
+"""Run every film's shared controls test and its own test, then every other test, and report. Exit code 1 if any run fails.
 
 Usage: python tools/run_tests.py
 Each film is a folder simulation/<slug>/ with one .html film; its own test, when present, is test/<slug>_test.py.
+Every other test/*_test.py runs once without arguments; film_controls_test.py needs a film, so it runs only per film.
 """
 import subprocess
 import sys
@@ -12,7 +13,8 @@ SIM = ROOT / "simulation"
 
 
 def runs():
-    for folder in sorted(p for p in SIM.iterdir() if p.is_dir() and not p.name.startswith("_")):
+    folders = sorted(p for p in SIM.iterdir() if p.is_dir() and not p.name.startswith("_"))
+    for folder in folders:
         films = sorted(folder.glob("*.html"))
         if len(films) != 1:
             yield folder.name, None
@@ -21,6 +23,10 @@ def runs():
         own = ROOT / "test" / f"{folder.name}_test.py"
         if own.exists():
             yield f"{folder.name}: own test", [sys.executable, str(own)]
+    per_film = {"film_controls_test.py"} | {f"{f.name}_test.py" for f in folders}
+    for test in sorted((ROOT / "test").glob("*_test.py")):
+        if test.name not in per_film:
+            yield test.stem, [sys.executable, str(test)]
 
 
 def main():
