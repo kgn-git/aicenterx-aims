@@ -29,7 +29,7 @@ def sub(old, new, count=1):
 # suggesters share, the run, then each suggester.
 AGENT_DATA = (("RISK_SUGGESTIONS", "risk_suggestions"), ("MITIGATION_SUGGESTIONS", "mitigation_suggestions"),
               ("MODEL_SUGGESTIONS", "model_suggestions"))
-AGENT_JS = ("agent-shared.js", "agent-run.js", "risk-suggestions.js", "mitigation-suggestions.js")
+AGENT_JS = ("agent-shared.js", "agent-run.js", "risk-suggestions.js", "mitigation-suggestions.js", "model-suggestions.js")
 
 def data_js(name):
     return script_literal(json.loads((SCRATCH / "data" / f"{name}.json").read_text(encoding="utf-8")))

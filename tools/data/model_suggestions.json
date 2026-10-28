@@ -153,21 +153,25 @@
       {
        "dataset": "s100",
        "no": 14,
+       "name": "IFEval",
        "dim": "G"
       },
       {
        "dataset": "s100",
        "no": 84,
+       "name": "FinanceBench",
        "dim": "X"
       },
       {
        "dataset": "s100",
        "no": 31,
+       "name": "TruthfulQA",
        "dim": "S"
       },
       {
        "dataset": "s100",
        "no": 42,
+       "name": "InjecAgent",
        "dim": "S"
       }
      ],
@@ -195,21 +199,25 @@
       {
        "dataset": "s100",
        "no": 22,
+       "name": "MMLU-Pro",
        "dim": "G"
       },
       {
        "dataset": "s100",
        "no": 79,
+       "name": "FLUE",
        "dim": "X"
       },
       {
        "dataset": "s100",
        "no": 37,
+       "name": "AgentDojo",
        "dim": "S"
       },
       {
        "dataset": "s100",
        "no": 59,
+       "name": "BBQ",
        "dim": "F"
       }
      ],
@@ -230,6 +238,7 @@
      "benchmark": {
       "dataset": "s100",
       "no": 95,
+      "name": "COMPL-AI",
       "dim": "R"
      }
     },
@@ -237,6 +246,7 @@
      "benchmark": {
       "dataset": "s100",
       "no": 94,
+      "name": "AIR-Bench 2024",
       "dim": "R"
      }
     },
@@ -282,11 +292,13 @@
       {
        "dataset": "s100",
        "no": 58,
+       "name": "StereoSet",
        "dim": "F"
       },
       {
        "dataset": "s100",
        "no": 64,
+       "name": "DiscrimEval",
        "dim": "F"
       }
      ],
@@ -322,6 +334,7 @@
       {
        "dataset": "s100",
        "no": 64,
+       "name": "DiscrimEval",
        "dim": "F"
       }
      ],

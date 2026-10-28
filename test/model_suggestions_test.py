@@ -121,9 +121,9 @@ def run(tmp):
             links = pg.locator(f'{cand("chatbot", c["id"])} a[href^="{PAGE}"]').evaluate_all(
                 'as => as.map(a => [a.getAttribute("href"), a.getAttribute("target"), a.getAttribute("rel"), a.textContent])')
             want = [f'{PAGE}#{x["dataset"]}-{x["no"]}' for x in c['benchmarks']]
-            check('each benchmark citation names its dataset and number and links into the benchmarks page in a new tab',
+            check('each benchmark citation names the benchmark, its dataset and number, and links into the benchmarks page in a new tab',
                   [l[0] for l in links] == want and all(l[1] == '_blank' and l[2] == 'noopener noreferrer' and f'{x["dataset"]} #{x["no"]}' in l[3]
-                                                       and '(opens in a new tab)' in l[3] for l, x in zip(links, c['benchmarks'])), links)
+                                                       and x['name'] in l[3] and '(opens in a new tab)' in l[3] for l, x in zip(links, c['benchmarks'])), links)
             words = pg.inner_text(host('chatbot')).lower()
             phrases = ['these are suggestions', 'block nothing', "the ai canvas's modelling approach is unchanged"]
             check('the copy says these are suggestions, block nothing, and leave the modelling approach unchanged',

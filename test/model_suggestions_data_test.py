@@ -5,7 +5,7 @@ Usage:  python test/model_suggestions_data_test.py
 The model run replays this data, so its citations must be real: every cited benchmark exists in the benchmarks page with
 that primary dimension, every raised or lowered risk can be selected on that initiative, and every source is a record
 of that initiative, a titled EUR-Lex link, or marked as written for this prototype. Checks:
-  - 2-3 candidates per pilot, each with a name, fit, gaps, and AC3/AC4's citations (chatbot: a G or X and an S or F
+  - 2-3 candidates per pilot, every cited benchmark carrying its row's name, each with a name, fit, gaps, and AC3/AC4's citations (chatbot: a G or X and an S or F
     benchmark; hiring: an F benchmark and a gap naming G and X; rcr: a criterion and a gap naming tabular credit models)
   - evidence (an R benchmark or a sourced criterion) for each control behind that initiative's curated mitigations
   - the guard: one broken copy per rule, each rejected for that rule
@@ -42,7 +42,8 @@ def prototype():
     for rid, ms in mitig['risks'].items():
         controls.setdefault(side['selectable'][rid], set()).update(m['controlKey'] for m in ms)
     built = re.search(r'^var MODEL_SUGGESTIONS=(.*);$', html, re.M)
-    return {'dims': {k: {r[0]: r[4] for r in rows} for k, rows in bench.items()}, 'selectable': side['selectable'],
+    return {'dims': {k: {r[0]: r[4] for r in rows} for k, rows in bench.items()},
+            'names': {k: {r[0]: r[2] for r in rows} for k, rows in bench.items()}, 'selectable': side['selectable'],
             'controls': controls, 'records': side['records'], 'built': built.group(1) if built else None}
 
 
@@ -73,6 +74,8 @@ def validate(data, proto):
             for b in c.get('benchmarks') or []:
                 if proto['dims'].get(b.get('dataset'), {}).get(b.get('no')) != b.get('dim') or not b.get('dim'):
                     bad.append(f'{cid}: benchmark {b} is not a row with that primary dimension')
+                elif proto['names'][b['dataset']][b['no']] != b.get('name'):
+                    bad.append(f"{cid}: benchmark {b} does not carry its row's name")
             for rid in (c.get('raises') or []) + (c.get('lowers') or []):
                 if proto['selectable'].get(rid) != init:
                     bad.append(f'{cid}: risk {rid!r} cannot be selected on {init}')
@@ -110,6 +113,7 @@ def broken_copies(data):
     return {
         'unknown benchmark': (edit(lambda d: first(d, 'chatbot')['benchmarks'].append({'dataset': 's100', 'no': 999, 'dim': 'G'})), 'is not a row'),
         'wrong dimension': (edit(lambda d: first(d, 'chatbot')['benchmarks'].append({'dataset': 's100', 'no': 31, 'dim': 'G'})), 'is not a row'),
+        'wrong benchmark name': (edit(lambda d: first(d, 'chatbot')['benchmarks'][0].update(name='Made up')), "row's name"),
         'risk from another initiative': (edit(lambda d: first(d, 'rcr')['raises'].append('s-chatbot-3')), 'cannot be selected'),
         'matched suggestion': (edit(lambda d: first(d, 'rcr')['lowers'].append('s-rcr-1')), 'cannot be selected'),
         'one candidate': (edit(lambda d: d['initiatives']['rcr'].update(candidates=d['initiatives']['rcr']['candidates'][:1])), 'want 2-3'),
