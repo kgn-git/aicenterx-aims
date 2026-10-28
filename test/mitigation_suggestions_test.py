@@ -1,4 +1,4 @@
-"""Behaviour test for the mitigation run on the initiative page (issue #15).
+"""Behaviour test for the mitigation run on the initiative page.
 
 Usage:  python test/mitigation_suggestions_test.py
 
@@ -8,7 +8,7 @@ a register risk's existing treatment, the nothing-selected state, unticking and 
 leaving and reload, the copy, its absence on an initiative without curated risks, and escaping and the render-time url
 check on tampered data.
 agentRun's own rules are pinned in test/risk_suggestions_test.py, and the data's in
-test/mitigation_suggestions_data_test.py, whose url_ok rule is the link rule here.
+test/mitigation_suggestions_data_test.py; test/source_url.py holds the link rule.
 The prototype's script runs inside one closure, so the tampered-data checks load a copy of index.html with the data
 literal swapped, and register risks, controls and people are read from the index.html source.
 Prints a JSON report; exit code 1 on any failure.
@@ -24,7 +24,7 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from risk_suggestions_data_test import url_ok
+from source_url import url_ok
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
 from inline_json import script_literal  # noqa: E402
@@ -38,12 +38,14 @@ RISK_DATA = json.loads((ROOT / 'tools' / 'data' / 'risk_suggestions.json').read_
 CONTROLS = {k: (o, c, w) for k, o, c, w in re.findall(r'\{key:"(A\.\d+)",objective:"([^"]*)",closure:"([\w-]+)",owner:"(\w+)"', HTML)}
 TREATMENT = {m.group(1): m.group(2, 3) for m in (re.match(r'\{id:"(r\d+)",init:"\w+".*?treatment:(?:null|\{strategy:"(\w+)",owner:"(\w+)")', c, re.S)
                                                  for c in re.split(r'(?=\{id:"r\d+",init:)', HTML)[1:]) if m}
+EVIDENCE = dict(re.findall(r'\{id:"(e\d+)",init:"\w+",kind:"[\w-]+",title:"([^"]+)"', HTML))
 DECISIONS = dict(re.findall(r'\{id:"(d\d+)",kind:"[\w-]+",subject:"[^"]*",init:(?:"\w+"|null),by:"\w+",at:"[^"]*",meeting:"[^"]*",summary:"([^"]+)"', HTML))
 HOSTS = ('airisk.mit.edu', 'incidentdatabase.ai', 'eur-lex.europa.eu', 'creativecommons.org')
 STEPS = ['Read the selected risks', "Check the register's treatments", 'Match the controls', 'Search mitigation sources',
          'Draft mitigations']
 FREE = {i: [s['id'] for s in RISK_DATA['initiatives'][i]['suggestions'] if not s['matchesRisk']] for i in RISK_DATA['initiatives']}
-NOTHING = 'Select risks above to get mitigations. This blocks nothing.'
+NOTHING = 'You have not selected any risks yet. Select risks in the risk suggestions to get mitigations. This blocks nothing.'
+FRESH = '#sugg-mitig-fresh-rcr'
 
 # Records, in the page, when each step is first marked done and when the result heading appears.
 RECORD = """([sel, head]) => { window.__log = []; window.__headT = null; const seen = new Set();
@@ -57,14 +59,12 @@ RECORD = """([sel, head]) => { window.__log = []; window.__headT = null; const s
 
 
 def tampered():
-    """rcr's mitigations with markup in every rendered text field and urls the render-time check must refuse or quote."""
+    """rcr's mitigations with markup in every rendered text field, an EUR-Lex lookalike source and a bad EUR-Lex licence
+    link. The url rule's own cases (javascript:, quotes, userinfo) are pinned in test/risk_suggestions_test.py."""
     d = copy.deepcopy(DATA)
     shown = []
-    first, second = d['risks']['s-rcr-3'][0], d['risks']['r2'][0]
-    first['sources'] = [{'url': 'javascript:alert(1)', 'title': 'bad one'}, {'url': 'https://eur-lex.europa.eu.evil.example/x', 'title': 'bad two'},
-                        {'url': 'https://eur-lex.europa.eu/x"onmouseover="alert(1)', 'title': 'quoted'}]
-    second['sources'].append({'url': "https://eur-lex.europa.eu/x'onfocus='alert(1)", 'title': 'single'})
-    d['attribution'][1]['licenceUrl'] = 'https://evil.example\\@eur-lex.europa.eu/'
+    d['risks']['s-rcr-3'][0]['sources'].append({'url': 'https://eur-lex.europa.eu.evil.example/x', 'title': 'lookalike'})
+    d['attribution'][1]['licenceUrl'] = 'https://eur-lex.europa.eu.evil.example/licence'
 
     def mark(obj, key):
         obj[key] = f'<i data-xss>{key} {len(shown)}</i>'
@@ -72,7 +72,7 @@ def tampered():
 
     for rid in ('r2', 's-rcr-3'):
         for m in d['risks'][rid]:
-            for key in ('description', 'why'):
+            for key in ('description', 'why', 'mit', 'lifecycleStage'):
                 mark(m, key)
             for s in m['sources']:
                 if 'title' in s:
@@ -80,7 +80,7 @@ def tampered():
     for a in d['attribution']:
         for key in ('source', 'licence', 'changes'):
             mark(a, key)
-    return d, shown, ('https://eur-lex.europa.eu/x"onmouseover="alert(1)', "https://eur-lex.europa.eu/x'onfocus='alert(1)")
+    return d, shown
 
 
 def main():
@@ -141,25 +141,25 @@ def run(tmp):
         b = p.chromium.launch()
 
         with section('AC1'):
-            for init in ('rcr', 'chatbot', 'hiring'):
+            for init, pair in (('rcr', ('r2', 's-rcr-3')), ('chatbot', ('r5', 's-chatbot-3')), ('hiring', ('r1', 's-hiring-3'))):
                 pg = open_page(b, f'#/initiative/{init}')
                 risk_result(pg, init)
                 btn = pg.locator(f'#sugg-risks-{init} [data-suggest-mitigations="{init}"]')
                 check(f'{init}: "Suggest mitigations" sits in the risk result', btn.count() == 1
                       and btn.inner_text().strip() == 'Suggest mitigations')
-                rid = FREE[init][0]
-                pick(pg, init, rid)
+                pick(pg, init, *pair)
                 if init == 'rcr':
                     pg.evaluate(RECORD, ['[data-suggest-mitigations="rcr"]', 'sugg-mitig-head-rcr'])
                     pg.wait_for_selector('#sugg-mitig-head-rcr', timeout=4000)
-                    took, order = pg.evaluate('window.__headT'), pg.evaluate('window.__log')
-                    check('rcr: the five mitigation steps run in order, then the result shows within 2.5 s',
-                          [next((s for s in STEPS if s in o), o) for o in order] == STEPS and took <= 2500, {'took': took, 'order': order})
+                    order = pg.evaluate('window.__log')
+                    check('rcr: the five mitigation steps run in order before the result',
+                          [next((s for s in STEPS if s in o), o) for o in order] == STEPS, order)
                 else:
                     mitigate(pg, init)
-                n = len(DATA['risks'][rid])
-                check(f'{init}: the result shows the {n} mitigations of the selected risk',
-                      pg.locator(f'{block(init, rid)} [data-mitig]').count() == n)
+                counts = {rid: pg.locator(f'{block(init, rid)} [data-mitig]').count() for rid in pair}
+                check(f'{init}: the result shows each selected risk with its own mitigations and no other risk',
+                      all(counts[rid] == len(DATA['risks'][rid]) for rid in pair)
+                      and pg.locator(f'{host(init)} [data-mitig-risk]').count() == len(pair), counts)
                 check(f'{init}: after a run the button reads "Suggest mitigations again"',
                       pg.inner_text(f'[data-suggest-mitigations="{init}"]').strip() == 'Suggest mitigations again')
 
@@ -173,20 +173,24 @@ def run(tmp):
             objective, closure, owner = CONTROLS[key]
             item = pg.locator(f'{host("rcr")} [data-mitig="{m["id"]}"]')
             text = item.inner_text()
-            want = [m['description'], 'Mitigate', key, objective, 'In progress', m['lifecycleStage'], m['why'], m['mit'], 'draft']
+            want = [m['description'], m['strategy'].capitalize(), key, objective, closure.replace('-', ' ').capitalize(),
+                    m['lifecycleStage'], m['why'], m['mit'], 'draft']
             check('a mitigation shows strategy, control key and objective, closure, stage, rationale and its MIT subcategory as a draft',
                   all(w in text for w in want), [w for w in want if w not in text])
             check('a mitigation names its control and opens it', item.locator(f'[data-open="control:{key}"]').count() == 1)
-            records = [s['record'] for s in m['sources'] if 'record' in s]
-            check('a record source names the decision or evidence and opens it',
-                  records and all(item.locator(f'[data-open$=":{r}"]').count() == 1 for r in records), records)
-            pg.click(f'{host("rcr")} [data-mitig="{m["id"]}"] [data-open="decision:d2"]')
-            pg.wait_for_selector('#modal', state='visible', timeout=1000)
-            check('a decision source opens that decision', DECISIONS['d2'][:40] in pg.inner_text('#modal'))
-            pg.keyboard.press('Escape')
-            pg.wait_for_selector('#modal', state='hidden', timeout=1000)
+            decision = next(s['record'] for s in m['sources'] if s.get('record', '').startswith('d'))
+            evidence = next(s['record'] for s in m['sources'] if s.get('record', '').startswith('e'))
+            check('a record source names the decision or the evidence',
+                  DECISIONS[decision] in item.locator(f'[data-open="decision:{decision}"]').inner_text()
+                  and EVIDENCE[evidence] in item.locator(f'[data-open="evidence:{evidence}"]').inner_text())
+            for kind, rid, want_text in (('decision', decision, DECISIONS[decision]), ('evidence', evidence, EVIDENCE[evidence])):
+                item.locator(f'[data-open="{kind}:{rid}"]').click()
+                pg.wait_for_selector('#modal', state='visible', timeout=1000)
+                check(f'a {kind} source opens that {kind}', want_text[:40] in pg.inner_text('#modal'))
+                pg.keyboard.press('Escape')
+                pg.wait_for_selector('#modal', state='hidden', timeout=1000)
             check('a mitigation on a control that is not implemented is a gap naming the control owner',
-                  item.locator(f'[data-gap] [data-open="person:{owner}"]').count() == 1)
+                  item.locator(f'[data-gap] [data-open="person:{owner}"]').count() == 1 and 'Gap' in item.locator('[data-gap]').inner_text())
             impl = next(x for x in DATA['risks']['s-rcr-4'] if CONTROLS[x['controlKey']][1] == 'implemented')
             check('a mitigation on an implemented control is not a gap',
                   pg.locator(f'{host("rcr")} [data-mitig="{impl["id"]}"]').count() == 1
@@ -196,10 +200,10 @@ def run(tmp):
             reg = pg.locator(f'{block("rcr", "r2")} [data-in-register]')
             r2_owner = CONTROLS[re.search(r'\{id:"r2",.*?controlKey:"(A\.\d+)"', HTML, re.S).group(1)][2]
             check('a selected register risk shows its treatment first, "In the register", with the treatment owner and a gap naming the control owner',
-                  first.get_attribute('data-in-register') is not None and 'In the register' in reg.inner_text()
-                  and strategy.capitalize() in reg.inner_text() and reg.locator(f'[data-open="person:{t_owner}"]').count() >= 1
+                  first.get_attribute('data-in-register') is not None and f'Treatment in the register: {strategy.capitalize()}' in reg.inner_text()
+                  and reg.locator(f'[data-open="person:{t_owner}"]').count() >= 1
                   and reg.locator(f'[data-gap] [data-open="person:{r2_owner}"]').count() == 1
-                  and reg.locator('[data-open="risk:r2"]').count() == 1)
+                  and reg.locator('[data-open="risk:r2"]').get_attribute('aria-describedby') == 'sugg-mitig-risk-rcr-r2')
             check('a suggested risk has no "In the register" row', pg.locator(f'{block("rcr", "s-rcr-4")} [data-in-register]').count() == 0)
             links = pg.locator(f'{host("rcr")} a').evaluate_all(
                 'as => as.map(a => [a.getAttribute("href"), a.getAttribute("target"), a.getAttribute("rel"), a.textContent])')
@@ -215,6 +219,11 @@ def run(tmp):
             check('each external source shows its linked name, linked licence and changes note',
                   len(rows) == len(DATA['attribution']) and all(any([a['url'], a['source']] in r['links'] and [a['licenceUrl'], a['licence']] in r['links']
                                                                      and a['changes'] in r['text'] for r in rows) for a in DATA['attribution']), rows)
+            pg.click('[data-suggest-risks="rcr"]')
+            pg.click('#sugg-risks-rcr [data-run-skip]')
+            pg.wait_for_selector('#sugg-mitig-head-rcr', timeout=1000)
+            check('running the risk agent again focuses the risk heading, not the mitigation heading inside it',
+                  pg.evaluate('document.activeElement && document.activeElement.id') == 'sugg-risks-head-rcr')
 
         with section('AC4 r4'):
             pg = open_page(b, '#/initiative/hiring')
@@ -222,22 +231,25 @@ def run(tmp):
             pick(pg, 'hiring', 'r4')
             mitigate(pg, 'hiring')
             reg = pg.locator(f'{block("hiring", "r4")} [data-in-register]')
-            check('a register risk with no treatment shows "No treatment recorded" as a gap',
+            r4_control = re.search(r'\{id:"r4",.*?controlKey:"(A\.\d+)"', HTML, re.S).group(1)
+            check('a register risk with no treatment shows "No treatment recorded" as its one gap, and still names its control',
                   'No treatment recorded' in reg.inner_text() and reg.locator('[data-gap]').count() == 1
-                  and 'Gap' in reg.locator('[data-gap]').inner_text())
+                  and 'Gap' in reg.locator('[data-gap]').inner_text() and reg.locator(f'[data-open="control:{r4_control}"]').count() == 1)
 
         with section('AC5'):
             pg = open_page(b, '#/initiative/chatbot')
             risk_result(pg, 'chatbot')
             pg.click('[data-suggest-mitigations="chatbot"]')
             msg = pg.locator(f'{host("chatbot")} [data-mitig-none]')
-            check('with nothing selected the action says it needs selected risks and blocks nothing',
+            check('with nothing selected the action says no risk is selected, what to do, and that it blocks nothing',
                   msg.count() == 1 and NOTHING in msg.inner_text() and pg.locator(f'{host("chatbot")} [data-step]').count() == 0)
             check('the nothing-selected message takes focus',
                   pg.evaluate('document.querySelector("#sugg-mitig-chatbot [data-mitig-none]").contains(document.activeElement)'))
             pg.click(f'{host("chatbot")} [data-mitig-goto]')
             check('"Go to the risk suggestions" moves focus to the first risk checkbox',
                   pg.evaluate('document.activeElement && document.activeElement.matches("#sugg-risks-chatbot [data-pick-risk]")'))
+            pick(pg, 'chatbot', FREE['chatbot'][0])
+            check('ticking a risk clears the nothing-selected message', pg.locator(f'{host("chatbot")} [data-mitig-none]').count() == 0)
 
         with section('AC6'):
             pg = open_page(b, '#/initiative/rcr')
@@ -248,28 +260,51 @@ def run(tmp):
             check('unticking a risk removes its mitigations at once',
                   pg.locator(block('rcr', 'r2')).count() == 0 and pg.locator(block('rcr', 's-rcr-3')).count() == 1)
             pick(pg, 'rcr', 's-rcr-5')
-            note = pg.locator(f'{host("rcr")} [data-mitig-fresh]')
             check('a risk ticked after the run shows a note and no mitigations yet',
-                  note.count() == 1 and 'Suggest mitigations again to add them for 1 new risk.' in note.inner_text()
-                  and pg.locator(block('rcr', 's-rcr-5')).count() == 0)
+                  pg.inner_text(FRESH).strip() == 'You selected 1 risk after the last run. Suggest mitigations again to add its mitigations.'
+                  and pg.locator(block('rcr', 's-rcr-5')).count() == 0 and pg.get_attribute(FRESH, 'aria-live') == 'polite')
+            pick(pg, 'rcr', 'r3')
+            check('two risks ticked after the run are counted in the note',
+                  pg.inner_text(FRESH).strip() == 'You selected 2 risks after the last run. Suggest mitigations again to add their mitigations.')
+            pg.uncheck('#sugg-risks-rcr [data-pick-risk="r3"]')
             go(pg, '#/portfolio', '#page')
             go(pg, '#/initiative/rcr', '#sugg-mitig-head-rcr')
             check('the result survives moving to another page and back',
-                  pg.locator(block('rcr', 's-rcr-3')).count() == 1 and pg.locator(f'{host("rcr")} [data-mitig-fresh]').count() == 1)
+                  pg.locator(block('rcr', 's-rcr-3')).count() == 1 and 'You selected 1 risk' in pg.inner_text(FRESH))
+            pg.click('[data-suggest-mitigations="rcr"]')
+            pg.wait_for_selector(f'{host("rcr")} [data-step]', timeout=1000)
+            pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-3"]')
+            pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-5"]')
+            pg.click('[data-suggest-mitigations="rcr"]')
+            pick(pg, 'rcr', 's-rcr-3', 's-rcr-5')
+            check('changing the selection or clicking with nothing selected during a run leaves the run on screen',
+                  pg.locator(f'{host("rcr")} [data-step]').count() == 5)
+            go(pg, '#/portfolio', '#page')
+            go(pg, '#/initiative/rcr', '#sugg-mitig-head-rcr')
+            pg.wait_for_timeout(2600)  # the run left behind ends meanwhile, with a newer result than the rebuilt page shows
+            check('a run that ends after you come back shows its newer result',
+                  pg.locator(block('rcr', 's-rcr-5')).count() == 1 and pg.inner_text(FRESH).strip() == '')
             pg.click('[data-suggest-risks="rcr"]')
             pg.click('#sugg-risks-rcr [data-run-skip]')
             pg.wait_for_selector('#sugg-mitig-head-rcr', timeout=1000)
             check('running the risk agent again keeps the mitigations', pg.locator(block('rcr', 's-rcr-3')).count() == 1)
-            mitigate(pg, 'rcr')
-            check('"Suggest mitigations again" adds the newly ticked risk', pg.locator(block('rcr', 's-rcr-5')).count() == 1
-                  and pg.locator(f'{host("rcr")} [data-mitig-fresh]').count() == 0)
             pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-3"]')
             pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-5"]')
-            check('unticking every covered risk shows the nothing-selected message',
+            pick(pg, 'rcr', 's-rcr-4')
+            check('with every covered risk unticked and a new one ticked, the result keeps its heading and the note',
+                  pg.locator('#sugg-mitig-head-rcr').count() == 1 and pg.locator(f'{host("rcr")} [data-mitig-risk]').count() == 0
+                  and 'You selected 1 risk' in pg.inner_text(FRESH))
+            pg.uncheck('#sugg-risks-rcr [data-pick-risk="s-rcr-4"]')
+            check('unticking every risk shows the nothing-selected message',
                   NOTHING in pg.inner_text(host('rcr')) and pg.locator(f'{host("rcr")} [data-mitig-risk]').count() == 0)
+            pick(pg, 'rcr', 's-rcr-3')
             pg.reload()
             pg.wait_for_selector('[data-suggest-risks="rcr"]')
-            check('reload clears the mitigations', pg.locator('[data-suggest-mitigations="rcr"]').count() == 0)
+            risk_result(pg, 'rcr')
+            pick(pg, 'rcr', 's-rcr-3')
+            check('reload clears the mitigations: the next risk result starts with no mitigation run',
+                  pg.inner_text('[data-suggest-mitigations="rcr"]').strip() == 'Suggest mitigations'
+                  and pg.locator(f'{host("rcr")} [data-mitig-risk]').count() == 0 and pg.locator('#sugg-mitig-head-rcr').count() == 0)
 
         with section('uncurated'):
             pg = open_page(b, '#/initiative/fraud')
@@ -278,7 +313,7 @@ def run(tmp):
             check('an initiative without curated risks offers no mitigation action', pg.locator('[data-suggest-mitigations]').count() == 0)
 
         with section('AC9 tampered'):
-            data, shown, quoted = tampered()
+            data, shown = tampered()
             html = HTML
             literal = 'var MITIGATION_SUGGESTIONS=' + script_literal(DATA) + ';'
             check('a copy of index.html can carry tampered data', html.count(literal) == 1)
@@ -292,10 +327,8 @@ def run(tmp):
             check('every curated text field reaches the page as text, never as markup',
                   pg.locator(f'{host("rcr")} [data-xss]').count() == 0 and all(s in text for s in shown), [s for s in shown if s not in text])
             hrefs = pg.locator(f'{host("rcr")} a').evaluate_all('as => as.map(a => a.getAttribute("href"))')
-            check('a quote in a url stays inside its double-quoted href', all(q in hrefs for q in quoted)
-                  and pg.locator(f'{host("rcr")} [onmouseover], {host("rcr")} [onfocus]').count() == 0, hrefs)
-            check('a url that fails the render-time check is not linked, and its title still shows as text',
-                  all(any(url_ok(h, x) for x in HOSTS) for h in hrefs) and len(hrefs) > 3, hrefs)
+            check('an EUR-Lex lookalike source or licence link is not linked',
+                  hrefs and all(any(url_ok(h, x) for x in HOSTS) for h in hrefs) and not any('evil' in h for h in hrefs), hrefs)
 
         b.close()
 

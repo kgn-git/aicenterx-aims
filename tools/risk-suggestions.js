@@ -1,23 +1,10 @@
 /* ---- Risk and harm suggestions on the initiative page: the agent replays the curated, cited RISK_SUGGESTIONS ----
-   The selection lives in SUGG, keyed by initiative so one initiative's picks never feed another's mitigations, until
-   reload. It never writes to RISKS: nothing enters the register until a person adds it. A suggestion that matches a
-   register risk has no checkbox of its own, so the selection holds each risk once: a register risk by its register
-   id, any other suggestion by its suggestion id. */
-var SUGG=Object.create(null);
-function suggOf(init){ return SUGG[init]||(SUGG[init]={selected:{},runs:{}}); }
+   It never writes to RISKS: nothing enters the register until a person adds it. A suggestion that matches a register
+   risk has no checkbox of its own, so the selection holds each risk once: a register risk by its register id, any
+   other suggestion by its suggestion id. Later steps add their sections to the end of the result through
+   RISK_RESULT_PARTS, so this file names none of them. */
 var RISK_STEPS=["Read the AI Canvas","Search the MIT AI Risk Repository","Match AI incidents","Add AI Index context","Draft suggestions"];
-var SOURCE_HOSTS={mit:"airisk.mit.edu",aiid:"incidentdatabase.ai",aiindex:"hai.stanford.edu",licence:"creativecommons.org"};
-// The data test's url_ok rule, applied again at render: a fixed prefix rather than a parsed hostname, because parsers
-// and browsers read userinfo, ports and backslashes differently.
-function sourceUrlOk(url,host){
-  var known=Object.keys(SOURCE_HOSTS).some(function(k){ return SOURCE_HOSTS[k]===host; }), head="https://"+host;
-  return known&&typeof url==="string"&&url.indexOf(head)===0&&/^(?:[\/?#]\S*)?$/.test(url.slice(head.length));
-}
-function sourceLink(url,host,text){
-  if(!sourceUrlOk(url,host)) return esc(text);
-  return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+esc(text)+
-    '<span aria-hidden="true"> ↗</span><span'+SR_ONLY+'> (opens in a new tab)</span></a>';
-}
+var RISK_RESULT_PARTS=[];
 function blockLabel(f){ var b=CANVAS_BLOCKS.filter(function(x){return x.f===f;})[0]; return b?b.l:"AI Canvas"; }
 function suggCount(init){ return Object.keys(suggOf(init).selected).length+" selected"; }
 function suggLabel(init,id,label){
@@ -65,11 +52,11 @@ function riskSuggestResult(init){
     }).join("")+'</ul>'+
     '<p style="margin:12px 0 2px;font-weight:600"><span data-sugg-count id="sugg-count-'+esc(init)+'" aria-live="polite">'+suggCount(init)+'</span></p>'+
     '<p class="muted-note" style="margin:0 0 14px">Your selection is kept until you reload the page. The next step suggests mitigations for it.</p>'+
-    mitigationSection(init)+
     '<h4 style="'+sub+'">Sources and licences</h4>'+
     '<ul data-attribution class="muted-note" style="margin:0;padding-left:18px;font-size:12px">'+RISK_SUGGESTIONS.attribution.map(function(a){
       return '<li>'+sourceLink(a.url,SOURCE_HOSTS[a.key],a.source)+', '+sourceLink(a.licenceUrl,SOURCE_HOSTS.licence,a.licence)+'. Changes: '+esc(a.changes)+'</li>';
-    }).join("")+'</ul></div>';
+    }).join("")+'</ul>'+
+    RISK_RESULT_PARTS.map(function(part){ return part(init); }).join("")+'</div>';
 }
 function riskSuggestEmpty(init){
   return '<div class="surface" data-sugg-empty style="margin-top:12px"><div class="empty">'+
@@ -109,4 +96,5 @@ document.addEventListener("change",function(e){
   if(el.checked) sel[id]=true; else delete sel[id];
   var c=document.getElementById("sugg-count-"+init);
   if(c) c.textContent=suggCount(init);
+  selectionChanged(init);
 });

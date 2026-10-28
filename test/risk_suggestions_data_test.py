@@ -24,6 +24,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
 from inline_json import script_literal  # noqa: E402
+from source_url import url_ok  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'tools' / 'data' / 'risk_suggestions.json'
@@ -73,12 +74,6 @@ def prototype(html):
             'risks': re.findall(r'\{id:"(r\d+)",init:"(\w+)"', html),
             'canvases': {i: canvas(i) for i in PILOTS},
             'built': built.group(1) if built else None}
-
-
-def url_ok(u, host):
-    """A plain https url on exactly this host. A fixed prefix, not a parsed hostname: parsers and browsers read
-    userinfo, ports and backslashes differently, so a parsed check can pass a url that a browser sends elsewhere."""
-    return isinstance(u, str) and re.fullmatch(rf'https://{re.escape(host)}(?:[/?#]\S*)?', u) is not None
 
 
 def quotes(text):

@@ -1,4 +1,4 @@
-"""Behaviour test for the risk agent run on the initiative page (issue #17).
+"""Behaviour test for the risk agent run on the initiative page.
 
 Usage:  python test/risk_suggestions_test.py
 
@@ -9,7 +9,7 @@ The initiative page is checked through its "Suggest risks and harms" button: one
 pilot, keyboard use and "Run again", the fields of a suggestion, "Already in the register", selecting suggestions and
 register risks, the copy, the empty state of the other initiatives, attribution and AI Index context, escaping and
 the render-time url check on tampered data, and leaving mid-run.
-test/risk_suggestions_data_test.py holds the rules of the curated data itself, and its url_ok is the link rule here.
+test/risk_suggestions_data_test.py holds the rules of the curated data itself; test/source_url.py holds the link rule.
 The prototype's script runs inside one closure, so its names are out of the page's reach: the agentRun and tampered-data
 checks load a copy of index.html with agentRun exposed or the data literal swapped, and register risks are read from
 the index.html source.
@@ -26,7 +26,7 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from risk_suggestions_data_test import url_ok
+from source_url import url_ok
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
 from inline_json import script_literal  # noqa: E402
@@ -81,9 +81,11 @@ UNIT = """async ([mode, steps]) => {
   if (mode === 'gone') { await wait(100); runHost.remove(); await wait(800); out.afterGone = out.done; await wait(2000); }
   if (mode === 'plain' || mode === 'reduced' || mode === 'none') { await wait(30); out.early = out.done; await wait(2600); }
   if (mode.startsWith('rebuilt') || mode === 'newer') {
-    await wait(100); runHost.remove(); host = mk(mode === 'rebuilt-result' ? '<h3 data-run-head>Kept</h3>' : '');
+    await wait(100); runHost.remove();
+    host = mk(mode === 'rebuilt-same' ? '<h3 data-run-head tabindex="-1">Result</h3>' : mode === 'rebuilt-stale' ? '<h3 data-run-head>Stale</h3>' : '');
+    const before = host.firstChild;
     if (mode === 'newer') agentRun('unit-host', steps, cb);
-    await settle(); await wait(50); out.afterOld = out.done;
+    await settle(); await wait(50); out.afterOld = out.done; out.sameNode = !!before && host.firstChild === before;
     out.freshSteps = host.querySelectorAll('[data-step]').length;
     const h = host.querySelector('[data-run-head]'); out.freshHead = h && h.textContent;
     out.focusedFresh = !!h && document.activeElement === h;
@@ -241,8 +243,12 @@ def run(tmp):
                 r = unit(pg, 'rebuilt-empty', five)
                 check('a rebuilt, empty host gets the result without taking focus',
                       r['afterOld'] == 1 and r['freshHead'] == 'Result' and not r['focusedFresh'], r)
-                r = unit(pg, 'rebuilt-result', five)
-                check('a rebuilt host that already shows a result keeps it', r['afterOld'] == 1 and r['freshHead'] == 'Kept', r)
+                r = unit(pg, 'rebuilt-same', five)
+                check('a rebuilt host that already shows this same result keeps it untouched',
+                      r['afterOld'] == 1 and r['freshHead'] == 'Result' and r['sameNode'], r)
+                r = unit(pg, 'rebuilt-stale', five)
+                check('a rebuilt host that shows an older result gets the new one',
+                      r['afterOld'] == 1 and r['freshHead'] == 'Result' and not r['focusedFresh'], r)
                 r = unit(pg, 'newer', five)
                 check('the run left behind does not paint over a newer run',
                       r['afterOld'] == 1 and r['freshSteps'] == 5 and r['freshHead'] is None and r['done'] == 2, r)

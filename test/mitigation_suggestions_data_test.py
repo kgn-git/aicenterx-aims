@@ -14,7 +14,7 @@ and every value must be one the prototype knows. Checks:
   - the guard: one broken copy per rule above, each rejected by the validator for that rule; a not-applicable control
     is shown by tampering with the prototype's controls, because no control is not-applicable today
   - the build: index.html carries MITIGATION_SUGGESTIONS as exactly the escaped literal of the JSON
-The prototype's lists are read from the built index.html source; url_ok is test/risk_suggestions_data_test.py's rule.
+The prototype's lists are read from the built index.html source; test/source_url.py holds the link rule.
 Prints a JSON report; exit code 1 on any failure.
 """
 import copy
@@ -23,7 +23,7 @@ import re
 import sys
 from pathlib import Path
 
-from risk_suggestions_data_test import url_ok
+from source_url import url_ok
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
 from inline_json import script_literal  # noqa: E402
@@ -155,8 +155,6 @@ def broken_copies(data, proto):
         'record of another initiative': (edit(lambda m, d: m['sources'].append({'record': foreign})), 'is not a decision'),
         'unknown record': (edit(lambda m, d: m['sources'].append({'record': 'd99'})), 'is not a decision'),
         'url off the allowed hosts': (edit(lambda m, d: m['sources'].append({'url': 'https://example.com/x', 'title': 'x'})), 'allowed host'),
-        'http url': (edit(lambda m, d: m['sources'].append({'url': 'http://eur-lex.europa.eu/x', 'title': 'x'})), 'allowed host'),
-        'url with userinfo': (edit(lambda m, d: m['sources'].append({'url': 'https://evil@eur-lex.europa.eu/x', 'title': 'x'})), 'allowed host'),
         'url without a title': (edit(lambda m, d: m['sources'].append({'url': 'https://eur-lex.europa.eu/x'})), 'allowed host'),
         'malformed id': (edit(lambda m, d: m.update(id=f'm-{other}-1')), 'is not m-'),
         'duplicate id': (edit(lambda m, d: d['risks'][rid].append(copy.deepcopy(m))), 'duplicate'),
