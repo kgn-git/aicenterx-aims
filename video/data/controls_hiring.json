@@ -1,0 +1,20 @@
+{
+  "controls": [
+    {
+      "key": "A.3",
+      "objective": "Internal organization (roles, responsibilities, reporting)"
+    },
+    {
+      "key": "A.6",
+      "objective": "AI system life cycle (responsible design and development)"
+    },
+    {
+      "key": "A.7",
+      "objective": "Data for AI systems (provenance, quality, preparation)"
+    },
+    {
+      "key": "A.9",
+      "objective": "Use of AI systems (intended use, human oversight)"
+    }
+  ]
+}

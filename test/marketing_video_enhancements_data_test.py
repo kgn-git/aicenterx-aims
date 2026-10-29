@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / 'video' / 'data' / 'model_enhancements.json'
 RISK_DATA = ROOT / 'tools' / 'data' / 'risk_suggestions.json'
 MITIGATION_DATA = ROOT / 'tools' / 'data' / 'mitigation_suggestions.json'
-KINDS = ('fine-tuning', 'agent workflow', 'human review')
+KINDS = ('fine-tuning', 'agent workflow', 'human feedback')
 HOSTS = ('eur-lex.europa.eu', 'airisk.mit.edu')
 MAX_RISKS = 3
 
