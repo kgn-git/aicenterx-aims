@@ -5,10 +5,11 @@ Usage:  python test/marketing_video_timeline_test.py
 Every later step (audio, fragments, join) builds on the timeline, so it must hold the story the user approved and point
 only at curated data. storyline.md is its human copy and must not drift from it. Checks:
   - shape: six scenes hook, canvas, risks, mitigations, enhancements, end, in that order, each in exactly one of the
-    fragments f1 (hook, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each scene carries only
+    fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each scene carries only
     its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 to f4 each run 10 to 15 s, f5 runs 8 s at most, 60.0 s at most in all, at most 2.5 words a second
-  - narration: 140 words at most; a hook of at most 10 words that names Amazon and says "allegedly"; no "use case";
+  - timing: f1 runs 10 to 21 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 66 s at most in all (the user's
+    tolerance until the combined review), at most 2.5 words a second
+  - narration: 155 words at most; a hook of at most 10 words that names Amazon and says "allegedly"; no "use case";
     never says the model is trained or retrained
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
@@ -36,7 +37,7 @@ STORYLINE = ROOT / 'video' / 'script' / 'storyline.md'
 RISK_DATA = ROOT / 'tools' / 'data' / 'risk_suggestions.json'
 MITIGATION_DATA = ROOT / 'tools' / 'data' / 'mitigation_suggestions.json'
 ENHANCEMENTS = ROOT / 'video' / 'data' / 'model_enhancements.json'
-FRAGMENTS = {'f1': ['hook', 'canvas'], 'f2': ['risks'], 'f3': ['mitigations'], 'f4': ['enhancements'], 'f5': ['end']}
+FRAGMENTS = {'f1': ['hook', 'problem', 'canvas'], 'f2': ['risks'], 'f3': ['mitigations'], 'f4': ['enhancements'], 'f5': ['end']}
 SCENES = [s for scenes in FRAGMENTS.values() for s in scenes]
 KINDS = ('risks', 'mitigations', 'enhancements')
 REFS = {'hook': {'sources'}, **{k: {k} for k in KINDS}}
@@ -44,8 +45,8 @@ SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs
 LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save selected mitigations',
           'Suggest model enhancements', 'Save selected enhancements')
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
-MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 140, 2.5, 60.0, 5, 10
-FRAGMENT_SECONDS, END_SECONDS = (10, 15), 8
+MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 155, 2.5, 66.0, 5, 10
+FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 21), 8
 
 
 def words(s):
@@ -117,7 +118,7 @@ def validate(t, ctx):
                 for item in END_CARD if (item in s['onScreen']) != (sid == 'end')]
     for fid, members in FRAGMENTS.items():
         secs = sum(by_id[m]['seconds'] for m in members)
-        lo, hi = (0, END_SECONDS) if fid == 'f5' else FRAGMENT_SECONDS
+        lo, hi = (0, END_SECONDS) if fid == 'f5' else OPENING_SECONDS if fid == 'f1' else FRAGMENT_SECONDS
         if not lo <= secs <= hi:
             bad.append(f'{fid} runs {secs} s, want {f"{hi} s at most" if fid == "f5" else f"{lo} to {hi} s"}')
     if sum(s['seconds'] for s in scenes) > MAX_TOTAL:

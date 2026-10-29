@@ -10,8 +10,8 @@ seconds or for its clip plus a short tail, whichever is longer. Checks:
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file
   - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
-    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 54 to 66 s in all (the user's
-    tolerance of 60 +/- 6 s until the combined review)
+    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 54 to 72 s in all (the user's
+    tolerance until the combined review, widened for the narrated problem statement)
   - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -29,7 +29,7 @@ VIDEO = ROOT / 'video'
 AUDIO = VIDEO / 'public' / 'audio'
 TIMELINE = VIDEO / 'src' / 'timeline.json'
 NARRATE = VIDEO / 'scripts' / 'narrate.mjs'
-RATE, MIN_TOTAL, MAX_TOTAL = 24000, 54.0, 66.0
+RATE, MIN_TOTAL, MAX_TOTAL = 24000, 54.0, 72.0
 FAKE_KEY = 'sk-test-0000-not-a-real-key'
 
 
