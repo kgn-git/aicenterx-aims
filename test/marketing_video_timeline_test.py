@@ -16,7 +16,7 @@ only at curated data. storyline.md is its human copy and must not drift from it.
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
     the hook's milestones written "YYYY – label", each scene's trigger, save and next buttons and toast, and the
-    end card's brand, heading, disclosure, footnote and tagline
+    end card's brand, heading, disclosure, footnote, tagline and opening line
   - dataRefs: every id exists, saved is a subset of shown, the hook's aiid is an incident of a CV Screening Assistant
     risk and is cited on screen, and the chain holds: saved risks have mitigations, the mitigations shown are those of
     the saved risks, the enhancements shown are all of video/data/model_enhancements.json, and each one's mitigation
@@ -58,7 +58,7 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                           4: 'Selected enhancements saved'},
          'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
-                 5: 'Make AI deliver value.'}}
+                 5: 'Make AI Deliver Value', 6: 'From idea to business value.'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
 MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 175, 2.5, 75.0, 5, 13
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 8
