@@ -48,7 +48,13 @@ LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
 ROLES = {'canvas': {4: 'Simulate risks'},
-         'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations'}}
+         'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations', 5: 'Selected risks saved'},
+         'mitigations': {0: 'Generate mitigations', 3: 'Save selected mitigations', 4: 'Suggest model enhancements',
+                         5: 'Selected mitigations saved'},
+         'enhancements': {0: 'Suggest model enhancements', 3: 'Save selected enhancements',
+                          4: 'Selected enhancements saved'},
+         'end': {0: 'AI Center X', 1: 'Coming soon',
+                 5: 'Making innovation, governance and change management work together.'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
 MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 155, 2.5, 66.0, 5, 10
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 21), 8
