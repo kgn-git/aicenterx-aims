@@ -4,8 +4,8 @@ import steps from "../../data/agent_steps.json";
 import risks from "../../../tools/data/risk_suggestions.json";
 import {color, headingFont} from "../theme";
 import {
-  AgentGrid, AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, SourceChip, Stream, Toast,
-  TOP_BAR, Zoom,
+  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, SourceChip, Stream, Toast, TOP_BAR, Zoom,
+  zoomLevel,
 } from "../ui/kit";
 import {CANVAS_HEADING, CanvasForm, INITIATIVE_NAME, TRIGGER} from "./Canvas";
 import type {SceneProps} from "./types";
@@ -31,6 +31,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const runFrom = 1;
   const runTo = 4;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.25;
+  const zoom = {from: shownAt(0), to: cues[2].start - 0.6};
   const ticks = saved.map((_, k) => cues[2].start + 0.3 + k * 0.6);
   const saveAt = ticks[ticks.length - 1] + 0.8;
   const nextAt = Math.max(cues[3].start, saveAt + 0.8);
@@ -40,22 +41,19 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const settled = ramp(t, ticks[ticks.length - 1] + 0.3, 0.4);
 
   return (
-    <AppFrame trail={t < click + 0.3 ? CANVAS_HEADING : name}>
+    <AppFrame trail={t < click + 0.3 ? CANVAS_HEADING : name} grid={run}>
       <div style={{position: "absolute", inset: 0, opacity: 1 - ramp(t, click + 0.1, 0.4)}}>
         <CanvasForm t={Infinity} typedBy={0} filledBy={0.5} />
       </div>
-      <AgentGrid t={t} shown={run} />
       {t >= runFrom && (
-        <AgentStatus
-          steps={steps.risks} t={t} from={runFrom} length={runTo - runFrom - 0.2}
-        />
+        <AgentStatus steps={steps.risks} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(cards.length) + 0.6} />
       )}
-      <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={shownAt(0)} to={cues[2].start - 0.6}>
-        {run > 0 && (
-          <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
-            <AgentRun steps={steps.risks} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
-          </div>
-        )}
+      {run > 0 && (
+        <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
+          <AgentRun steps={steps.risks} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
+        </div>
+      )}
+      <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={zoom.from} to={zoom.to}>
         {cards.map((risk, i) => {
           const k = saved.indexOf(risk.id);
           const incident = risk.incidents[0];
@@ -110,10 +108,11 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
       <Toast text={toast} shown={ramp(t, saveAt + 0.15, 0.35)} style={{top: 32, bottom: undefined, right: SIDE + 420, padding: "12px 28px"}} />
       <Cursor
         t={t}
+        shown={1 - zoomLevel(t, zoom.from, zoom.to)}
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
-          {t: cues[2].start, x: 1100, y: 600},
+          {t: cues[2].start - 0.5, x: 1100, y: 600},
           ...saved.map((id, k) => ({t: ticks[k], ...target(shown.indexOf(id))})),
           {t: saveAt, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
           {t: seconds, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},

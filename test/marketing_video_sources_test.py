@@ -39,7 +39,7 @@ def main():
     node = shutil.which('node')
     got, why = None, 'node is not on PATH'
     if node:
-        r = subprocess.run([node, str(SCRIPT)], capture_output=True, text=True, timeout=60, cwd=ROOT)
+        r = subprocess.run([node, str(SCRIPT)], capture_output=True, encoding='utf-8', timeout=60, cwd=ROOT)
         try:
             got, why = json.loads(r.stdout), 'printed'
         except ValueError:

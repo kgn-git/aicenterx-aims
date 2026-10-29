@@ -1,5 +1,5 @@
 import React from "react";
-import {AbsoluteFill, Easing, interpolate} from "remotion";
+import {AbsoluteFill, Easing, interpolate, useCurrentFrame, useVideoConfig} from "remotion";
 import {appFrameHeight, bodyFont, color, headingFont, video} from "../theme";
 
 export const TOP_BAR = 88;
@@ -12,7 +12,23 @@ const clamp = {extrapolateLeft: "clamp", extrapolateRight: "clamp"} as const;
 export const ramp = (t: number, from: number, length = 0.5) =>
   interpolate(t, [from, from + length], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
 
-export const Background: React.FC<{children?: React.ReactNode}> = ({children}) => (
+/** A faint dot grid drifting slowly behind every scene, the agents' presence; it brightens while one works. */
+const AgentGrid: React.FC<{shown: number}> = ({shown}) => {
+  const t = useCurrentFrame() / useVideoConfig().fps;
+  return (
+    <div
+      style={{
+        position: "absolute", inset: 0, opacity: shown * 0.5, pointerEvents: "none",
+        backgroundImage: `radial-gradient(circle, ${color.gov} 1.6px, transparent 2px)`, backgroundSize: "48px 48px",
+        backgroundPosition: `${t * 12}px ${t * 6}px`,
+        maskImage: "radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%)",
+      }}
+    />
+  );
+};
+
+/** The prototype's backdrop under the dot grid; `grid` is 1 while an agent works. */
+export const Background: React.FC<{grid?: number; children?: React.ReactNode}> = ({grid = 0, children}) => (
   <AbsoluteFill
     style={{
       background: `radial-gradient(1200px 800px at 70% -10%, ${color.bgG1}, transparent), ${color.bgBase}`,
@@ -21,13 +37,14 @@ export const Background: React.FC<{children?: React.ReactNode}> = ({children}) =
       fontSize: BODY,
     }}
   >
+    <AgentGrid shown={0.25 + 0.95 * grid} />
     {children}
   </AbsoluteFill>
 );
 
 /** The prototype's frame: brand bar on top, content laid out above the caption safe area. */
-export const AppFrame: React.FC<{trail?: string; children?: React.ReactNode}> = ({trail, children}) => (
-  <Background>
+export const AppFrame: React.FC<{trail?: string; grid?: number; children?: React.ReactNode}> = ({trail, grid, children}) => (
+  <Background grid={grid}>
     <div
       style={{
         position: "absolute", top: 0, left: 0, right: 0, height: TOP_BAR, padding: `0 ${SIDE}px`,
@@ -86,8 +103,8 @@ export const Checkbox: React.FC<{checked: number}> = ({checked}) => (
 );
 
 /** A pointer that glides between keyframes {t, x, y} and dips at each time in `clicks`. */
-export const Cursor: React.FC<{t: number; path: {t: number; x: number; y: number}[]; clicks?: number[]}> = ({
-  t, path, clicks = [],
+export const Cursor: React.FC<{t: number; path: {t: number; x: number; y: number}[]; clicks?: number[]; shown?: number}> = ({
+  t, path, clicks = [], shown = 1,
 }) => {
   const times = path.map((p) => p.t);
   const ease = {...clamp, easing: Easing.inOut(Easing.cubic)};
@@ -97,7 +114,10 @@ export const Cursor: React.FC<{t: number; path: {t: number; x: number; y: number
   return (
     <svg
       width="44" height="44" viewBox="0 0 24 24"
-      style={{position: "absolute", left: x, top: y, transform: `scale(${1 - 0.15 * press})`, transformOrigin: "0 0", zIndex: 10}}
+      style={{
+        position: "absolute", left: x, top: y, transform: `scale(${1 - 0.15 * press})`, transformOrigin: "0 0", zIndex: 10,
+        opacity: shown,
+      }}
     >
       <path d="M3 2l17 9.5-7.2 1.6L9.5 21z" fill="#fff" stroke={color.bgBase} strokeWidth="1.5" strokeLinejoin="round" />
     </svg>
@@ -168,10 +188,11 @@ export const AgentRun: React.FC<{steps: string[]; t: number; from: number; lengt
 );
 
 /** The agent's status in the brand bar: its current step while it runs, then that the choice is the user's. */
-export const AgentStatus: React.FC<{steps: string[]; t: number; from: number; length: number; after?: string}> = ({
-  steps, t, from, length, after = "Suggestions ready. You decide what to save.",
-}) => {
-  const i = Math.floor(((t - from) / length) * steps.length);
+export const AgentStatus: React.FC<{
+  steps: string[]; t: number; from: number; length: number; until?: number; after?: string;
+}> = ({steps, t, from, length, until = from + length, after = "Suggestions ready. You decide what to save."}) => {
+  // The last step holds until `until`, when the suggestions are written, so "ready" never shows over streaming text.
+  const i = t >= until ? steps.length : Math.min(steps.length - 1, Math.floor(((t - from) / length) * steps.length));
   return (
     <div
       style={{
@@ -185,18 +206,6 @@ export const AgentStatus: React.FC<{steps: string[]; t: number; from: number; le
     </div>
   );
 };
-
-/** A faint dot grid that drifts while the agent works and fades away while the viewer reads. */
-export const AgentGrid: React.FC<{t: number; shown: number}> = ({t, shown}) => (
-  <div
-    style={{
-      position: "absolute", inset: 0, opacity: shown * 0.5, pointerEvents: "none",
-      backgroundImage: `radial-gradient(circle, ${color.gov} 1.6px, transparent 2px)`, backgroundSize: "48px 48px",
-      backgroundPosition: `${t * 12}px ${t * 6}px`,
-      maskImage: "radial-gradient(ellipse at 50% 40%, black 20%, transparent 75%)",
-    }}
-  />
-);
 
 /** Text written out as the agent drafts it; the unwritten rest keeps its place, so the layout never jumps. */
 export const Stream: React.FC<{text: string; t: number; from: number; length?: number}> = ({text, t, from, length = 0.6}) => {
@@ -235,13 +244,17 @@ export const KindTag: React.FC<{kind: string}> = ({kind}) => (
   <SourceChip tone={KIND_COLOUR[kind]}>{kind[0].toUpperCase() + kind.slice(1)}</SourceChip>
 );
 
+/** How far a Zoom between `from` and `to` seconds is in at `t`, 0 to 1, so a scene can hide what the zoom hides.
+ *  A re-voiced take can move the cue that ends the zoom; holding at least half a second avoids a half-zoom lurch. */
+export const zoomLevel = (t: number, from: number, to: number) =>
+  ramp(t, from, 0.5) * (1 - ramp(t, Math.max(to, from + 1), 0.5));
+
 /** Moves `focus` (in the layer's own pixels) to the middle and enlarges it between `from` and `to` seconds, so a
  *  phone-sized viewer can read the card being narrated. */
 export const Zoom: React.FC<{
   t: number; focus: {x: number; y: number}; from: number; to: number; scale?: number; children?: React.ReactNode;
 }> = ({t, focus, from, to, scale = 1.7, children}) => {
-  // A re-voiced take can move the cue that ends the zoom; holding at least half a second avoids a half-zoom lurch.
-  const z = ramp(t, from, 0.5) * (1 - ramp(t, Math.max(to, from + 1), 0.5));
+  const z = zoomLevel(t, from, to);
   const middle = {x: video.width / 2, y: (appFrameHeight - TOP_BAR) / 2};
   return (
     <div style={{position: "absolute", inset: 0, overflow: "hidden"}}>

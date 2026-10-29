@@ -4,8 +4,8 @@ import enhancements from "../../data/model_enhancements.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import {color, headingFont, video} from "../theme";
 import {
-  AgentGrid, AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Stream,
-  Toast, TOP_BAR, Zoom,
+  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Stream, Toast,
+  TOP_BAR, Zoom, zoomLevel,
 } from "../ui/kit";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
 import type {SceneProps} from "./types";
@@ -27,10 +27,11 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const {shown, saved} = scene.dataRefs.enhancements!;
   const cards = shown.map((id) => enhancements.enhancements.find((e) => e.id === id)!);
 
-  const click = 0.5;
-  const runFrom = 1;
+  const click = 0.35;
+  const runFrom = 0.7;
   const runTo = 2.9;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.3;
+  const zoom = {from: shownAt(0) + 0.5, to: (cues[1].start + cues[1].end) / 2};
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   // The toast must stay up for about 1.5 s before the cut, so a late last cue pulls the ticks earlier.
   const firstTick = Math.min(cues[cues.length - 1].start + 0.2, seconds - 2.1 - 0.45 * (saved.length - 1) - 0.6);
@@ -39,17 +40,16 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const button = {x: TRIGGER.x, y: TRIGGER.y - TOP_BAR};
 
   return (
-    <AppFrame trail={INITIATIVE_NAME}>
-      <AgentGrid t={t} shown={run} />
+    <AppFrame trail={INITIATIVE_NAME} grid={run}>
       {t >= runFrom && (
-        <AgentStatus steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
+        <AgentStatus steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(cards.length - 1) + 0.6} />
       )}
-      <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={shownAt(0) + 0.5} to={(cues[1].start + cues[1].end) / 2} scale={1.6}>
-        {run > 0 && (
-          <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
-            <AgentRun steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
-          </div>
-        )}
+      {run > 0 && (
+        <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
+          <AgentRun steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
+        </div>
+      )}
+      <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={zoom.from} to={zoom.to} scale={1.6}>
         {cards.map((e, i) => {
           const k = saved.indexOf(e.id);
           const m = all.find((x) => x.id === e.mitigationId)!;
@@ -73,10 +73,10 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
                 </div>
                 <Stream text={e.how} t={t} from={shownAt(i)} />
                 <div style={{display: "flex", flexWrap: "wrap", gap: 10}}>
-                  <SourceChip tone={color.val} shown={chip(0)}>ISO/IEC 42001 {m.controlKey}</SourceChip>
-                  <SourceChip tone={color.gov} shown={chip(1)}>MIT · {m.mit}</SourceChip>
+                  <SourceChip tone={color.gov} shown={chip(0)}>MIT · {m.mit}</SourceChip>
+                  <SourceChip tone={color.val} shown={chip(1)}>ISO/IEC 42001 {m.controlKey}</SourceChip>
                 </div>
-                <div style={{color: color.inkMuted, fontSize: 22, opacity: chip(2)}}>{source}</div>
+                <div style={{color: color.inkMuted, fontSize: 22, opacity: chip(2)}}>Source: {source}</div>
               </div>
             </Card>
           );
@@ -95,6 +95,7 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
       <Toast text={toast} shown={ramp(t, saveAt + 0.15, 0.35)} style={{top: 32, bottom: undefined, right: SIDE + 470, padding: "12px 28px"}} />
       <Cursor
         t={t}
+        shown={1 - zoomLevel(t, zoom.from, zoom.to)}
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: button.x, y: button.y},

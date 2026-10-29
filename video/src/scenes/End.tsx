@@ -3,6 +3,8 @@ import {useCurrentFrame, useVideoConfig} from "remotion";
 import enhancements from "../../data/model_enhancements.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import risks from "../../../tools/data/risk_suggestions.json";
+import timeline from "../timeline.json";
+import {aiActArticles} from "../sources.mjs";
 import {appFrameHeight, color, headingFont, video} from "../theme";
 import {Background, ramp} from "../ui/kit";
 import type {SceneProps} from "./types";
@@ -15,44 +17,52 @@ const credits = [...risks.attribution, ...mitigations.attribution].filter(
   (a, i, list) => list.findIndex((b) => b.source === a.source) === i,
 );
 
-/** The enhancement sources grouped by document, so four long titles fit one footer line:
- *  "EU AI Act: Article 10, Article 26 · MIT AI Risk Mitigation Taxonomy (draft): 3.1, 3.5, 2.2". */
+/** The sources grouped by document, so the long titles fit one footer line: the EU AI Act articles of every
+ *  mitigation shown and every enhancement, then the other enhancement sources:
+ *  "EU AI Act: Article 10, Article 14, Article 26 · MIT AI Risk Mitigation Taxonomy (draft): 3.1, 3.5, 2.2". */
 const sources = (() => {
-  const groups = new Map<string, string[]>();
+  const shown = timeline.scenes.find((s) => s.id === "mitigations")!.dataRefs.mitigations!.shown;
+  const all = Object.values(mitigations.risks).flat();
+  const cited = enhancements.enhancements.flatMap((e) => ("title" in e.source ? [{sources: [e.source]}] : []));
+  const articles = [...new Set([...shown.map((id) => all.find((m) => m.id === id)!), ...cited].flatMap(aiActArticles))].sort((a, b) => a - b);
+  const groups = new Map<string, string[]>([["EU AI Act", articles.map((n) => `Article ${n}`)]]);
   for (const e of enhancements.enhancements) {
-    if (!("title" in e.source)) continue;
-    const [doc, part] = e.source.title.split(/, (?=Article|\d)/);
-    const name = doc.split(" (Regulation")[0];
-    const label = part?.match(/^(Article \d+|\d\.\d)/)?.[0] ?? part ?? "";
-    groups.set(name, [...(groups.get(name) ?? []), label].filter((x, i, l) => x && l.indexOf(x) === i));
+    if (!("title" in e.source) || e.source.title.startsWith("EU AI Act")) continue;
+    const [doc, part] = e.source.title.split(/, (?=\d)/);
+    const label = part?.match(/^\d\.\d/)?.[0] ?? part ?? "";
+    groups.set(doc, [...(groups.get(doc) ?? []), label].filter((x, i, l) => x && l.indexOf(x) === i));
   }
   return [...groups].map(([name, parts]) => `${name}: ${parts.join(", ")}`).join(" · ");
 })();
 
-/** The "Coming soon" card: the brand and its promise as the message, every source and disclosure in the footer. */
-export const End: React.FC<SceneProps> = ({scene}) => {
+/** The "Coming soon" card in two beats: the opening line as the narration says it, then the brand and its promise,
+ *  with every source and disclosure in the footer. */
+export const End: React.FC<SceneProps> = ({scene, cues}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
-  const [brand, soon, heading, disclosure, footnote, tagline] = scene.onScreen;
-  const shown = ramp(t, 0.3, 0.8);
+  const [brand, soon, heading, disclosure, footnote, tagline, opening] = scene.onScreen;
+  const brandAt = cues[1].start;
+  const line = ramp(t, 0.3, 0.6) * (1 - ramp(t, brandAt - 0.4, 0.3));
+  const shown = ramp(t, brandAt - 0.2, 0.7);
+  const centred: React.CSSProperties = {
+    position: "absolute", left: 160, right: 160, top: 0, height: appFrameHeight - FOOTER, display: "flex",
+    flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center",
+  };
   return (
     <Background>
-      <div
-        style={{
-          position: "absolute", left: 160, right: 160, top: 0, height: appFrameHeight - FOOTER,
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          textAlign: "center", opacity: shown,
-        }}
-      >
+      <div style={{...centred, opacity: line, transform: `translateY(${-30 * (1 - line)}px)`}}>
+        <div style={{fontFamily: headingFont, fontSize: 96, fontWeight: 600, lineHeight: 1.15, maxWidth: 1400}}>{opening}</div>
+      </div>
+      <div style={{...centred, opacity: shown, transform: `translateY(${24 * (1 - shown)}px)`}}>
         <span
           style={{
-            border: `2px solid ${color.gov}`, color: color.gov, borderRadius: 2, padding: "4px 18px",
-            fontWeight: 600, letterSpacing: 1,
+            border: `2px solid ${color.gov}`, color: color.gov, borderRadius: 2, padding: "6px 22px",
+            fontWeight: 600, fontSize: 32, letterSpacing: 1,
           }}
         >
           {soon}
         </span>
         <div style={{fontFamily: headingFont, fontSize: 150, fontWeight: 650, marginTop: 28, lineHeight: 1}}>{brand}</div>
-        <div style={{fontSize: 46, lineHeight: 1.3, marginTop: 36, maxWidth: 1200, opacity: ramp(t, 1.2, 0.8)}}>
+        <div style={{fontSize: 52, fontWeight: 600, lineHeight: 1.3, marginTop: 36, maxWidth: 1200, opacity: ramp(t, brandAt + 0.7, 0.7)}}>
           {tagline}
         </div>
       </div>
@@ -60,7 +70,7 @@ export const End: React.FC<SceneProps> = ({scene}) => {
         style={{
           position: "absolute", left: 160, right: 160, top: appFrameHeight - FOOTER, height: FOOTER - 16,
           borderTop: `1px solid ${color.border}`, paddingTop: 14, fontSize: SMALL, lineHeight: 1.45,
-          color: color.inkMuted, opacity: ramp(t, 0.8, 0.8), width: video.width - 320,
+          color: color.inkMuted, opacity: ramp(t, brandAt + 0.3, 0.8), width: video.width - 320,
         }}
       >
         <div>

@@ -2,8 +2,11 @@
 // timings. Voicing the script in one take keeps one pace and energy across scenes; the pauses between scenes are
 // hardly longer than those between sentences, so only the words show where a scene ends.
 const RATE = 24000;
-const LEAD = 0.03;
+// Long enough that a word's first consonant, which a transcript times late, is never clipped.
+const LEAD = 0.15;
 const TRAIL = 0.08;
+// A breath before the first word, so it lands once the scene's picture has arrived.
+const PAD = 0.2;
 const MIN_MATCH = 0.85;
 
 const token = (w) => w.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -35,7 +38,8 @@ function align(script, heard) {
   return {map, exact};
 }
 
-/** One PCM buffer per scene narration in `scenes`, cut from just before its first spoken word to just after its last;
+/** One PCM buffer per scene narration in `scenes`, PAD seconds of silence then the take cut from just before its
+ *  first spoken word to just after its last;
  *  `words` are the transcript's {word, start, end} in seconds. Throws when the transcript matches too little. */
 export function splitTake(pcm, scenes, words) {
   const counts = scenes.map((s) => s.split(/\s+/).length);
@@ -56,6 +60,6 @@ export function splitTake(pcm, scenes, words) {
   return spans.map(([start, end], i) => {
     const from = Math.max(start - LEAD, i ? (spans[i - 1][1] + start) / 2 : 0);
     const to = Math.min(end + TRAIL, i < spans.length - 1 ? (end + spans[i + 1][0]) / 2 : samples / RATE);
-    return pcm.subarray(Math.round(from * RATE) * 2, Math.round(to * RATE) * 2);
+    return Buffer.concat([Buffer.alloc(Math.round(PAD * RATE) * 2), pcm.subarray(Math.round(from * RATE) * 2, Math.round(to * RATE) * 2)]);
   });
 }
