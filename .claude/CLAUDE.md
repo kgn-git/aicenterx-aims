@@ -11,6 +11,7 @@ This is a **static, single-file prototype** with no server and no import graph b
 - `index.html` is generated: it MUST be changed through `tools/build.py` (patches over `backup/AI Center X prototype.html` plus `tools/why.css` and `tools/why.js`), never by hand.
 - Each film is one standalone file, `simulation/<slug>/<Name>.html`, built from `simulation/_template/`; `simulation/_template/README.md` is its technical contract.
 - A film MUST NOT depend on another film or on files outside its folder, apart from the pinned CDN scripts the template names.
+- `video/` is a standalone Remotion (Node) project for the marketing video. It MAY read `tools/data/*.json` and `index.html`; the prototype, films and `tools/` MUST NOT depend on it, and `npm run check` MUST pass without its dependencies installed.
 
 ## Testing
 
