@@ -68,7 +68,8 @@
         "Suggested mitigations for the saved risks, cited from the MIT AI Risk Mitigation Taxonomy (draft) and EUR-Lex",
         "Relevant mitigations ticked",
         "Save selected mitigations",
-        "Suggest model enhancements"
+        "Suggest model enhancements",
+        "Selected mitigations saved"
       ],
       "dataRefs": {
         "mitigations": {
@@ -86,7 +87,8 @@
         "Suggest model enhancements",
         "Model enhancements: fine-tuning, agent workflow and human review, each tied to a saved mitigation",
         "Relevant enhancements ticked",
-        "Save selected enhancements"
+        "Save selected enhancements",
+        "Selected enhancements saved"
       ],
       "dataRefs": {
         "enhancements": {
@@ -105,7 +107,8 @@
         "Coming soon",
         "Sources and licences of every cited dataset",
         "The narration voice is AI-generated.",
-        "This is a product concept video."
+        "This is a product concept video.",
+        "Making innovation, governance and change management work together."
       ],
       "dataRefs": {}
     }
