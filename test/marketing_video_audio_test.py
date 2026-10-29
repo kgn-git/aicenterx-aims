@@ -9,8 +9,10 @@ seconds or for its clip plus a short tail, whichever is longer. Checks:
     key, and changes no clip and not timeline.json
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file
-  - each scene's audioSeconds equals its clip's length, and the scenes, each stretched to its clip plus 0.3 s, run
-    66 s at most (the user's tolerance of 60 +/- 6 s until the combined review)
+  - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
+    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 54 to 66 s in all (the user's
+    tolerance of 60 +/- 6 s until the combined review)
+  - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
 """
 import hashlib
@@ -27,7 +29,7 @@ VIDEO = ROOT / 'video'
 AUDIO = VIDEO / 'public' / 'audio'
 TIMELINE = VIDEO / 'src' / 'timeline.json'
 NARRATE = VIDEO / 'scripts' / 'narrate.mjs'
-RATE, TAIL, MAX_TOTAL = 24000, 0.3, 66.0
+RATE, MIN_TOTAL, MAX_TOTAL = 24000, 54.0, 66.0
 FAKE_KEY = 'sk-test-0000-not-a-real-key'
 
 
@@ -55,17 +57,24 @@ def guard_problems(node, ids):
     return bad
 
 
-def wav_problems(path):
+def wav_problems(name, data):
     """What is wrong with a clip's header, and its length in seconds; the length is None when it cannot be read."""
-    data = path.read_bytes()
     if len(data) < 44:
-        return [f'{path.name} is shorter than a WAV header'], None
+        return [f'{name} is shorter than a WAV header'], None
     riff, size, wave, fmt, fmt_len, pcm, channels, rate, byte_rate, align, bits, tag, data_len = struct.unpack(
         '<4sI4s4sIHHIIHH4sI', data[:44])
     want = (b'RIFF', len(data) - 8, b'WAVE', b'fmt ', 16, 1, 1, RATE, RATE * 2, 2, 16, b'data', len(data) - 44)
     got = (riff, size, wave, fmt, fmt_len, pcm, channels, rate, byte_rate, align, bits, tag, data_len)
-    bad = [f'{path.name}: header {got} is not 24 kHz 16-bit mono PCM sized to the file'] if got != want else []
+    bad = [f'{name}: header {got} is not 24 kHz 16-bit mono PCM sized to the file'] if got != want else []
     return bad, data_len / (RATE * 2)
+
+
+def broken_headers(data):
+    """{rule: a copy of a sound clip broken only that way}; wav_problems must reject each."""
+    def patch(offset, fmt, value):
+        return data[:offset] + struct.pack(fmt, value) + data[offset + struct.calcsize(fmt):]
+    return {'truncated data': data[:-2], 'stereo': patch(22, '<H', 2), '44.1 kHz': patch(24, '<I', 44100),
+            'a short data size': patch(40, '<I', len(data) - 46)}
 
 
 def main():
@@ -87,15 +96,29 @@ def main():
           + [f'unexpected {n}' for n in others])
     lengths, problems = {}, []
     for sid, path in clips.items():
-        bad, lengths[sid] = wav_problems(path)
+        bad, length = wav_problems(path.name, path.read_bytes())
         problems += bad
+        if sid in scenes:
+            lengths[sid] = length
     check('each clip is a 24 kHz 16-bit mono PCM WAV sized to its header', problems)
+    if clips and not problems:
+        sample = next(iter(clips.values())).read_bytes()
+        check('the header check rejects each broken copy',
+              [k for k, d in broken_headers(sample).items() if not wav_problems(k, d)[0]])
     check("each scene's audioSeconds equals its clip's length",
           [f'{s}: audioSeconds {scenes[s].get("audioSeconds")}, clip {n:.3f} s' for s, n in lengths.items()
            if n is not None and abs(scenes[s].get('audioSeconds', -1) - n) > 0.001])
-    total = sum(max(s['seconds'], s.get('audioSeconds', 0) + TAIL) for s in timeline['scenes'])
-    check(f'the scenes, stretched to fit their clips, run {MAX_TOTAL:g} s at most',
-          [] if total <= MAX_TOTAL else [f'{total:.2f} s'])
+    if node:
+        r = subprocess.run([node, str(VIDEO / 'scripts' / 'scene-seconds.mjs')], capture_output=True, text=True,
+                           timeout=60, cwd=ROOT)
+        try:
+            total = sum(json.loads(r.stdout).values())
+            found = [] if MIN_TOTAL <= total <= MAX_TOTAL else [f'{total:.2f} s']
+        except ValueError:
+            found = [f'scene-seconds.mjs failed: {r.stderr[-200:]!r}']
+    else:
+        found = ['node is not on PATH']
+    check(f'the scenes, stretched to fit their clips, run {MIN_TOTAL:g} to {MAX_TOTAL:g} s', found)
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))

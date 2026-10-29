@@ -14,20 +14,20 @@
       "fragment": "f1",
       "scene": "canvas",
       "start": 5.1,
-      "end": 10.003,
+      "end": 9.449,
       "lines": [
-        "With AI Center X, you define the",
-        "CV Screening Assistant in its"
+        "With AI Center X, you define",
+        "the CV Screening Assistant"
       ]
     },
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 10.003,
+      "start": 9.449,
       "end": 14.273,
       "lines": [
-        "AI Canvas: the problem, the",
-        "data, the people affected."
+        "in its AI Canvas: the problem,",
+        "the data, the people affected."
       ]
     },
     {
@@ -43,36 +43,35 @@
       "fragment": "f2",
       "scene": "risks",
       "start": 0,
-      "end": 3.841,
+      "end": 2.85,
       "lines": [
-        "An AI agent suggests risks,",
-        "each cited from the MIT"
+        "An AI agent suggests risks, each cited"
       ]
     },
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 3.841,
-      "end": 7.455,
+      "start": 2.85,
+      "end": 7.425,
       "lines": [
-        "AI Risk Repository and",
-        "the AI Incident Database."
+        "from the MIT AI Risk Repository",
+        "and the AI Incident Database."
       ]
     },
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 7.455,
-      "end": 10.392,
+      "start": 7.425,
+      "end": 10.35,
       "lines": [
-        "You tick three to act on and save them."
+        "You select and save the relevant risks."
       ]
     },
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 10.392,
-      "end": 12.35,
+      "start": 10.35,
+      "end": 12.3,
       "lines": [
         "Then generate mitigations."
       ]
@@ -81,36 +80,37 @@
       "fragment": "f3",
       "scene": "mitigations",
       "start": 0,
-      "end": 4.682,
+      "end": 3.997,
       "lines": [
-        "For each saved risk, the agent",
-        "proposes mitigations, classed"
+        "For each saved risk,",
+        "the agent proposes mitigations,"
       ]
     },
     {
       "fragment": "f3",
       "scene": "mitigations",
-      "start": 4.682,
-      "end": 8.583,
+      "start": 3.997,
+      "end": 8.455,
       "lines": [
-        "by MIT's draft taxonomy",
+        "classed by MIT's draft taxonomy",
         "and tied to the EU AI Act."
       ]
     },
     {
       "fragment": "f3",
       "scene": "mitigations",
-      "start": 8.583,
-      "end": 9.675,
+      "start": 8.455,
+      "end": 11.914,
       "lines": [
-        "You save four."
+        "You select and save",
+        "the relevant mitigations."
       ]
     },
     {
       "fragment": "f3",
       "scene": "mitigations",
-      "start": 9.675,
-      "end": 12.25,
+      "start": 11.914,
+      "end": 14.45,
       "lines": [
         "Next, suggest model enhancements."
       ]
@@ -119,29 +119,30 @@
       "fragment": "f4",
       "scene": "enhancements",
       "start": 0,
-      "end": 5.079,
+      "end": 4.039,
       "lines": [
-        "The agent proposes how to put the four",
-        "mitigations into effect: fine-tuning"
+        "The agent proposes how to put",
+        "the saved mitigations into effect:"
       ]
     },
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 5.079,
-      "end": 9.481,
+      "start": 4.039,
+      "end": 8.897,
       "lines": [
-        "on audited shortlists, two checking",
-        "agents, and recruiter review."
+        "fine-tuning on audited shortlists,",
+        "two checking agents, and recruiter review."
       ]
     },
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 9.481,
-      "end": 10.7,
+      "start": 8.897,
+      "end": 11.8,
       "lines": [
-        "You save all four."
+        "You select and save",
+        "the relevant enhancements."
       ]
     },
     {

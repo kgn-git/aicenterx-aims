@@ -1,6 +1,6 @@
 # Marketing video
 
-This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs just under 60 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
+This folder holds the narrated marketing video of the CV Screening Assistant journey, which targets 60 s; until the user's combined review, anything from 54 to 66 s is accepted. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
 
 Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the project owner confirmed on 28 October 2026 that it applies here.
 
@@ -24,15 +24,35 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 
 | Composition | Scenes | Length |
 |---|---|---|
-| `f1-create` | hook, canvas | 15 s |
+| `f1-create` | hook, canvas | 15 s planned, 16.6 s with the clips |
 | `f2-risks` | risks | 14 s |
-| `f3-mitigations` | mitigations | 12 s |
-| `f4-enhancements` | enhancements | 12 s |
-| `f5-closing` | end | 6 s |
+| `f3-mitigations` | mitigations | 13 s planned, 14.8 s with the clip |
+| `f4-enhancements` | enhancements | 12 s planned, 12.1 s with the clip |
+| `f5-closing` | end | 6 s planned, 6.7 s with the clip |
 
-The lengths come from `src/timeline.json`, which is the only place timing is set. Each scene is a placeholder until #30 and #31 build it. The dashed line marks the caption safe area, the bottom 18% of the frame, which stays free for the captions.
+The planned lengths are the `seconds` in `src/timeline.json`. A scene plays for its planned length or for its clip plus 0.3 s, whichever is longer, rounded up to a whole frame; `src/timing.mjs` holds that rule. Each scene is a placeholder until it is built, and it already plays its clip. The dashed line marks the caption safe area, the bottom 18% of the frame, which stays free for the captions.
 
 To check that the fonts loaded, look at a scene title: it is set in Fraunces, a serif with sharp, high-contrast strokes. A render stops with an error if a font file fails to load.
+
+## Narrate
+
+The narration is voiced with OpenAI text-to-speech and committed as `public/audio/<scene>.wav`, so a render needs neither the key nor the model. Remake it only when the narration changes. Each run costs well under a cent.
+
+1. Copy `.env.example` to `.env.local` at the repo root and add `OPENAI_API_KEY`. The file is git-ignored.
+2. In the key's project on platform.openai.com, allow both `gpt-4o-mini-tts-2025-12-15` and `gpt-4o-mini-tts` under the model limits. Without the second, OpenAI refuses some requests with HTTP 403. A change there can take about 30 minutes to apply everywhere.
+3. Voice the scenes, then rebuild the captions:
+
+```sh
+npm run video:narrate                  # every scene
+npm run video:narrate -- f2-risks      # only one fragment's scenes
+npm run video:cues
+```
+
+`video:narrate` writes each clip's length into `src/timeline.json` as `audioSeconds`. It replaces nothing unless every clip in the run succeeded, and it never prints the key. Listen to each clip before committing: it must say the whole line. `video:cues` rebuilds `src/captions.json`; the captions test fails until it has run.
+
+The voice is Marin, chosen by the project owner on 29 October 2026, and set as `VOICE` in `scripts/narrate.mjs` with the speaking instructions. To compare voices again, `npm run video:narrate -- --samples` writes the hook in each candidate voice to `video/out/samples/`.
+
+OpenAI plans to retire the dated model on 6 January 2027. The committed clips keep working, but a new narration after that date needs a newer model, and possibly another voice choice.
 
 ## Render a fragment
 
@@ -48,6 +68,9 @@ Every fragment is encoded the same way (H.264, yuv420p, BT.709, AAC) and always 
 
 - `src/timeline.json`: scenes, timing and data references (#27). `test/marketing_video_timeline_test.py` checks it.
 - `src/compositions.json`: the composition id of each fragment.
+- `src/timing.mjs`: how long each scene plays. `scripts/scene-seconds.mjs` prints it for the tests.
+- `src/captions.json`: the caption cues, built by `scripts/cues.mjs`. `test/marketing_video_captions_test.py` checks them.
+- `public/audio/`: one narration clip per scene, made by `scripts/narrate.mjs`. `test/marketing_video_audio_test.py` checks them.
 - `src/theme.ts`: colours and font stacks copied from the prototype's default theme. `test/marketing_video_project_test.py` checks that they still match `index.html`.
 - `public/fonts/`: Fraunces and IBM Plex Sans as variable fonts, each with its SIL Open Font License.
 

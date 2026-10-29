@@ -28,12 +28,12 @@
     {
       "id": "risks",
       "seconds": 14,
-      "audioSeconds": 12.35,
-      "narration": "An AI agent suggests risks, each cited from the MIT AI Risk Repository and the AI Incident Database. You tick three to act on and save them. Then generate mitigations.",
+      "audioSeconds": 12.3,
+      "narration": "An AI agent suggests risks, each cited from the MIT AI Risk Repository and the AI Incident Database. You select and save the relevant risks. Then generate mitigations.",
       "onScreen": [
         "Simulate risks",
-        "5 suggested risks, each with its MIT AI Risk Repository class and AI Incident Database incidents",
-        "3 risks ticked",
+        "Suggested risks, each with its MIT AI Risk Repository class and AI Incident Database incidents",
+        "Relevant risks ticked",
         "Save selected risks",
         "Generate mitigations"
       ],
@@ -46,13 +46,13 @@
     },
     {
       "id": "mitigations",
-      "seconds": 12,
-      "audioSeconds": 12.25,
-      "narration": "For each saved risk, the agent proposes mitigations, classed by MIT's draft taxonomy and tied to the EU AI Act. You save four. Next, suggest model enhancements.",
+      "seconds": 13,
+      "audioSeconds": 14.45,
+      "narration": "For each saved risk, the agent proposes mitigations, classed by MIT's draft taxonomy and tied to the EU AI Act. You select and save the relevant mitigations. Next, suggest model enhancements.",
       "onScreen": [
         "Generate mitigations",
-        "5 suggested mitigations for the 3 saved risks, cited from the MIT AI Risk Mitigation Taxonomy (draft) and EUR-Lex",
-        "4 mitigations ticked",
+        "Suggested mitigations for the saved risks, cited from the MIT AI Risk Mitigation Taxonomy (draft) and EUR-Lex",
+        "Relevant mitigations ticked",
         "Save selected mitigations",
         "Suggest model enhancements"
       ],
@@ -66,12 +66,12 @@
     {
       "id": "enhancements",
       "seconds": 12,
-      "audioSeconds": 10.7,
-      "narration": "The agent proposes how to put the four mitigations into effect: fine-tuning on audited shortlists, two checking agents, and recruiter review. You save all four.",
+      "audioSeconds": 11.8,
+      "narration": "The agent proposes how to put the saved mitigations into effect: fine-tuning on audited shortlists, two checking agents, and recruiter review. You select and save the relevant enhancements.",
       "onScreen": [
         "Suggest model enhancements",
-        "4 model enhancements: fine-tuning, agent workflow and human review, each tied to a saved mitigation",
-        "4 enhancements ticked",
+        "Model enhancements: fine-tuning, agent workflow and human review, each tied to a saved mitigation",
+        "Relevant enhancements ticked",
         "Save selected enhancements"
       ],
       "dataRefs": {
