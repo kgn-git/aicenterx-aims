@@ -1,14 +1,14 @@
-"""Test for splitting one continuous narration take into scene clips: splitTake in video/scripts/take.mjs.
+"""Test for cutting one continuous narration take into scene clips: splitTake in video/scripts/take.mjs.
 
 Usage:  python test/marketing_video_take_test.py
 
-The narration is voiced in one take so the voice keeps one pace and energy, then cut at the pauses between scenes.
-A wrong cut would put words in the wrong scene, so the split must find the scene pauses and refuse when it cannot.
-It runs on synthetic 24 kHz 16-bit PCM through node, so no voice or network is needed. Checks:
-  - a take of three tones parted by two long pauses, with a shorter pause inside the first, splits at the two long
-    pauses, and each clip keeps its speech without the pauses
-  - a take with too few pauses is refused
-  - a split whose clip lengths stray far from the scenes' word shares is refused
+The narration is voiced in one take so the voice keeps one pace and energy, then cut where each scene's words begin
+and end, using a transcript's word timings. A wrong cut would put words in the wrong scene, so the transcript is
+matched to the script word by word and the cut is refused when too little of it matches. It runs on synthetic
+24 kHz 16-bit PCM through node, so no voice or network is needed. Checks:
+  - each clip runs from just before its scene's first word to just after its last, and clips never overlap
+  - a transcript with one misheard word and different case and punctuation still cuts in the same places
+  - a transcript that matches too little of the script is refused
 Prints a JSON report; exit code 1 on any failure.
 """
 import json
@@ -18,32 +18,26 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TAKE = (ROOT / 'video' / 'scripts' / 'take.mjs').as_uri()
+TAKE = ROOT / 'video' / 'scripts' / 'take.mjs'
 
-# Each case builds PCM from [(seconds, loud?)] segments and calls splitTake(pcm, wordCounts).
 PROGRAM = """
 import {splitTake} from %s;
 const RATE = 24000;
-const pcm = (parts) => {
-  const chunks = parts.map(([s, loud]) => {
-    const b = Buffer.alloc(Math.round(s * RATE) * 2);
-    if (loud) for (let i = 0; i < b.length / 2; i++) b.writeInt16LE(Math.round(8000 * Math.sin(i / 3)), i * 2);
-    return b;
-  });
-  return Buffer.concat(chunks);
-};
-const run = (parts, words) => {
+const pcm = Buffer.alloc(10 * RATE * 2);
+const scenes = ["One two three.", "Four five.", "Six seven eight nine."];
+const at = (word, start, end) => ({word, start, end});
+const words = [at("One", 0.5, 0.9), at("two", 1.0, 1.4), at("three.", 1.5, 2.0), at("Four", 3.0, 3.4),
+  at("five", 3.5, 4.0), at("Six", 5.0, 5.4), at("seven", 5.5, 5.9), at("eight", 6.0, 6.4), at("nine", 6.5, 7.0)];
+const misheard = words.map((w) => (w.word === "five" ? {...w, word: "Fine,"} : {...w, word: w.word.toUpperCase()}));
+const secs = (clips) => clips.map((c) => Math.round((c.length / 2 / RATE) * 100) / 100);
+const run = (ws) => {
   try {
-    return {clips: splitTake(pcm(parts), words).map((c) => Math.round((c.length / 2 / RATE) * 100) / 100)};
+    return {clips: secs(splitTake(pcm, scenes, ws))};
   } catch (e) {
     return {refused: String(e.message)};
   }
 };
-console.log(JSON.stringify({
-  good: run([[0.2, 0], [1.0, 1], [0.35, 0], [1.0, 1], [1.2, 0], [2.0, 1], [1.1, 0], [1.0, 1], [0.2, 0]], [4, 4, 2]),
-  fewPauses: run([[2.0, 1], [0.3, 0], [2.0, 1]], [2, 2, 2]),
-  stray: run([[1.0, 1], [1.2, 0], [4.0, 1], [1.2, 0], [1.0, 1]], [10, 1, 10]),
-}));
+console.log(JSON.stringify({good: run(words), misheard: run(misheard), poor: run(words.slice(0, 3))}));
 """
 
 
@@ -56,24 +50,27 @@ def main():
     node = shutil.which('node')
     if not node:
         check('node is on PATH', ['node is not on PATH'])
-    elif not (ROOT / 'video' / 'scripts' / 'take.mjs').is_file():
+    elif not TAKE.is_file():
         check('video/scripts/take.mjs exists', ['missing'])
     else:
-        r = subprocess.run([node, '--input-type=module', '-e', PROGRAM % json.dumps(TAKE)], capture_output=True,
-                           text=True, timeout=60)
+        r = subprocess.run([node, '--input-type=module', '-e', PROGRAM % json.dumps(TAKE.as_uri())],
+                           capture_output=True, text=True, timeout=60)
         try:
             got = json.loads(r.stdout)
         except ValueError:
             got = None
             check('splitTake runs', [r.stderr[-400:]])
         if got:
+            # Scenes span 0.5-2.0, 3.0-4.0 and 5.0-7.0 s; each clip adds 0.03 s before and 0.08 s after.
+            want = [1.61, 1.11, 2.11]
             clips = got['good'].get('clips')
-            check('a take splits at the two long pauses, keeping each scene\'s speech',
-                  [] if clips and len(clips) == 3 and abs(clips[0] - 2.35) < 0.2 and abs(clips[1] - 2.0) < 0.2
-                  and abs(clips[2] - 1.0) < 0.2 else [got['good']])
-            check('a take with too few pauses is refused', [] if 'refused' in got['fewPauses'] else [got['fewPauses']])
-            check("a split far from the scenes' word shares is refused",
-                  [] if 'refused' in got['stray'] else [got['stray']])
+            check("each clip runs from its scene's first word to its last",
+                  [] if clips and all(abs(a - b) < 0.02 for a, b in zip(clips, want)) and len(clips) == 3
+                  else [got['good']])
+            check('a misheard word and other case or punctuation cut in the same places',
+                  [] if got['misheard'].get('clips') == clips else [got['misheard']])
+            check('a transcript that matches too little of the script is refused',
+                  [] if 'refused' in got['poor'] else [got['poor']])
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))
