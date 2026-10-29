@@ -35,7 +35,8 @@
         "Suggested risks, each with its MIT AI Risk Repository class and AI Incident Database incidents",
         "Relevant risks ticked",
         "Save selected risks",
-        "Generate mitigations"
+        "Generate mitigations",
+        "Selected risks saved"
       ],
       "dataRefs": {
         "risks": {
