@@ -12,10 +12,14 @@ import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {splitTake} from "./take.mjs";
 
-const VOICE = "marin";
-const SAMPLE_VOICES = ["marin", "cedar", "fable"];
+const VOICE = "ballad";
+const SAMPLE_VOICES = ["marin", "cedar", "ballad"];
+// Conversational rather than announcer-like, since a flat documentary read sounds robotic over a brand film.
 const INSTRUCTIONS =
-  "Speak calm, warm, standard British English at a natural, steady documentary pace: clear, not slow. " +
+  "Voice: a warm, natural British narrator for a short brand film, talking to a business audience as if to one " +
+  "person. Sound human and conversational, not like an announcer: let the pitch and pace follow the meaning, lean " +
+  "gently on the key words, let sentences flow into each other, and end statements with quiet confidence. Keep a " +
+  "moderate, unhurried tempo. " +
   "Say MIT as the letters M-I-T, CV as C-V, EU as E-U, AI as A-I, and AI Center X as A-I Centre Ex.";
 // One take keeps one pace and energy across scenes; a transcript's word timings then show where each scene is cut.
 const TAKE_INSTRUCTIONS =
@@ -194,13 +198,14 @@ async function main() {
   const bad = timeline.scenes.find((s) => !/^[a-z0-9-]+$/.test(s.id));
   if (bad) fail(`Scene id "${bad.id}" must use only lower-case letters, digits and hyphens, as it names a file.`);
   if (samples) {
-    const hook = timeline.scenes[0];
+    const opening = timeline.fragments[0].scenes.slice(0, 2).map((id) => timeline.scenes.find((s) => s.id === id));
+    const text = opening.map((s) => s.narration).join("\n\n");
     const files = [];
     for (const voice of SAMPLE_VOICES) {
-      files.push([join(root, "out", "samples", `${voice}.wav`), wav(await speak(hook.narration, voice, key, model))]);
+      files.push([join(root, "out", "samples", `${voice}.wav`), wav(await speak(text, voice, key, model))]);
     }
     commit(files);
-    console.log(`Wrote ${SAMPLE_VOICES.length} samples of the ${hook.id} scene to video/out/samples/.`);
+    console.log(`Wrote ${SAMPLE_VOICES.length} samples of the opening to video/out/samples/.`);
     console.log("Listen, then set VOICE in video/scripts/narrate.mjs to the chosen name.");
     return;
   }

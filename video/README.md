@@ -20,7 +20,7 @@ npm's install scripts stay blocked: renders work without esbuild's postinstall s
 npm run video:studio
 ```
 
-Remotion Studio opens at http://localhost:3000. It lists one composition per fragment and `CvScreeningJourney`, which plays all five in order:
+Remotion Studio opens at http://localhost:3000. It lists one composition per fragment and `CvScreeningJourney`, the whole story with crossfades:
 
 | Composition | Scenes | Length |
 |---|---|---|
@@ -63,7 +63,13 @@ npm run video:render:fragment -- f2-risks
 
 This writes `video/out/fragments/f2-risks.mp4`. `video/out/` is git-ignored, so rendered video is never committed. Only the five composition names in the table are accepted.
 
-Every fragment is encoded the same way (H.264, yuv420p, BT.709, AAC) and always carries an audio track, set in `remotion.config.ts`, so the approved fragments can be joined without re-encoding. `CvScreeningJourney` is for previewing only; the released video joins the rendered fragments. To render it anyway, run `npx remotion render CvScreeningJourney` inside `video/`, which writes `video/out/CvScreeningJourney.mp4`.
+Fragments are for review. The released video is rendered in one piece from `CvScreeningJourney`, where each scene crossfades into the next over 0.3 s, the silent tail every scene ends with:
+
+```sh
+npm run video:assemble
+```
+
+This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 75 s at most (the tolerance until the combined review) at 1920x1080, with H.264 video and AAC audio.
 
 ## Files
 

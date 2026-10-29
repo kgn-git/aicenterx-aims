@@ -4,7 +4,7 @@
       "fragment": "f1",
       "scene": "hook",
       "start": 0,
-      "end": 3.68,
+      "end": 4.531,
       "lines": [
         "Amazon's experimental hiring tool",
         "allegedly ranked women lower."
@@ -12,19 +12,38 @@
     },
     {
       "fragment": "f1",
-      "scene": "problem",
-      "start": 4,
-      "end": 9.41,
+      "scene": "hook",
+      "start": 4.531,
+      "end": 6.76,
       "lines": [
-        "In 2026, the challenge is to govern AI",
+        "Abandoning it took three years."
+      ]
+    },
+    {
+      "fragment": "f1",
+      "scene": "problem",
+      "start": 7.067,
+      "end": 11.881,
+      "lines": [
+        "Today, no company can afford that",
+        "much time, money or possible harm."
+      ]
+    },
+    {
+      "fragment": "f1",
+      "scene": "problem",
+      "start": 11.881,
+      "end": 16.837,
+      "lines": [
+        "The challenge is to govern AI",
         "responsibly and still create real value."
       ]
     },
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 10,
-      "end": 12.74,
+      "start": 17.167,
+      "end": 20.274,
       "lines": [
         "In AI Center X,",
         "you start with the AI Canvas:"
@@ -33,8 +52,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 12.74,
-      "end": 17.245,
+      "start": 20.274,
+      "end": 25.383,
       "lines": [
         "the CV Screening Assistant's problem,",
         "its data, and the people it affects."
@@ -43,8 +62,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 17.245,
-      "end": 18.95,
+      "start": 25.383,
+      "end": 27.317,
       "lines": [
         "Then you simulate the risks."
       ]
@@ -53,7 +72,7 @@
       "fragment": "f2",
       "scene": "risks",
       "start": 0,
-      "end": 2.49,
+      "end": 2.841,
       "lines": [
         "An AI agent suggests risks, each cited"
       ]
@@ -61,8 +80,8 @@
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 2.49,
-      "end": 6.487,
+      "start": 2.841,
+      "end": 7.402,
       "lines": [
         "from the MIT AI Risk Repository",
         "and the AI Incident Database."
@@ -71,8 +90,8 @@
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 6.487,
-      "end": 9.304,
+      "start": 7.402,
+      "end": 10.617,
       "lines": [
         "You select the relevant",
         "ones and save them."
@@ -81,8 +100,8 @@
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 9.304,
-      "end": 11.27,
+      "start": 10.617,
+      "end": 12.86,
       "lines": [
         "Now, generate the mitigations."
       ]
@@ -91,7 +110,7 @@
       "fragment": "f3",
       "scene": "mitigations",
       "start": 0,
-      "end": 3.556,
+      "end": 3.888,
       "lines": [
         "For every saved risk,",
         "the agent proposes mitigations,"
@@ -100,8 +119,8 @@
     {
       "fragment": "f3",
       "scene": "mitigations",
-      "start": 3.556,
-      "end": 7.784,
+      "start": 3.888,
+      "end": 8.509,
       "lines": [
         "each classed by MIT's draft",
         "taxonomy and tied to the EU AI Act."
@@ -110,8 +129,8 @@
     {
       "fragment": "f3",
       "scene": "mitigations",
-      "start": 7.784,
-      "end": 9.596,
+      "start": 8.509,
+      "end": 10.489,
       "lines": [
         "Again, you select and save."
       ]
@@ -119,8 +138,8 @@
     {
       "fragment": "f3",
       "scene": "mitigations",
-      "start": 9.596,
-      "end": 11.81,
+      "start": 10.489,
+      "end": 12.91,
       "lines": [
         "Next come the model enhancements."
       ]
@@ -129,7 +148,7 @@
       "fragment": "f4",
       "scene": "enhancements",
       "start": 0,
-      "end": 2.862,
+      "end": 3.438,
       "lines": [
         "Finally, the agent shows",
         "how to put those mitigations"
@@ -138,8 +157,8 @@
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 2.862,
-      "end": 5.4,
+      "start": 3.438,
+      "end": 6.486,
       "lines": [
         "into effect: fine-tuning",
         "on audited shortlists,"
@@ -148,8 +167,8 @@
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 5.4,
-      "end": 8.532,
+      "start": 6.486,
+      "end": 10.249,
       "lines": [
         "two checking agents, and learning",
         "from recruiter feedback."
@@ -158,8 +177,8 @@
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 8.532,
-      "end": 9.99,
+      "start": 10.249,
+      "end": 12,
       "lines": [
         "You save the ones you need."
       ]
@@ -168,7 +187,7 @@
       "fragment": "f5",
       "scene": "end",
       "start": 0,
-      "end": 1.871,
+      "end": 2.142,
       "lines": [
         "From idea to governed initiative."
       ]
@@ -176,8 +195,8 @@
     {
       "fragment": "f5",
       "scene": "end",
-      "start": 1.871,
-      "end": 6.35,
+      "start": 2.142,
+      "end": 7.27,
       "lines": [
         "AI Center X: making innovation, governance",
         "and change management work together."
