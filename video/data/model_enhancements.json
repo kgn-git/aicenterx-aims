@@ -36,8 +36,8 @@
     {
       "id": "enh-rlhf-recruiter-feedback",
       "kind": "human feedback",
-      "name": "RLHF on recruiter feedback",
-      "how": "Recruiters rate a weekly sample of rankings, and RLHF tunes the model so their judgement shapes future shortlists.",
+      "name": "RLHF on audited recruiter feedback",
+      "how": "Recruiters rate a weekly sample of rankings; only ratings that pass the bias audit tune the model through RLHF.",
       "mitigationId": "m-s-hiring-7-1",
       "source": {
         "title": "MIT AI Risk Mitigation Taxonomy (draft), 2.2 Model Alignment",

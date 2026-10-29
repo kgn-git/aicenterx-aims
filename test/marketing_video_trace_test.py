@@ -5,13 +5,15 @@ Usage:  python test/marketing_video_trace_test.py
 The trace scene shows every saved enhancement traced back to its mitigation and risk. It is the video's claim that
 governance is traceable, so it must draw only links the curated data holds. Reads the rows through
 video/scripts/trace.mjs, so the rule is checked where the scene takes it from. Checks:
-  - one row per saved enhancement, in the order they are saved
+  - one row per saved enhancement, grouped by risk so each risk is drawn once beside its rows: the risks in the order
+    their first enhancement is saved, and within a risk the saving order
   - each row's mitigation is the one the enhancement puts into effect, and is saved
   - each row's risk is the saved risk whose mitigations include that mitigation
-  - each row's articles are exactly the EU AI Act articles cited by the mitigation's EUR-Lex sources
+  - each row's articles are exactly those its mitigation's EU AI Act sources cite; other EUR-Lex law such as the GDPR
+    is not the EU AI Act
   - every label is the one video/data/trace_labels.json holds, 1 to 6 words, and that file labels exactly the saved
     risks and the mitigations drawn
-  - the guard: a row naming another risk is rejected
+  - the guard: a row naming another risk is rejected, and the article rule skips a GDPR source
 Prints a JSON report; exit code 1 on any failure.
 """
 import copy
@@ -35,9 +37,9 @@ def load(p):
 
 
 def articles(mitigation):
-    """The EU AI Act article numbers a mitigation's EUR-Lex sources cite, in order."""
-    return [int(n) for s in mitigation['sources'] if 'eur-lex' in s.get('url', '') or 'EU AI Act' in s.get('title', '')
-            for n in re.findall(r'Article (\d+)', s.get('title', ''))]
+    """The article numbers a mitigation's EU AI Act sources cite, in order."""
+    return [int(n) for s in mitigation['sources'] if s.get('title', '').startswith('EU AI Act')
+            for n in re.findall(r'Article (\d+)', s['title'])]
 
 
 def validate(rows, data):
@@ -51,8 +53,12 @@ def validate(rows, data):
     if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
         return ['trace.mjs must print a list of rows']
     bad = []
-    if [r.get('enhancement', {}).get('id') for r in rows] != saved['enhancements']:
-        bad.append('the rows must be the saved enhancements, in the order they are saved')
+    first = {}
+    for e in saved['enhancements']:
+        first.setdefault(answers.get(enh.get(e, {}).get('mitigationId')), len(first))
+    grouped = sorted(saved['enhancements'], key=lambda e: first[answers.get(enh.get(e, {}).get('mitigationId'))])
+    if [r.get('enhancement', {}).get('id') for r in rows] != grouped:
+        bad.append(f'the rows must be the saved enhancements grouped by risk, {grouped}')
     for r in rows:
         e, m, k = (r.get(x, {}) for x in ('enhancement', 'mitigation', 'risk'))
         eid = e.get('id')
@@ -106,6 +112,9 @@ def main():
             others = [k for k in data['timeline']['scenes'][3]['dataRefs']['risks']['saved'] if k != wrong[0]['risk']['id']]
             wrong[0]['risk'] = {'id': others[0], 'label': data['labels'][others[0]]}
             check('validator rejects a row naming another risk', any('the risk must be' in x for x in validate(wrong, data)))
+            gdpr = {'sources': [{'title': 'GDPR (Regulation (EU) 2016/679), Article 22', 'url': 'https://eur-lex.europa.eu/eli/reg/2016/679/oj'},
+                                {'title': 'EU AI Act (Regulation (EU) 2024/1689), Article 10: Data', 'url': 'https://eur-lex.europa.eu/eli/reg/2024/1689/oj'}]}
+            check('the article rule skips a GDPR source', articles(gdpr) == [10], articles(gdpr))
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))

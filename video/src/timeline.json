@@ -3,7 +3,7 @@
     {
       "id": "hook",
       "seconds": 6,
-      "audioSeconds": 5.62,
+      "audioSeconds": 5.78,
       "narration": "Amazon's experimental hiring tool allegedly ranked women lower. Abandoning it took three years.",
       "onScreen": [
         "Amazon's Experimental Hiring Tool Allegedly Displayed Gender Bias in Candidate Rankings",
@@ -17,7 +17,7 @@
     {
       "id": "problem",
       "seconds": 11.5,
-      "audioSeconds": 9.65,
+      "audioSeconds": 9.69,
       "narration": "Today, no company can afford to spend such time and effort and end up potentially causing harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
         "Today, no company can afford to spend such time and effort and end up potentially causing harm. The challenge is to govern AI responsibly and create real value."
@@ -27,7 +27,7 @@
     {
       "id": "canvas",
       "seconds": 11.5,
-      "audioSeconds": 10.27,
+      "audioSeconds": 10.07,
       "narration": "In AI Center X, you start with the AI Canvas: the CV Screening Assistant's business problem, its data, and the people it affects. Then you simulate the risks.",
       "onScreen": [
         "Define an initiative",
@@ -41,7 +41,7 @@
     {
       "id": "risks",
       "seconds": 12,
-      "audioSeconds": 12.75,
+      "audioSeconds": 11.55,
       "narration": "An AI agent suggests risks, each cited from the MIT AI Risk Repository and the AI Incident Database. You select the relevant ones and save them. Now, generate the mitigations.",
       "onScreen": [
         "Simulate risks",
@@ -60,8 +60,8 @@
     },
     {
       "id": "mitigations",
-      "seconds": 13,
-      "audioSeconds": 11.61,
+      "seconds": 12.5,
+      "audioSeconds": 11.41,
       "narration": "For every saved risk, the agent proposes mitigations, each classed by MIT's draft taxonomy and tied to the EU AI Act. Again, you select and save. Next come the model enhancements.",
       "onScreen": [
         "Generate mitigations",
@@ -81,8 +81,8 @@
     {
       "id": "enhancements",
       "seconds": 12,
-      "audioSeconds": 10.07,
-      "narration": "The agent shows how to put those mitigations into effect: fine-tuning on audited shortlists, two checking agents, and learning from recruiter feedback. You save the ones you need.",
+      "audioSeconds": 9.83,
+      "narration": "The agent shows how to put those mitigations into effect: fine-tuning on audited shortlists, two checking agents, and learning from audited recruiter feedback. You save the ones you need.",
       "onScreen": [
         "Suggest model enhancements",
         "Model enhancements: fine-tuning, agent workflow and human feedback, each tied to a saved mitigation",
@@ -98,10 +98,23 @@
       }
     },
     {
+      "id": "trace",
+      "seconds": 3.5,
+      "audioSeconds": 1.49,
+      "narration": "From idea to business value.",
+      "onScreen": [
+        "Every enhancement traces back to a risk",
+        "Saved risk",
+        "Saved mitigation",
+        "Model enhancement"
+      ],
+      "dataRefs": {}
+    },
+    {
       "id": "end",
-      "seconds": 7,
-      "audioSeconds": 5.67,
-      "narration": "From idea to business value. AI Center X: making innovation and governance work together.",
+      "seconds": 5.5,
+      "audioSeconds": 3.35,
+      "narration": "AI Center X: making innovation and governance work together.",
       "onScreen": [
         "AI Center X",
         "Coming soon",
@@ -118,6 +131,6 @@
     {"id": "f2", "scenes": ["risks"]},
     {"id": "f3", "scenes": ["mitigations"]},
     {"id": "f4", "scenes": ["enhancements"]},
-    {"id": "f5", "scenes": ["end"]}
+    {"id": "f5", "scenes": ["trace", "end"]}
   ]
 }
