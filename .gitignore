@@ -5,6 +5,6 @@ CLAUDE.local.md
 node_modules/
 .3c/telemetry/
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 video/out/

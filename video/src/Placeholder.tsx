@@ -1,11 +1,10 @@
 import React from "react";
 import {AbsoluteFill} from "remotion";
+import type {Scene} from "./scenes";
 import {appFrameHeight, bodyFont, captionSafeArea, color, headingFont} from "./theme";
 
-type Scene = {id: string; seconds: number; narration: string; onScreen: string[]};
-
-/** Stands in for a scene until #30 and #31 build it: the scene's id, timing and on-screen items, above the caption
- *  safe area. */
+/** Stands in for a scene until it is built: the scene's id, timing and on-screen items, above the caption safe
+ *  area. */
 export const Placeholder: React.FC<{scene: Scene}> = ({scene}) => (
   <AbsoluteFill style={{background: `radial-gradient(1200px 800px at 70% -10%, ${color.bgG1}, transparent), ${color.bgBase}`}}>
     <div

@@ -1,8 +1,8 @@
 # Marketing video
 
-This folder holds the 60-second narrated video of the CV Screening Assistant journey, built with [Remotion](https://www.remotion.dev/). It is a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
+This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs just under 60 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
 
-Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the user confirmed on 28 October 2026 that it applies here.
+Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the project owner confirmed on 28 October 2026 that it applies here.
 
 ## Install
 
@@ -12,7 +12,7 @@ Node 22.9 or later is needed. From the repo root:
 npm --prefix video ci
 ```
 
-The first preview or render downloads Chrome Headless Shell once (about 120 MB). After that, a render needs no network: the fonts are bundled.
+npm's install scripts stay blocked: renders work without esbuild's postinstall step, so there is no need to allow it. The first preview or render downloads Chrome Headless Shell once (about 120 MB). After that, a render needs no network: the fonts are bundled.
 
 ## Preview
 
@@ -40,9 +40,9 @@ To check that the fonts loaded, look at a scene title: it is set in Fraunces, a 
 npm run video:render:fragment -- f2-risks
 ```
 
-This writes `video/out/fragments/f2-risks.mp4`. `video/out/` is git-ignored, so rendered video is never committed. Only the five fragment ids above are accepted.
+This writes `video/out/fragments/f2-risks.mp4`. `video/out/` is git-ignored, so rendered video is never committed. Only the five composition names in the table are accepted.
 
-Every fragment is encoded the same way (H.264, yuv420p, BT.709, AAC), set in `remotion.config.ts`, so #32 can join them without re-encoding. To render the whole preview instead, run `npx remotion render CvScreeningJourney` inside `video/`.
+Every fragment is encoded the same way (H.264, yuv420p, BT.709, AAC) and always carries an audio track, set in `remotion.config.ts`, so the approved fragments can be joined without re-encoding. `CvScreeningJourney` is for previewing only; the released video joins the rendered fragments. To render it anyway, run `npx remotion render CvScreeningJourney` inside `video/`, which writes `video/out/CvScreeningJourney.mp4`.
 
 ## Files
 
@@ -53,4 +53,4 @@ Every fragment is encoded the same way (H.264, yuv420p, BT.709, AAC), set in `re
 
 ## Known audit finding
 
-`npm audit` reports 10 high-severity findings and no critical ones. All 10 come from one advisory in `zod` 4.5.4, which Remotion pins exactly: [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), memory exhaustion while validating oversized collections. Remotion only validates this project's own composition props, on this machine. Forcing a newer `zod` makes Remotion warn of broken renders, so the pinned version stays until Remotion moves to a fixed one.
+`npm audit` reports 10 high-severity findings and no critical ones. All 10 come from one advisory in `zod` 4.5.4, which Remotion pins exactly: [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), memory exhaustion while validating oversized collections. Remotion only validates this project's own composition props, on this machine. Forcing a newer `zod` makes Remotion warn of broken renders, so the pinned version stays until Remotion moves to a fixed one. Run `npm audit --prefix video` after every Remotion upgrade; it must report no critical findings.

@@ -16,14 +16,12 @@ export const color = {
   ragHigh: "#e2899a",
 };
 
-export const accent = color.gov;
-
 export const headingFont = "'Fraunces', Georgia,'Times New Roman',serif";
 export const bodyFont = "'IBM Plex Sans', ui-sans-serif, system-ui, 'Segoe UI', sans-serif";
 
 export const video = {width: 1920, height: 1080, fps: 30};
 
-// The bottom 18% of the frame stays free for the burned-in captions #30 adds; rounded once, so every layer that
+// The bottom 18% of the frame stays free for the burned-in captions; rounded once, so every layer that
 // lays out above it uses the same pixel edge.
 export const captionSafeArea = Math.round(video.height * 0.18);
 export const appFrameHeight = video.height - captionSafeArea;
