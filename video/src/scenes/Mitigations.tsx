@@ -15,7 +15,7 @@ const all = Object.values(mitigations.risks).flat();
 const objective = new Map(controls.controls.map((c) => [c.key, c.objective]));
 
 /** "EU AI Act, Article 10" from a EUR-Lex source title, so each row stays within three lines. */
-const shortSource = (title: string) => `${title.split(" (")[0]}, ${title.match(/Article \d+/)?.[0] ?? ""}`;
+const shortSource = (title: string) => [title.split(" (")[0], title.match(/Article \d+/)?.[0]].filter(Boolean).join(", ");
 
 /** The second agent run: mitigations for the saved risks, each with its control, MIT class and law. */
 export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
@@ -89,7 +89,7 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           {t: cues[2].start, x: 1100, y: 600},
           ...saved.map((id, k) => ({t: ticks[k], x: SIDE + 40, y: top(shown.indexOf(id)) + ROW / 2})),
           {t: saveAt, ...button},
-          {t: seconds, x: 1450, y: 100},
+          {t: seconds, ...button},
         ]}
       />
     </AppFrame>

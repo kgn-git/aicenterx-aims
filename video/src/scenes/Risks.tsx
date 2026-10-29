@@ -101,7 +101,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           {t: cues[2].start, x: 1100, y: 600},
           ...saved.map((id, k) => ({t: ticks[k], ...target(shown.indexOf(id))})),
           {t: saveAt, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
-          {t: seconds, x: 1500, y: 100},
+          {t: seconds, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
         ]}
       />
     </AppFrame>

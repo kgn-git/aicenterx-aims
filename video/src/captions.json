@@ -129,27 +129,37 @@
       "fragment": "f4",
       "scene": "enhancements",
       "start": 0,
-      "end": 4.039,
+      "end": 3.03,
       "lines": [
-        "The agent proposes how to put",
-        "the saved mitigations into effect:"
+        "The agent proposes how",
+        "to put the saved mitigations"
       ]
     },
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 4.039,
-      "end": 8.897,
+      "start": 3.03,
+      "end": 5.822,
       "lines": [
-        "fine-tuning on audited shortlists,",
-        "two checking agents, and recruiter review."
+        "into effect: fine-tuning",
+        "on audited shortlists,"
       ]
     },
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 8.897,
-      "end": 11.8,
+      "start": 5.822,
+      "end": 9.267,
+      "lines": [
+        "two checking agents, and learning",
+        "from recruiter feedback."
+      ]
+    },
+    {
+      "fragment": "f4",
+      "scene": "enhancements",
+      "start": 9.267,
+      "end": 12,
       "lines": [
         "You select and save",
         "the relevant enhancements."

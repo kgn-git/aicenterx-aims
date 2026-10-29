@@ -34,14 +34,14 @@
       }
     },
     {
-      "id": "enh-recruiter-review",
-      "kind": "human review",
-      "name": "Recruiter review of every rejection",
-      "how": "The named recruiter reviews each rejection below the cut-off and records why before the candidate is told.",
+      "id": "enh-rlhf-recruiter-feedback",
+      "kind": "human feedback",
+      "name": "RLHF on recruiter feedback",
+      "how": "Recruiters rate a weekly sample of rankings, and RLHF tunes the model so their judgement shapes future shortlists.",
       "mitigationId": "m-s-hiring-7-1",
       "source": {
-        "title": "EU AI Act (Regulation (EU) 2024/1689), Article 26: Obligations of deployers of high-risk AI systems",
-        "url": "https://eur-lex.europa.eu/eli/reg/2024/1689/oj"
+        "title": "MIT AI Risk Mitigation Taxonomy (draft), 2.2 Model Alignment",
+        "url": "https://airisk.mit.edu/ai-risk-mitigations"
       }
     }
   ]

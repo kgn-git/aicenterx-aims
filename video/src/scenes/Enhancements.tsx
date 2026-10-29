@@ -11,7 +11,7 @@ const TOP = 130;
 const GAP = 18;
 const WIDTH = (video.width - 2 * SIDE - GAP) / 2;
 const HEIGHT = 318;
-const KIND_COLOUR: Record<string, string> = {"fine-tuning": color.arch, "agent workflow": color.gov, "human review": color.val};
+const KIND_COLOUR: Record<string, string> = {"fine-tuning": color.arch, "agent workflow": color.gov, "human feedback": color.val};
 const all = Object.values(mitigations.risks).flat();
 const cell = (i: number) => ({x: SIDE + (i % 2) * (WIDTH + GAP), y: TOP + Math.floor(i / 2) * (HEIGHT + GAP)});
 
@@ -24,7 +24,9 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
 
   const click = 0.5;
   const appearFrom = 1.1;
-  const ticks = saved.map((_, k) => cues[cues.length - 1].start + 0.2 + k * 0.45);
+  // The toast must stay up for about 1.5 s before the cut, so a late last cue pulls the ticks earlier.
+  const firstTick = Math.min(cues[cues.length - 1].start + 0.2, seconds - 2.1 - 0.45 * (saved.length - 1) - 0.6);
+  const ticks = saved.map((_, k) => firstTick + k * 0.45);
   const saveAt = ticks[ticks.length - 1] + 0.6;
   const button = {x: TRIGGER.x, y: TRIGGER.y - TOP_BAR};
 
@@ -83,7 +85,7 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: button.x, y: button.y},
-          {t: cues[cues.length - 1].start, x: 1000, y: 500},
+          {t: firstTick - 0.4, x: 1000, y: 500},
           ...saved.map((id, k) => ({t: ticks[k], x: cell(shown.indexOf(id)).x + 40, y: cell(shown.indexOf(id)).y + 40})),
           {t: saveAt, ...button},
           {t: seconds, x: 1450, y: 100},

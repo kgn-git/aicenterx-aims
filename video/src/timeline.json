@@ -81,19 +81,19 @@
     {
       "id": "enhancements",
       "seconds": 12,
-      "audioSeconds": 11.8,
-      "narration": "The agent proposes how to put the saved mitigations into effect: fine-tuning on audited shortlists, two checking agents, and recruiter review. You select and save the relevant enhancements.",
+      "audioSeconds": 12,
+      "narration": "The agent proposes how to put the saved mitigations into effect: fine-tuning on audited shortlists, two checking agents, and learning from recruiter feedback. You select and save the relevant enhancements.",
       "onScreen": [
         "Suggest model enhancements",
-        "Model enhancements: fine-tuning, agent workflow and human review, each tied to a saved mitigation",
+        "Model enhancements: fine-tuning, agent workflow and human feedback, each tied to a saved mitigation",
         "Relevant enhancements ticked",
         "Save selected enhancements",
         "Selected enhancements saved"
       ],
       "dataRefs": {
         "enhancements": {
-          "shown": ["enh-fairness-fine-tuning", "enh-bias-check-agent", "enh-missed-candidate-agent", "enh-recruiter-review"],
-          "saved": ["enh-fairness-fine-tuning", "enh-bias-check-agent", "enh-missed-candidate-agent", "enh-recruiter-review"]
+          "shown": ["enh-fairness-fine-tuning", "enh-bias-check-agent", "enh-missed-candidate-agent", "enh-rlhf-recruiter-feedback"],
+          "saved": ["enh-fairness-fine-tuning", "enh-bias-check-agent", "enh-missed-candidate-agent", "enh-rlhf-recruiter-feedback"]
         }
       }
     },
