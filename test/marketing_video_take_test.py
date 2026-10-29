@@ -23,7 +23,7 @@ TAKE = ROOT / 'video' / 'scripts' / 'take.mjs'
 PROGRAM = """
 import {splitTake} from %s;
 const RATE = 24000;
-const pcm = Buffer.alloc(10 * RATE * 2);
+const pcm = Buffer.alloc(10 * RATE * 2, 7);
 const scenes = ["One two three.", "Four five.", "Six seven eight nine."];
 const at = (word, start, end) => ({word, start, end});
 const words = [at("One", 0.5, 0.9), at("two", 1.0, 1.4), at("three.", 1.5, 2.0), at("Four", 3.0, 3.4),
@@ -32,7 +32,8 @@ const misheard = words.map((w) => (w.word === "five" ? {...w, word: "Fine,"} : {
 const secs = (clips) => clips.map((c) => Math.round((c.length / 2 / RATE) * 100) / 100);
 const run = (ws) => {
   try {
-    return {clips: secs(splitTake(pcm, scenes, ws))};
+    const clips = splitTake(pcm, scenes, ws);
+    return {clips: secs(clips), quiet: clips.every((c) => c.subarray(0, 0.2 * RATE * 2).every((b) => b === 0))};
   } catch (e) {
     return {refused: String(e.message)};
   }
@@ -62,12 +63,13 @@ def main():
             check('splitTake runs', [r.stderr[-400:]])
         if got:
             # Scenes span 0.5-2.0, 3.0-4.0 and 5.0-7.0 s; each clip adds 0.15 s before and 0.08 s after, so
-            # the first consonant of a scene is never clipped.
-            want = [1.73, 1.23, 2.23]
+            # the first consonant of a scene is never clipped, then opens with 0.2 s of silence as a breath.
+            want = [1.93, 1.43, 2.43]
             clips = got['good'].get('clips')
             check("each clip runs from its scene's first word to its last",
                   [] if clips and all(abs(a - b) < 0.02 for a, b in zip(clips, want)) and len(clips) == 3
                   else [got['good']])
+            check('each clip opens with 0.2 s of silence', [] if got['good'].get('quiet') else [got['good']])
             check('a misheard word and other case or punctuation cut in the same places',
                   [] if got['misheard'].get('clips') == clips else [got['misheard']])
             check('a transcript that matches too little of the script is refused',
