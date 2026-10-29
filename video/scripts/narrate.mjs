@@ -10,10 +10,10 @@ import {mkdirSync, readFileSync, renameSync, rmSync, writeFileSync} from "node:f
 import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 
-const VOICE = null;
+const VOICE = "marin";
 const SAMPLE_VOICES = ["marin", "cedar", "fable"];
 const INSTRUCTIONS =
-  "Speak calm, warm, standard British English, at an unhurried and even pace, like a documentary narrator. " +
+  "Speak calm, warm, standard British English at a natural, steady documentary pace: clear, not slow. " +
   "Say MIT as the letters M-I-T, CV as C-V, EU as E-U, AI as A-I, and AI Center X as A-I Centre Ex.";
 const RATE = 24000;
 

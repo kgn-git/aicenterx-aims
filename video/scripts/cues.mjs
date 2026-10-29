@@ -14,26 +14,43 @@ const timeline = JSON.parse(readFileSync(join(src, "timeline.json"), "utf8"));
 const scenes = new Map(timeline.scenes.map((s) => [s.id, s]));
 const round = (x) => Math.round(x * 1000) / 1000;
 
-/** Greedy line filling: as many whole words per line as fit, at most LINES lines per cue, a sentence never shared. */
+/** The two lines of one cue, split where the longer line is shortest, or null when the words cannot fit. */
+function twoLines(words) {
+  const one = words.join(" ");
+  if (one.length <= LINE) return [one];
+  let best = null;
+  for (let i = 1; i < words.length; i++) {
+    const pair = [words.slice(0, i).join(" "), words.slice(i).join(" ")];
+    const longest = Math.max(...pair.map((l) => l.length));
+    if (longest <= LINE && (!best || longest < best.longest)) best = {pair, longest};
+  }
+  return best?.pair ?? null;
+}
+
+/** Each sentence split into the fewest cues that fit, with the words shared as evenly as possible by length, so no
+ *  cue holds a stray word or two and no cue spans two sentences. */
 function blocks(narration) {
   const out = [];
   for (const sentence of narration.match(/[^.!?]+[.!?]+/g) ?? [narration]) {
-    let lines = [];
-    let line = "";
-    for (const word of sentence.trim().split(/\s+/)) {
-      if (line && (line + " " + word).length > LINE) {
-        lines.push(line);
-        line = word;
-        if (lines.length === LINES) {
-          out.push(lines);
-          lines = [];
+    const words = sentence.trim().split(/\s+/);
+    for (let n = Math.ceil(sentence.trim().length / (LINE * LINES)); n <= words.length; n++) {
+      const target = sentence.trim().length / n;
+      const chunks = [];
+      let chunk = [];
+      for (const word of words) {
+        chunk.push(word);
+        if (chunks.length < n - 1 && chunk.join(" ").length >= target) {
+          chunks.push(chunk);
+          chunk = [];
         }
-      } else {
-        line = line ? line + " " + word : word;
+      }
+      if (chunk.length) chunks.push(chunk);
+      const split = chunks.map(twoLines);
+      if (split.every(Boolean)) {
+        out.push(...split);
+        break;
       }
     }
-    lines.push(line);
-    out.push(lines);
   }
   return out;
 }

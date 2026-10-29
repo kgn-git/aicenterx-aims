@@ -1,0 +1,167 @@
+{
+  "cues": [
+    {
+      "fragment": "f1",
+      "scene": "hook",
+      "start": 0,
+      "end": 4.8,
+      "lines": [
+        "Amazon's experimental hiring tool",
+        "allegedly showed gender bias in rankings."
+      ]
+    },
+    {
+      "fragment": "f1",
+      "scene": "canvas",
+      "start": 5.1,
+      "end": 10.003,
+      "lines": [
+        "With AI Center X, you define the",
+        "CV Screening Assistant in its"
+      ]
+    },
+    {
+      "fragment": "f1",
+      "scene": "canvas",
+      "start": 10.003,
+      "end": 14.273,
+      "lines": [
+        "AI Canvas: the problem, the",
+        "data, the people affected."
+      ]
+    },
+    {
+      "fragment": "f1",
+      "scene": "canvas",
+      "start": 14.273,
+      "end": 16.25,
+      "lines": [
+        "Next, simulate the risks."
+      ]
+    },
+    {
+      "fragment": "f2",
+      "scene": "risks",
+      "start": 0,
+      "end": 3.841,
+      "lines": [
+        "An AI agent suggests risks,",
+        "each cited from the MIT"
+      ]
+    },
+    {
+      "fragment": "f2",
+      "scene": "risks",
+      "start": 3.841,
+      "end": 7.455,
+      "lines": [
+        "AI Risk Repository and",
+        "the AI Incident Database."
+      ]
+    },
+    {
+      "fragment": "f2",
+      "scene": "risks",
+      "start": 7.455,
+      "end": 10.392,
+      "lines": [
+        "You tick three to act on and save them."
+      ]
+    },
+    {
+      "fragment": "f2",
+      "scene": "risks",
+      "start": 10.392,
+      "end": 12.35,
+      "lines": [
+        "Then generate mitigations."
+      ]
+    },
+    {
+      "fragment": "f3",
+      "scene": "mitigations",
+      "start": 0,
+      "end": 4.682,
+      "lines": [
+        "For each saved risk, the agent",
+        "proposes mitigations, classed"
+      ]
+    },
+    {
+      "fragment": "f3",
+      "scene": "mitigations",
+      "start": 4.682,
+      "end": 8.583,
+      "lines": [
+        "by MIT's draft taxonomy",
+        "and tied to the EU AI Act."
+      ]
+    },
+    {
+      "fragment": "f3",
+      "scene": "mitigations",
+      "start": 8.583,
+      "end": 9.675,
+      "lines": [
+        "You save four."
+      ]
+    },
+    {
+      "fragment": "f3",
+      "scene": "mitigations",
+      "start": 9.675,
+      "end": 12.25,
+      "lines": [
+        "Next, suggest model enhancements."
+      ]
+    },
+    {
+      "fragment": "f4",
+      "scene": "enhancements",
+      "start": 0,
+      "end": 5.079,
+      "lines": [
+        "The agent proposes how to put the four",
+        "mitigations into effect: fine-tuning"
+      ]
+    },
+    {
+      "fragment": "f4",
+      "scene": "enhancements",
+      "start": 5.079,
+      "end": 9.481,
+      "lines": [
+        "on audited shortlists, two checking",
+        "agents, and recruiter review."
+      ]
+    },
+    {
+      "fragment": "f4",
+      "scene": "enhancements",
+      "start": 9.481,
+      "end": 10.7,
+      "lines": [
+        "You save all four."
+      ]
+    },
+    {
+      "fragment": "f5",
+      "scene": "end",
+      "start": 0,
+      "end": 4.738,
+      "lines": [
+        "From idea to governed initiative,",
+        "every suggestion cited."
+      ]
+    },
+    {
+      "fragment": "f5",
+      "scene": "end",
+      "start": 4.738,
+      "end": 6.4,
+      "lines": [
+        "That is AI Center X."
+      ]
+    }
+  ]
+}
