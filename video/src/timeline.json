@@ -3,7 +3,7 @@
     {
       "id": "hook",
       "seconds": 6,
-      "audioSeconds": 6.76,
+      "audioSeconds": 5.62,
       "narration": "Amazon's experimental hiring tool allegedly ranked women lower. Abandoning it took three years.",
       "onScreen": [
         "Amazon's Experimental Hiring Tool Allegedly Displayed Gender Bias in Candidate Rankings",
@@ -16,19 +16,19 @@
     },
     {
       "id": "problem",
-      "seconds": 10,
-      "audioSeconds": 9.77,
-      "narration": "Today, no company can afford that much time, money or possible harm. The challenge is to govern AI responsibly and still create real value.",
+      "seconds": 11.5,
+      "audioSeconds": 9.65,
+      "narration": "Today, no company can afford to spend such time and effort and end up potentially causing harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
-        "Today, no company can afford that much time, money or possible harm. The challenge is to govern AI responsibly and still create real value."
+        "Today, no company can afford to spend such time and effort and end up potentially causing harm. The challenge is to govern AI responsibly and create real value."
       ],
       "dataRefs": {}
     },
     {
       "id": "canvas",
-      "seconds": 11,
-      "audioSeconds": 10.15,
-      "narration": "In AI Center X, you start with the AI Canvas: the CV Screening Assistant's problem, its data, and the people it affects. Then you simulate the risks.",
+      "seconds": 11.5,
+      "audioSeconds": 10.27,
+      "narration": "In AI Center X, you start with the AI Canvas: the CV Screening Assistant's business problem, its data, and the people it affects. Then you simulate the risks.",
       "onScreen": [
         "Define an initiative",
         "CV Screening Assistant",
@@ -41,7 +41,7 @@
     {
       "id": "risks",
       "seconds": 12,
-      "audioSeconds": 12.86,
+      "audioSeconds": 12.75,
       "narration": "An AI agent suggests risks, each cited from the MIT AI Risk Repository and the AI Incident Database. You select the relevant ones and save them. Now, generate the mitigations.",
       "onScreen": [
         "Simulate risks",
@@ -61,7 +61,7 @@
     {
       "id": "mitigations",
       "seconds": 13,
-      "audioSeconds": 12.91,
+      "audioSeconds": 11.61,
       "narration": "For every saved risk, the agent proposes mitigations, each classed by MIT's draft taxonomy and tied to the EU AI Act. Again, you select and save. Next come the model enhancements.",
       "onScreen": [
         "Generate mitigations",
@@ -81,8 +81,8 @@
     {
       "id": "enhancements",
       "seconds": 12,
-      "audioSeconds": 12,
-      "narration": "Finally, the agent shows how to put those mitigations into effect: fine-tuning on audited shortlists, two checking agents, and learning from recruiter feedback. You save the ones you need.",
+      "audioSeconds": 10.07,
+      "narration": "The agent shows how to put those mitigations into effect: fine-tuning on audited shortlists, two checking agents, and learning from recruiter feedback. You save the ones you need.",
       "onScreen": [
         "Suggest model enhancements",
         "Model enhancements: fine-tuning, agent workflow and human feedback, each tied to a saved mitigation",
@@ -100,15 +100,15 @@
     {
       "id": "end",
       "seconds": 7,
-      "audioSeconds": 7.27,
-      "narration": "From idea to governed initiative. AI Center X: making innovation, governance and change management work together.",
+      "audioSeconds": 5.67,
+      "narration": "From idea to business value. AI Center X: making innovation and governance work together.",
       "onScreen": [
         "AI Center X",
         "Coming soon",
         "Sources and licences of every cited dataset",
         "The narration voice is AI-generated.",
         "This is a product concept video.",
-        "Making innovation, governance and change management work together."
+        "Making innovation and governance work together."
       ],
       "dataRefs": {}
     }

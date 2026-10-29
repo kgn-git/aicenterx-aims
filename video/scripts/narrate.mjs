@@ -12,7 +12,7 @@ import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {splitTake} from "./take.mjs";
 
-const VOICE = "ballad";
+const VOICE = "marin";
 const SAMPLE_VOICES = ["marin", "cedar", "ballad"];
 // Conversational rather than announcer-like, since a flat documentary read sounds robotic over a brand film.
 const INSTRUCTIONS =

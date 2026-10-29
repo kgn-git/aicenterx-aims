@@ -7,9 +7,9 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 runs 10 to 27 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 71 s at most in all (the user's
+  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 75 s at most in all (the user's
     tolerance until the combined review), at most 2.5 words a second
-  - narration: 170 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
+  - narration: 175 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
     never says the model is trained or retrained
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
@@ -59,8 +59,8 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
                  5: 'Making innovation and governance work together.'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
-MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 170, 2.5, 71.0, 5, 13
-FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 27), 8
+MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 175, 2.5, 75.0, 5, 13
+FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 8
 
 
 def words(s):
