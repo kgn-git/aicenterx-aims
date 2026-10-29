@@ -11,7 +11,7 @@ seconds or for its clip plus a short tail, whichever is longer. Checks:
     sizes match the file
   - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
     video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 54 to 72 s in all (the user's
-    tolerance until the combined review, widened for the narrated problem statement)
+    tolerance until the combined review)
   - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
 """

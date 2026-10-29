@@ -10,8 +10,9 @@ const GAP = 18;
 const ROWS = [2, 3, 2];
 const GRID_TOP = 240;
 const ROW_HEIGHT = 166;
-// The trigger sits where the risks scene expects it, so the cursor carries on across the cut.
-export const TRIGGER = {right: SIDE, top: 32, x: video.width - SIDE - 150, y: TOP_BAR + 64};
+// The trigger sits where the risks scene expects it, so the cursor carries on across the cut; the pointer rests on
+// the button's lower right, which every label leaves clear.
+export const TRIGGER = {right: SIDE, top: 32, x: video.width - SIDE - 30, y: TOP_BAR + 84};
 
 const canvasScene = timeline.scenes.find((s) => s.id === "canvas")!;
 export const [CANVAS_HEADING, INITIATIVE_NAME] = canvasScene.onScreen;
@@ -46,7 +47,9 @@ export const CanvasForm: React.FC<{t: number; typedBy: number; filledBy: number}
             return (
               <Card key={block.key} style={{flex: 1, opacity: 0.35 + 0.65 * ramp(t, at, 0.4), padding: 20}}>
                 <div style={{color: color.gov, fontWeight: 600}}>{block.label}</div>
-                <div style={{marginTop: 8, lineHeight: 1.3, opacity: ramp(t, at, 0.5)}}>{block.excerpt}</div>
+                <div style={{marginTop: 8, lineHeight: 1.3, opacity: ramp(t, at, 0.5)}}>
+                  {block.excerpt[0].toUpperCase() + block.excerpt.slice(1)}
+                </div>
               </Card>
             );
           })}

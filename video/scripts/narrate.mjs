@@ -165,10 +165,10 @@ async function main() {
     return;
   }
 
-  const fragmentIds = args.length ? [Object.keys(compositions).find((k) => compositions[k] === args[0])] : null;
+  const fragmentId = Object.keys(compositions).find((k) => compositions[k] === args[0]);
   const chosen = sceneIds.includes(args[0])
     ? [args[0]]
-    : timeline.fragments.filter((f) => !fragmentIds || fragmentIds.includes(f.id)).flatMap((f) => f.scenes);
+    : timeline.fragments.filter((f) => !args.length || f.id === fragmentId).flatMap((f) => f.scenes);
   const files = [];
   const seconds = {};
   for (const id of chosen) {

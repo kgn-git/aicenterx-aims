@@ -3,7 +3,7 @@ import {Audio, Composition, Series, staticFile} from "remotion";
 import "./fonts";
 import compositions from "./compositions.json";
 import {Placeholder} from "./Placeholder";
-import {SCENES} from "./scenes/index";
+import {SCENES} from "./scenes";
 import captions from "./captions.json";
 import timeline from "./timeline.json";
 import {video} from "./theme";

@@ -32,6 +32,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   const label = t < runTo ? trigger : t < nextAt ? save : next;
   const target = (i: number) => ({x: cell(i).x + 40, y: cell(i).y + 40});
+  const settled = ramp(t, ticks[ticks.length - 1] + 0.3, 0.4);
 
   return (
     <AppFrame trail={t < click + 0.3 ? CANVAS_HEADING : name}>
@@ -68,7 +69,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
             key={risk.id}
             style={{
               position: "absolute", left: cell(i).x, top: cell(i).y, width: WIDTH, height: HEIGHT,
-              opacity: ramp(t, shownAt, 0.4), transform: `translateY(${(1 - ramp(t, shownAt, 0.4)) * 24}px)`,
+              opacity: ramp(t, shownAt, 0.4) * (k < 0 ? 1 - 0.45 * settled : 1), transform: `translateY(${(1 - ramp(t, shownAt, 0.4)) * 24}px)`,
               display: "flex", gap: 18, borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border,
             }}
           >
@@ -76,7 +77,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
             <div style={{display: "flex", flexDirection: "column", gap: 12, lineHeight: 1.3}}>
               <div>{risk.description}</div>
               <div style={{color: color.inkMuted}}>
-                {risk.mit.domain} · AIID {incident.id}
+                {risk.mit.domain} · AIID{" "}{incident.id}
               </div>
             </div>
           </Card>
@@ -94,13 +95,13 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
       </Card>
       <Cursor
         t={t}
-        clicks={[click, saveAt]}
+        clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
           {t: cues[2].start, x: 1100, y: 600},
           ...saved.map((id, k) => ({t: ticks[k], ...target(shown.indexOf(id))})),
           {t: saveAt, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
-          {t: seconds, x: TRIGGER.x - 60, y: TRIGGER.y - TOP_BAR + 120},
+          {t: seconds, x: 1500, y: 100},
         ]}
       />
     </AppFrame>

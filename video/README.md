@@ -1,6 +1,6 @@
 # Marketing video
 
-This folder holds the narrated marketing video of the CV Screening Assistant journey, which targets 60 s; until the user's combined review, anything from 54 to 66 s is accepted. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
+This folder holds the narrated marketing video of the CV Screening Assistant journey, which targets 60 s; until the user's combined review, a plan of up to 66 s and a voiced length of 54 to 72 s are accepted. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
 
 Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the project owner confirmed on 28 October 2026 that it applies here.
 
@@ -24,11 +24,11 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 
 | Composition | Scenes | Length |
 |---|---|---|
-| `f1-create` | hook, canvas | 15 s planned, 16.6 s with the clips |
-| `f2-risks` | risks | 14 s |
+| `f1-create` | hook, problem, canvas | 21 s planned, 23 s with the clips |
+| `f2-risks` | risks | 13 s |
 | `f3-mitigations` | mitigations | 13 s planned, 14.8 s with the clip |
 | `f4-enhancements` | enhancements | 12 s planned, 12.1 s with the clip |
-| `f5-closing` | end | 6 s planned, 6.7 s with the clip |
+| `f5-closing` | end | 7 s planned, 8.7 s with the clip |
 
 The planned lengths are the `seconds` in `src/timeline.json`. A scene plays for its planned length or for its clip plus 0.3 s, whichever is longer, rounded up to a whole frame; `src/timing.mjs` holds that rule. The hook, problem, canvas and risks scenes are built; the rest are placeholders, and every scene plays its clip. The bottom 18% of the frame stays free, so a player's subtitles never cover the interface.
 
@@ -45,6 +45,7 @@ The narration is voiced with OpenAI text-to-speech and committed as `public/audi
 ```sh
 npm run video:narrate                  # every scene
 npm run video:narrate -- f2-risks      # only one fragment's scenes
+npm run video:narrate -- problem       # only one scene
 npm run video:cues
 ```
 

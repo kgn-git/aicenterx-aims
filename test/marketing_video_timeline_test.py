@@ -4,16 +4,17 @@ Usage:  python test/marketing_video_timeline_test.py
 
 Every later step (audio, fragments, join) builds on the timeline, so it must hold the story the user approved and point
 only at curated data. storyline.md is its human copy and must not drift from it. Checks:
-  - shape: six scenes hook, canvas, risks, mitigations, enhancements, end, in that order, each in exactly one of the
-    fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each scene carries only
-    its own dataRefs group (the hook its sources), with no repeated id
+  - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
+    one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
+    scene carries only its own dataRefs group (the hook its sources), with no repeated id
   - timing: f1 runs 10 to 21 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 66 s at most in all (the user's
     tolerance until the combined review), at most 2.5 words a second
   - narration: 155 words at most; a hook of at most 10 words that names Amazon and says "allegedly"; no "use case";
     never says the model is trained or retrained
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
-  - the six button labels on screen
+  - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
+    the hook's milestones written "YYYY – label", the canvas trigger, and the risks trigger, save and next buttons
   - dataRefs: every id exists, saved is a subset of shown, the hook's aiid is an incident of a CV Screening Assistant
     risk and is cited on screen, and the chain holds: saved risks have mitigations, the mitigations shown are those of
     the saved risks, the enhancements shown are all of video/data/model_enhancements.json, and each one's mitigation
@@ -45,6 +46,10 @@ SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs
 LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save selected mitigations',
           'Suggest model enhancements', 'Save selected enhancements')
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
+# {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
+ROLES = {'canvas': {4: 'Simulate risks'},
+         'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations'}}
+MILESTONE = re.compile(r'\d{4} – \S.*')
 MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 155, 2.5, 66.0, 5, 10
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 21), 8
 
@@ -130,6 +135,11 @@ def validate(t, ctx):
         bad.append(f'the hook must have at most {HOOK_WORDS} words, name Amazon and say "allegedly"')
     on_screen = {x for s in scenes for x in s['onScreen']}
     bad += [f'button label "{label}" is not on screen' for label in LABELS if label not in on_screen]
+    bad += [f'{sid}: onScreen[{i}] must be "{want}"' for sid, roles in ROLES.items() for i, want in roles.items()
+            if by_id[sid]['onScreen'][i:i + 1] != [want]]
+    milestones = by_id['hook']['onScreen'][2:]
+    if not milestones or not all(MILESTONE.fullmatch(m) for m in milestones):
+        bad.append('hook: onScreen[2:] must be milestones written "YYYY – label"')
     return bad + validate_refs(by_id, ctx)
 
 
