@@ -8,7 +8,8 @@
     "video:studio": "npm --prefix video run studio",
     "video:render:fragment": "npm --prefix video run render:fragment --",
     "video:narrate": "node --env-file-if-exists=.env.local video/scripts/narrate.mjs",
-    "video:cues": "node video/scripts/cues.mjs"
+    "video:cues": "node video/scripts/cues.mjs",
+    "video:assemble": "npm --prefix video run assemble"
   },
   "dependencies": {
     "@kgn-git/3c": "git+https://github.com/kgn-git/3C.git#b0badf18793be087c6fc86ef0cba4ecf3fb37033"
