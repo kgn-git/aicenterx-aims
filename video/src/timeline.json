@@ -27,7 +27,7 @@
     },
     {
       "id": "risks",
-      "seconds": 14,
+      "seconds": 13,
       "audioSeconds": 12.3,
       "narration": "An AI agent suggests risks, each cited from the MIT AI Risk Repository and the AI Incident Database. You select and save the relevant risks. Then generate mitigations.",
       "onScreen": [
@@ -83,9 +83,9 @@
     },
     {
       "id": "end",
-      "seconds": 6,
-      "audioSeconds": 6.4,
-      "narration": "From idea to governed initiative, every suggestion cited. That is AI Center X.",
+      "seconds": 7,
+      "audioSeconds": 8.35,
+      "narration": "From idea to governed initiative. AI Center X: making innovation, governance and change management work together.",
       "onScreen": [
         "AI Center X",
         "Coming soon",
