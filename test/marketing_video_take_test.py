@@ -61,8 +61,9 @@ def main():
             got = None
             check('splitTake runs', [r.stderr[-400:]])
         if got:
-            # Scenes span 0.5-2.0, 3.0-4.0 and 5.0-7.0 s; each clip adds 0.03 s before and 0.08 s after.
-            want = [1.61, 1.11, 2.11]
+            # Scenes span 0.5-2.0, 3.0-4.0 and 5.0-7.0 s; each clip adds 0.15 s before and 0.08 s after, so
+            # the first consonant of a scene is never clipped.
+            want = [1.73, 1.23, 2.23]
             clips = got['good'].get('clips')
             check("each clip runs from its scene's first word to its last",
                   [] if clips and all(abs(a - b) < 0.02 for a, b in zip(clips, want)) and len(clips) == 3

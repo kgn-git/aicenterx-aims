@@ -4,11 +4,10 @@ Usage:  python test/marketing_video_timeline_test.py
 
 Every later step (audio, fragments, join) builds on the timeline, so it must hold the story the user approved and point
 only at curated data. storyline.md is its human copy and must not drift from it. Checks:
-  - shape: eight scenes hook, problem, canvas, risks, mitigations, enhancements, trace, end, in that order, each in
-    exactly one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (trace,
-    end); each
+  - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
+    one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 9 s at most, 75 s at most in all (the user's
+  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 75 s at most in all (the user's
     tolerance until the combined review), at most 2.5 words a second
   - narration: 175 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
@@ -17,7 +16,7 @@ only at curated data. storyline.md is its human copy and must not drift from it.
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
     the hook's milestones written "YYYY – label", each scene's trigger, save and next buttons and toast, and the
-    end card's brand, heading, disclosure, footnote and tagline, and the trace scene's heading and column names
+    end card's brand, heading, disclosure, footnote and tagline
   - dataRefs: every id exists, saved is a subset of shown, the hook's aiid is an incident of a CV Screening Assistant
     risk and is cited on screen, and the chain holds: saved risks have mitigations, the mitigations shown are those of
     the saved risks, the enhancements shown are all of video/data/model_enhancements.json, and each one's mitigation
@@ -41,7 +40,7 @@ STORYLINE = ROOT / 'video' / 'script' / 'storyline.md'
 RISK_DATA = ROOT / 'tools' / 'data' / 'risk_suggestions.json'
 MITIGATION_DATA = ROOT / 'tools' / 'data' / 'mitigation_suggestions.json'
 ENHANCEMENTS = ROOT / 'video' / 'data' / 'model_enhancements.json'
-FRAGMENTS = {'f1': ['hook', 'problem', 'canvas'], 'f2': ['risks'], 'f3': ['mitigations'], 'f4': ['enhancements'], 'f5': ['trace', 'end']}
+FRAGMENTS = {'f1': ['hook', 'problem', 'canvas'], 'f2': ['risks'], 'f3': ['mitigations'], 'f4': ['enhancements'], 'f5': ['end']}
 SCENES = [s for scenes in FRAGMENTS.values() for s in scenes]
 KINDS = ('risks', 'mitigations', 'enhancements')
 REFS = {'hook': {'sources'}, **{k: {k} for k in KINDS}}
@@ -57,14 +56,12 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                          5: 'Selected mitigations saved'},
          'enhancements': {0: 'Suggest model enhancements', 3: 'Save selected enhancements',
                           4: 'Selected enhancements saved'},
-         'trace': {0: 'Every enhancement traces back to a risk', 1: 'Saved risk', 2: 'Saved mitigation',
-                   3: 'Model enhancement'},
          'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
                  5: 'Making innovation and governance work together.'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
 MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 175, 2.5, 75.0, 5, 13
-FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 9
+FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 8
 
 
 def words(s):
