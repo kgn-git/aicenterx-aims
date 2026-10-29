@@ -1,0 +1,39 @@
+{
+  "blocks": [
+    {
+      "key": "businessProblem",
+      "label": "Business Problem",
+      "excerpt": "Recruiters cannot read every application for a high-volume requisition"
+    },
+    {
+      "key": "businessValue",
+      "label": "Business Value",
+      "excerpt": "Recruiter time moves from first-pass reading to a reviewable shortlist"
+    },
+    {
+      "key": "objectiveFunction",
+      "label": "Objective Function",
+      "excerpt": "Match between an application and the requisition"
+    },
+    {
+      "key": "modelingApproach",
+      "label": "Modeling Approach",
+      "excerpt": "it ranks for a recruiter and never decides on its own"
+    },
+    {
+      "key": "modelTraining",
+      "label": "Model Training",
+      "excerpt": "an independent bias audit must clear each version first"
+    },
+    {
+      "key": "customerValue",
+      "label": "Customer Value",
+      "excerpt": "every application is considered rather than missed"
+    },
+    {
+      "key": "dataStrategy",
+      "label": "Data Strategy",
+      "excerpt": "Application text and structured CV fields"
+    }
+  ]
+}

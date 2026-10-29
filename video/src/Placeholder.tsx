@@ -1,6 +1,6 @@
 import React from "react";
 import {AbsoluteFill} from "remotion";
-import type {Scene} from "./scenes";
+import type {Scene} from "./scene";
 import {appFrameHeight, bodyFont, captionSafeArea, color, headingFont} from "./theme";
 
 /** Stands in for a scene until it is built: the scene's id, timing and on-screen items, above the caption safe

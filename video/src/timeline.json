@@ -7,9 +7,22 @@
       "narration": "Amazon's experimental hiring tool allegedly showed gender bias in rankings.",
       "onScreen": [
         "Amazon's Experimental Hiring Tool Allegedly Displayed Gender Bias in Candidate Rankings",
-        "AI Incident Database, incident 37"
+        "AI Incident Database, incident 37",
+        "2014 – Development starts",
+        "2015 – Bias against women found",
+        "2018 – Reuters makes it public"
       ],
       "dataRefs": {"sources": [{"aiid": 37}]}
+    },
+    {
+      "id": "problem",
+      "seconds": 6,
+      "audioSeconds": 6.1,
+      "narration": "In 2026, how do you govern AI initiatives responsibly and create real value?",
+      "onScreen": [
+        "In 2026, how do you govern AI initiatives responsibly and create real value?"
+      ],
+      "dataRefs": {}
     },
     {
       "id": "canvas",
@@ -35,7 +48,8 @@
         "Suggested risks, each with its MIT AI Risk Repository class and AI Incident Database incidents",
         "Relevant risks ticked",
         "Save selected risks",
-        "Generate mitigations"
+        "Generate mitigations",
+        "Selected risks saved"
       ],
       "dataRefs": {
         "risks": {
@@ -97,7 +111,7 @@
     }
   ],
   "fragments": [
-    {"id": "f1", "scenes": ["hook", "canvas"]},
+    {"id": "f1", "scenes": ["hook", "problem", "canvas"]},
     {"id": "f2", "scenes": ["risks"]},
     {"id": "f3", "scenes": ["mitigations"]},
     {"id": "f4", "scenes": ["enhancements"]},

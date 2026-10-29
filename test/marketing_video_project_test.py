@@ -18,6 +18,10 @@ text and runs only the render script's argument guard, which exits before Remoti
     command when the project is not installed
   - the root package.json runs video:studio and video:render:fragment through npm --prefix video, and .gitignore
     keeps video/out/ and every .env file but .env.example out of git
+  - video/data/agent_steps.json holds RISK_STEPS and MITIGATION_STEPS exactly as tools/ defines them, since those
+    browser scripts cannot be imported into the video
+  - no file under video/src/ but timeline.json names a curated risk or mitigation id, so the scenes take their ids
+    only from the timeline's dataRefs
   - the guard: one broken copy per rule above that parses project text is rejected
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -40,6 +44,7 @@ ENCODING = ('setCodec("h264")', 'setPixelFormat("yuv420p")', 'setColorSpace("bt7
 SCRIPTS = {'video:studio': 'npm --prefix video run studio',
            'video:render:fragment': 'npm --prefix video run render:fragment --'}
 EXACT = re.compile(r'\d+\.\d+\.\d+')
+CURATED_ID = re.compile(r'\b(?:s-hiring-\d|m-r\d|m-s-hiring-\d)')
 REGISTRY = 'https://registry.npmjs.org/'
 
 
@@ -201,6 +206,14 @@ def main():
         check('the render script refuses any id it does not list',
               render_guard(node, list(comps.values())) if node else ['node is not on PATH'])
 
+    steps = load(VIDEO / 'data' / 'agent_steps.json')
+    want_steps = {k: json.loads(re.search(rf'var {v}=(\[.*?\]);', (ROOT / 'tools' / f).read_text(encoding='utf-8')).group(1))
+                  for k, v, f in (('risks', 'RISK_STEPS', 'risk-suggestions.js'),
+                                  ('mitigations', 'MITIGATION_STEPS', 'mitigation-suggestions.js'))}
+    check("agent_steps.json matches the prototype's agent steps", [] if steps == want_steps else [steps, want_steps])
+    check('only timeline.json names curated ids under video/src/',
+          sorted(str(p.relative_to(VIDEO)) for p in (VIDEO / 'src').rglob('*') if p.is_file() and p.name != 'timeline.json'
+                 and CURATED_ID.search(p.read_text(encoding='utf-8', errors='replace'))))
     scripts = (load(ROOT / 'package.json') or {}).get('scripts', {})
     check('root scripts run through npm --prefix video',
           [f'{k} is {scripts.get(k)!r}' for k, v in SCRIPTS.items() if scripts.get(k) != v])

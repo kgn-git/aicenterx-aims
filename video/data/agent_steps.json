@@ -1,0 +1,16 @@
+{
+  "risks": [
+    "Read the AI Canvas",
+    "Search the MIT AI Risk Repository",
+    "Match AI incidents",
+    "Add AI Index context",
+    "Draft suggestions"
+  ],
+  "mitigations": [
+    "Read the selected risks",
+    "Check the register's treatments",
+    "Match the controls",
+    "Search mitigation sources",
+    "Draft mitigations"
+  ]
+}
