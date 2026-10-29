@@ -4,7 +4,7 @@ Usage:  python test/marketing_video_project_test.py
 
 npm run check must pass on a clone where `npm --prefix video ci` was never run, so this reads the project's files as
 text and never calls into video/node_modules. Checks:
-  - video/package.json pins every dependency and devDependency to an exact x.y.z version, includes remotion,
+  - video/package.json pins every dependency, devDependency and override to an exact x.y.z version, includes remotion,
     @remotion/cli, react, react-dom and typescript, and sets engines.node to >=22.9
   - video/package-lock.json exists and locks the same versions
   - video/src/theme.ts holds each named token with the value it has in index.html's midnight-executive block, and its
@@ -25,8 +25,7 @@ VIDEO = ROOT / 'video'
 REQUIRED = ('remotion', '@remotion/cli', 'react', 'react-dom', 'typescript')
 TOKENS = ('--bg-base', '--bg-g1', '--surface', '--surface-2', '--border', '--ink', '--ink-muted',
           '--gov', '--val', '--arch', '--rag-low', '--rag-medium', '--rag-high')
-FONTS = ('Fraunces-Variable.ttf', 'Fraunces-OFL.txt', 'IBMPlexSans-Regular.ttf', 'IBMPlexSans-Medium.ttf',
-         'IBMPlexSans-SemiBold.ttf', 'IBMPlexSans-Bold.ttf', 'IBMPlexSans-OFL.txt')
+FONTS = ('Fraunces-Variable.ttf', 'Fraunces-OFL.txt', 'IBMPlexSans-Variable.ttf', 'IBMPlexSans-OFL.txt')
 EXACT = re.compile(r'\d+\.\d+\.\d+')
 
 
@@ -63,7 +62,7 @@ def main():
     pkg = load(VIDEO / 'package.json')
     check('video/package.json exists and parses', pkg is not None)
     if pkg is not None:
-        deps = {**pkg.get('dependencies', {}), **pkg.get('devDependencies', {})}
+        deps = {**pkg.get('dependencies', {}), **pkg.get('devDependencies', {}), **pkg.get('overrides', {})}
         loose = {k: v for k, v in deps.items() if not EXACT.fullmatch(str(v))}
         check('every dependency is pinned to an exact version', deps and not loose, loose or sorted(deps))
         check('the required packages are dependencies', set(REQUIRED) <= set(deps), sorted(set(REQUIRED) - set(deps)))

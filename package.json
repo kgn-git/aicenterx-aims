@@ -4,7 +4,9 @@
     "build": "python tools/build.py",
     "verify": "python tools/verify.py",
     "test:films": "python tools/run_tests.py",
-    "check": "npm run verify && npm run test:films"
+    "check": "npm run verify && npm run test:films",
+    "video:studio": "npm --prefix video run studio",
+    "video:render:fragment": "npm --prefix video run render:fragment --"
   },
   "dependencies": {
     "@kgn-git/3c": "git+https://github.com/kgn-git/3C.git#b0badf18793be087c6fc86ef0cba4ecf3fb37033"
