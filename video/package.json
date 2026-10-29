@@ -1,0 +1,23 @@
+{
+  "name": "aicenterx-marketing-video",
+  "private": true,
+  "description": "The 60-second narrated marketing video of the CV Screening Assistant journey, built with Remotion.",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "studio": "remotion studio",
+    "compositions": "remotion compositions",
+    "render:fragment": "node scripts/render-fragment.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.535",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "remotion": "4.0.535"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}
