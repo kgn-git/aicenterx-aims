@@ -1,13 +1,13 @@
-"""Test for the step that joins the marketing video's fragments: video/scripts/assemble.mjs.
+"""Test for the step that renders the final marketing video: video/scripts/assemble.mjs.
 
 Usage:  python test/marketing_video_assemble_test.py
 
-The join copies the approved fragments without re-encoding them, so it must refuse to run on an incomplete set rather
-than release a shorter video. Rendering needs video/node_modules, so this checks the wiring and the refusal only.
+The final video is rendered as one piece, the CvScreeningJourney composition, so its scenes can crossfade; the
+fragments stay for review only. Rendering needs video/node_modules, so this checks the wiring and the refusal only.
 Checks:
   - the root package.json runs video:assemble through npm --prefix video, and video/package.json runs the script
-  - with any fragment missing, the script exits non-zero, names the missing fragment and the command that renders it,
-    prints no stack trace, and writes no joined video
+  - the script renders CvScreeningJourney and keeps the result only after its length, size and codec check
+  - given an argument it does not take, it exits non-zero with its usage, prints no stack trace, and writes nothing
 Prints a JSON report; exit code 1 on any failure.
 """
 import json
@@ -47,15 +47,17 @@ def main():
     elif not SCRIPT.is_file():
         check('video/scripts/assemble.mjs exists', [str(SCRIPT)])
     else:
-        first = next(iter(json.loads((VIDEO / 'src' / 'compositions.json').read_text(encoding='utf-8')).values()))
+        text = SCRIPT.read_text(encoding='utf-8')
+        check('it renders CvScreeningJourney and checks the result before keeping it',
+              [] if '"CvScreeningJourney"' in text and 'ffprobe' in text and 'renameSync' in text else ['missing'])
         with tempfile.TemporaryDirectory() as empty:
-            r = subprocess.run([node, str(SCRIPT)], capture_output=True, text=True, timeout=60, cwd=VIDEO,
+            r = subprocess.run([node, str(SCRIPT), '--bogus'], capture_output=True, text=True, timeout=60, cwd=VIDEO,
                                env={**os.environ, 'VIDEO_OUT': empty})
             written = sorted(os.listdir(empty))
         out = r.stdout + r.stderr
-        check('with a fragment missing, it refuses, names it and how to render it, and writes nothing',
-              [] if r.returncode != 0 and first in r.stderr and 'video:render:fragment' in r.stderr
-              and '    at ' not in out and not written else [r.returncode, out[-300:], written])
+        check('given an argument it does not take, it refuses with its usage and writes nothing',
+              [] if r.returncode != 0 and 'npm run video:assemble' in r.stderr and '    at ' not in out and not written
+              else [r.returncode, out[-300:], written])
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))
