@@ -31,7 +31,6 @@ export const End: React.FC<SceneProps> = ({scene}) => {
         </span>
         <div style={{fontFamily: headingFont, fontSize: 120, fontWeight: 650, marginTop: 24, lineHeight: 1}}>{brand}</div>
         <div style={{fontSize: 38, lineHeight: 1.3, marginTop: 32, opacity: ramp(t, 1.2, 0.8)}}>{tagline}</div>
-        <div style={{color: color.inkMuted, marginTop: 48}}>{disclosure}</div>
       </div>
       <div
         style={{
@@ -53,11 +52,12 @@ export const End: React.FC<SceneProps> = ({scene}) => {
       </div>
       <div
         style={{
-          position: "absolute", left: 140, top: appFrameHeight - 64, fontSize: 24, color: color.inkMuted,
-          opacity: shown,
+          position: "absolute", left: 140, top: appFrameHeight - 96, fontSize: 24, lineHeight: 1.4,
+          color: color.inkMuted, opacity: shown,
         }}
       >
-        {footnote}
+        <div>{footnote}</div>
+        <div>{disclosure}</div>
       </div>
     </Background>
   );
