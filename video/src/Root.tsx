@@ -1,23 +1,25 @@
 import React from "react";
-import {Composition, Series} from "remotion";
+import {Audio, Composition, Series, staticFile} from "remotion";
 import "./fonts";
 import compositions from "./compositions.json";
 import {Placeholder} from "./Placeholder";
 import timeline from "./timeline.json";
 import {video} from "./theme";
+import {sceneSeconds} from "./timing.mjs";
 
 type FragmentId = keyof typeof compositions;
 
 const scenes = new Map(timeline.scenes.map((s) => [s.id, s]));
 const frames = (seconds: number) => Math.round(seconds * video.fps);
 const scenesOf = (id: string) => timeline.fragments.find((f) => f.id === id)!.scenes.map((s) => scenes.get(s)!);
-const fragmentFrames = (id: string) => scenesOf(id).reduce((sum, s) => sum + frames(s.seconds), 0);
+const fragmentFrames = (id: string) => scenesOf(id).reduce((sum, s) => sum + frames(sceneSeconds(s)), 0);
 
 const FragmentScenes: React.FC<{fragmentId: string}> = ({fragmentId}) => (
   <Series>
     {scenesOf(fragmentId).map((scene) => (
-      <Series.Sequence key={scene.id} durationInFrames={frames(scene.seconds)} name={scene.id}>
+      <Series.Sequence key={scene.id} durationInFrames={frames(sceneSeconds(scene))} name={scene.id}>
         <Placeholder scene={scene} />
+        {"audioSeconds" in scene && <Audio src={staticFile(`audio/${scene.id}.wav`)} />}
       </Series.Sequence>
     ))}
   </Series>
