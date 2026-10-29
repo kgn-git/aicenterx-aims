@@ -124,7 +124,7 @@ def validate_refs(by_id, ctx):
                     and all(isinstance(g[k], list) for k in g)):
                 bad.append(f'{sid}: {kind} must be exactly {{shown: [...], saved: [...]}}')
                 continue
-            bad += [f'{sid}: unknown {kind} id {x!r}' for x in g['shown'] if x not in ctx[kind]]
+            bad += [f'{sid}: unknown {kind[:-1]} id {x!r}' for x in g['shown'] if x not in ctx[kind]]
             if not set(g['saved']) <= set(g['shown']):
                 bad.append(f'{sid}: saved {kind} must be a subset of the {kind} shown')
             groups[kind] = g
