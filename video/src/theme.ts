@@ -21,7 +21,7 @@ export const bodyFont = "'IBM Plex Sans', ui-sans-serif, system-ui, 'Segoe UI', 
 
 export const video = {width: 1920, height: 1080, fps: 30};
 
-// The bottom 18% of the frame stays free for the burned-in captions; rounded once, so every layer that
-// lays out above it uses the same pixel edge.
+// The bottom 18% of the frame stays free, so a player's subtitles never cover the interface; rounded once, so
+// every layer that lays out above it uses the same pixel edge.
 export const captionSafeArea = Math.round(video.height * 0.18);
 export const appFrameHeight = video.height - captionSafeArea;

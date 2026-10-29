@@ -30,7 +30,7 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 | `f4-enhancements` | enhancements | 12 s planned, 12.1 s with the clip |
 | `f5-closing` | end | 6 s planned, 6.7 s with the clip |
 
-The planned lengths are the `seconds` in `src/timeline.json`. A scene plays for its planned length or for its clip plus 0.3 s, whichever is longer, rounded up to a whole frame; `src/timing.mjs` holds that rule. Each scene is a placeholder until it is built, and it already plays its clip. The dashed line marks the caption safe area, the bottom 18% of the frame, which stays free for the captions.
+The planned lengths are the `seconds` in `src/timeline.json`. A scene plays for its planned length or for its clip plus 0.3 s, whichever is longer, rounded up to a whole frame; `src/timing.mjs` holds that rule. The hook, problem, canvas and risks scenes are built; the rest are placeholders, and every scene plays its clip. The bottom 18% of the frame stays free, so a player's subtitles never cover the interface.
 
 To check that the fonts loaded, look at a scene title: it is set in Fraunces, a serif with sharp, high-contrast strokes. A render stops with an error if a font file fails to load.
 
@@ -69,7 +69,7 @@ Every fragment is encoded the same way (H.264, yuv420p, BT.709, AAC) and always 
 - `src/timeline.json`: scenes, timing and data references (#27). `test/marketing_video_timeline_test.py` checks it.
 - `src/compositions.json`: the composition id of each fragment.
 - `src/timing.mjs`: how long each scene plays. `scripts/scene-seconds.mjs` prints it for the tests.
-- `src/captions.json`: the caption cues, built by `scripts/cues.mjs`. `test/marketing_video_captions_test.py` checks them.
+- `src/captions.json`: the caption cues, built by `scripts/cues.mjs`. `test/marketing_video_captions_test.py` checks them. They are not burned into the picture: the released video carries them as a switchable subtitle track and an .srt (user decision, 29 October 2026).
 - `public/audio/`: one narration clip per scene, made by `scripts/narrate.mjs`. `test/marketing_video_audio_test.py` checks them.
 - `src/theme.ts`: colours and font stacks copied from the prototype's default theme. `test/marketing_video_project_test.py` checks that they still match `index.html`.
 - `public/fonts/`: Fraunces and IBM Plex Sans as variable fonts, each with its SIL Open Font License.

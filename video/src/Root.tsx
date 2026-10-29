@@ -5,7 +5,6 @@ import compositions from "./compositions.json";
 import {Placeholder} from "./Placeholder";
 import {SCENES} from "./scenes/index";
 import captions from "./captions.json";
-import {Captions} from "./ui/Captions";
 import timeline from "./timeline.json";
 import {video} from "./theme";
 import {sceneSeconds} from "./timing.mjs";
@@ -43,7 +42,6 @@ const FragmentScenes: React.FC<{fragmentId: string}> = ({fragmentId}) => (
         );
       })}
     </Series>
-    <Captions fragmentId={fragmentId} />
   </>
 );
 
