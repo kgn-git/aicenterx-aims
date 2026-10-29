@@ -82,8 +82,10 @@
       "narration": "From idea to governed initiative, every suggestion cited. That is AI Center X.",
       "onScreen": [
         "AI Center X",
+        "Coming soon",
         "Sources and licences of every cited dataset",
-        "The narration voice is AI-generated."
+        "The narration voice is AI-generated.",
+        "This is a product concept video."
       ],
       "dataRefs": {}
     }
