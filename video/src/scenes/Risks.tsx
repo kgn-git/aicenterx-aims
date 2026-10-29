@@ -2,10 +2,9 @@ import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
 import steps from "../../data/agent_steps.json";
 import risks from "../../../tools/data/risk_suggestions.json";
-import timeline from "../timeline.json";
 import {color, headingFont} from "../theme";
 import {AgentRun, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, Toast, TOP_BAR} from "../ui/kit";
-import {TRIGGER} from "./Canvas";
+import {CANVAS_HEADING, CanvasForm, INITIATIVE_NAME, TRIGGER} from "./Canvas";
 import type {SceneProps} from "./types";
 
 const COLS = 3;
@@ -19,13 +18,13 @@ const cell = (i: number) => ({x: SIDE + (i % COLS) * (WIDTH + GAP), y: TOP + Mat
 export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, next, toast] = scene.onScreen;
-  const name = timeline.scenes.find((s) => s.id === "canvas")!.onScreen[1];
+  const name = INITIATIVE_NAME;
   const {shown, saved} = scene.dataRefs.risks!;
   const hiring = risks.initiatives.hiring;
   const cards = shown.map((id) => hiring.suggestions.find((s) => s.id === id)!);
 
   const click = 0.5;
-  const runFrom = 0.8;
+  const runFrom = 1;
   const runTo = 2.9;
   const ticks = saved.map((_, k) => cues[2].start + 0.3 + k * 0.6);
   const saveAt = ticks[ticks.length - 1] + 0.8;
@@ -35,8 +34,16 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const target = (i: number) => ({x: cell(i).x + 40, y: cell(i).y + 40});
 
   return (
-    <AppFrame trail={name}>
-      <div style={{position: "absolute", left: SIDE, top: 32, fontFamily: headingFont, fontSize: 56, fontWeight: 600}}>
+    <AppFrame trail={t < click + 0.3 ? CANVAS_HEADING : name}>
+      <div style={{position: "absolute", inset: 0, opacity: 1 - ramp(t, click + 0.1, 0.4)}}>
+        <CanvasForm t={Infinity} typedBy={0} filledBy={0.5} />
+      </div>
+      <div
+        style={{
+          position: "absolute", left: SIDE, top: 32, fontFamily: headingFont, fontSize: 56, fontWeight: 600,
+          opacity: ramp(t, click + 0.3, 0.4),
+        }}
+      >
         {name}
       </div>
       <div style={{position: "absolute", right: TRIGGER.right, top: TRIGGER.top}}>

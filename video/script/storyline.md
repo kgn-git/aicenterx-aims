@@ -6,7 +6,8 @@ From the canvas scene to the mitigations scene, each scene ends on the button th
 
 | Scene | Seconds | Narration | On screen |
 |---|---|---|---|
-| hook | 4 | Amazon's experimental hiring tool allegedly showed gender bias in rankings. | The incident title, cited to the AI Incident Database, incident 37 |
+| hook | 4 | Amazon's experimental hiring tool allegedly showed gender bias in rankings. | The incident title, cited to the AI Incident Database, incident 37, over a timeline: 2014 development starts, 2015 bias against women found, 2018 Reuters makes it public |
+| problem | 6 | In 2026, how do you govern AI initiatives responsibly and create real value? | The question as a title card |
 | canvas | 11 | With AI Center X, you define the CV Screening Assistant in its AI Canvas: the problem, the data, the people affected. Next, simulate the risks. | "Define an initiative", AI Canvas excerpts, then the initiative page with "Simulate risks" |
 | risks | 13 | An AI agent suggests risks, each cited from the MIT AI Risk Repository and the AI Incident Database. You select and save the relevant risks. Then generate mitigations. | Cited risks, the relevant ones ticked, "Save selected risks" with the toast "Selected risks saved", then "Generate mitigations" |
 | mitigations | 13 | For each saved risk, the agent proposes mitigations, classed by MIT's draft taxonomy and tied to the EU AI Act. You select and save the relevant mitigations. Next, suggest model enhancements. | Cited mitigations, the relevant ones ticked, "Save selected mitigations", then "Suggest model enhancements" |

@@ -2,6 +2,7 @@
 // length in src/timeline.json as audioSeconds:
 //   npm run video:narrate                    every fragment
 //   npm run video:narrate -- f2-risks        one fragment, so a bad clip can be remade alone
+//   npm run video:narrate -- problem         one scene, leaving the approved clips around it untouched
 //   npm run video:narrate -- --samples       the hook in each candidate voice, to out/samples/, to choose a voice
 // It fails closed: a missing setting or a refused request changes nothing, every file is staged before any is
 // replaced, and no message carries the key, a header or a stack trace.
@@ -137,18 +138,19 @@ async function main() {
   const compositions = JSON.parse(readFileSync(join(root, "src", "compositions.json"), "utf8"));
   const args = process.argv.slice(2);
   const ids = Object.values(compositions);
+  const text = readFileSync(timelinePath, "utf8");
+  const timeline = JSON.parse(text);
+  const sceneIds = timeline.scenes.map((s) => s.id);
   const samples = args.length === 1 && args[0] === "--samples";
-  if (args.length > 1 || (args.length === 1 && !samples && !ids.includes(args[0]))) {
-    const cause = args.length > 1 ? "Give at most one fragment." : `"${args[0]}" is not a fragment.`;
-    fail(`${cause} Name one of ${ids.join(", ")}, or none for all, or --samples to compare voices.`);
+  if (args.length > 1 || (args.length === 1 && !samples && !ids.includes(args[0]) && !sceneIds.includes(args[0]))) {
+    const cause = args.length > 1 ? "Give at most one fragment or scene." : `"${args[0]}" is not a fragment or scene.`;
+    fail(`${cause} Name one of ${ids.join(", ")}, or a scene (${sceneIds.join(", ")}), or none for all, or --samples to compare voices.`);
   }
   const key = process.env.OPENAI_API_KEY;
   const model = process.env.OPENAI_TTS_MODEL;
   if (!key) fail("OPENAI_API_KEY is not set. Copy .env.example to .env.local at the repo root and add your key.");
   if (!model) fail("OPENAI_TTS_MODEL is not set. Copy it from .env.example into .env.local.");
 
-  const text = readFileSync(timelinePath, "utf8");
-  const timeline = JSON.parse(text);
   const bad = timeline.scenes.find((s) => !/^[a-z0-9-]+$/.test(s.id));
   if (bad) fail(`Scene id "${bad.id}" must use only lower-case letters, digits and hyphens, as it names a file.`);
   if (samples) {
@@ -164,7 +166,9 @@ async function main() {
   }
 
   const fragmentIds = args.length ? [Object.keys(compositions).find((k) => compositions[k] === args[0])] : null;
-  const chosen = timeline.fragments.filter((f) => !fragmentIds || fragmentIds.includes(f.id)).flatMap((f) => f.scenes);
+  const chosen = sceneIds.includes(args[0])
+    ? [args[0]]
+    : timeline.fragments.filter((f) => !fragmentIds || fragmentIds.includes(f.id)).flatMap((f) => f.scenes);
   const files = [];
   const seconds = {};
   for (const id of chosen) {
