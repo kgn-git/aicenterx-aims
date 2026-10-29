@@ -6,8 +6,9 @@ Step 4 of the video shows enhancements that put a saved mitigation into effect, 
 of the CV Screening Assistant, and together they may need no more than the 3 risks the video saves. Checks:
   - the key rule in test/video_keys.py: a matched suggestion resolves to its register risk
   - the curated data: 3-4 entries with a unique enh-<slug> id, one of the three kinds (each used at least once), a
-    name of at most 6 words, a how of at most 20 words, a mitigationId of a CV Screening Assistant risk, all of them
-    within 3 risks, and a source that is either a titled https url on an allowed host or exactly {"illustrative": true}
+    name of at most 6 words, a how of at most 20 words, a human-feedback entry whose name and how both say the
+    feedback is audited (unaudited recruiter ratings would re-learn the bias the video names as a risk), a
+    mitigationId of a CV Screening Assistant risk, all of them within 3 risks, and a source that is either a titled https url on an allowed host or exactly {"illustrative": true}
   - the guard: one broken copy per rule that spans files (unknown mitigation, another initiative's mitigation, more
     than 3 risks), each rejected by the validator for that rule
 Prints a JSON report; exit code 1 on any failure.
@@ -56,6 +57,8 @@ def validate(data, hiring):
             bad.append(f'{eid}: name must have 1-6 words')
         if not text_of(e.get('how'), 20):
             bad.append(f'{eid}: how must have 1-20 words')
+        elif e.get('kind') == 'human feedback' and not all('audit' in str(e.get(k)).lower() for k in ('name', 'how')):
+            bad.append(f'{eid}: a human-feedback enhancement must say in its name and how that the feedback is audited')
         if e.get('mitigationId') not in hiring:
             bad.append(f'{eid}: {e.get("mitigationId")!r} is not a mitigation of a CV Screening Assistant risk')
         s = e.get('source')
