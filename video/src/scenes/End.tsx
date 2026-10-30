@@ -44,15 +44,23 @@ const counts = KINDS.map((k): [number, string] => {
 const initiative = timeline.scenes.find((s) => s.id === "canvas")!.onScreen[1];
 // The word the voice says as each capability lands, in the order the capabilities are listed on screen.
 const KEYWORDS = ["models", "data lineage", "programmes", "architecture", "intelligence"];
+// The phrases each beat waits for, in the order the voice must say them.
+const BEATS = ["now less", "your key", "are identified", "Then scale up", ...KEYWORDS];
 
 /** The close in three beats: the hook's years against the hour the journey took, the pull-back to the portfolio and
  *  the capabilities still to come, then the "Coming soon" card with every source and disclosure in the footer. */
 export const End: React.FC<SceneProps> = ({scene, cues}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
-  const [brand, soon, heading, disclosure, footnote, tagline, message, years, chip, platform, next, ...capabilities] =
+  const [brand, soon, heading, disclosure, footnote, tagline, message, years, chip, platform, next, ...rest] =
     scene.onScreen;
+  const capabilities = rest.slice(0, KEYWORDS.length);
+  const wave = rest[KEYWORDS.length];
   const end = cues[cues.length - 1].end;
   const at = (phrase: string) => spokenAt(scene.narration, phrase, end);
+  const order = [...BEATS, brand].map(at);
+  if (order.some((x, i) => i && x <= order[i - 1])) {
+    throw new Error(`The close's narration must say ${[...BEATS, brand].join(", ")} in that order.`);
+  }
   const scaleAt = at("Then scale up") - 0.3;
   const brandAt = at(brand);
   const contrast = 1 - ramp(t, scaleAt, 0.6);
@@ -72,7 +80,7 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
       </div>
       <div style={{position: "absolute", inset: 0, height: appFrameHeight, opacity: portfolio}}>
         <Portfolio
-          t={t} from={scaleAt} badge={next} heading={platform} initiative={initiative} chip={chip}
+          t={t} from={scaleAt} tag={next} heading={platform} initiative={initiative} chip={chip} wave={wave}
           capabilities={capabilities} times={KEYWORDS.map(at)}
         />
       </div>

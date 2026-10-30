@@ -68,14 +68,15 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
             <div
               key={m}
               style={{
-                position: "absolute", left: LEFT + ((RIGHT - LEFT) * (2 * i + 1)) / 6 - 150, width: 300, top: BAR_Y - 96,
+                position: "absolute", left: LEFT + ((RIGHT - LEFT) * (2 * i + 1)) / (2 * marks.length) - 150, width: 300, top: BAR_Y - 96,
                 textAlign: "center", opacity: shown, transform: `translateY(${(1 - shown) * 16}px)`,
               }}
             >
               <div style={{fontSize: 40, fontWeight: 600, color: harm ? color.ragHigh : color.ink}}>{m}</div>
               <div
                 style={{
-                  width: 30, height: 30, borderRadius: 15, margin: "20px auto 0", border: `4px solid ${color.bgBase}`,
+                  position: "absolute", left: 135, top: 81, width: 30, height: 30, borderRadius: 15,
+                  border: `4px solid ${color.bgBase}`, boxSizing: "border-box",
                   background: harm ? color.ragHigh : color.inkMuted, transform: `scale(${0.4 + 0.6 * shown})`,
                 }}
               />

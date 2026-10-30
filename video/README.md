@@ -24,10 +24,10 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 
 | Composition | Scenes | Length |
 |---|---|---|
-| `f1-create` | hook, problem, canvas | 21 s planned, 23 s with the clips |
-| `f2-risks` | risks | 13 s |
-| `f3-mitigations` | mitigations | 13 s planned, 14.8 s with the clip |
-| `f4-enhancements` | enhancements | 12 s planned, 12.1 s with the clip |
+| `f1-create` | hook, problem, canvas | 29 s planned, 29.8 s with the clips |
+| `f2-risks` | risks | 12 s planned, 12.6 s with the clip |
+| `f3-mitigations` | mitigations | 12.5 s planned, 13.3 s with the clip |
+| `f4-enhancements` | enhancements | 12 s |
 | `f5-closing` | end | 18 s planned, 19 s with the clip |
 
 The planned lengths are the `seconds` in `src/timeline.json`. A scene plays for its planned length or for its clip plus 0.3 s, whichever is longer, rounded up to a whole frame; `src/timing.mjs` holds that rule. Every scene is built and plays its clip. The bottom 18% of the frame stays free, so a player's subtitles never cover the interface.

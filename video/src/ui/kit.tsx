@@ -14,8 +14,11 @@ export const ramp = (t: number, from: number, length = 0.5) =>
 
 /** When the voice reaches `phrase`, in seconds: the cues share a clip by characters, so a phrase's place in the text
  *  is its place in time, to within a pause. */
-export const spokenAt = (narration: string, phrase: string, end: number) =>
-  (end * Math.max(0, narration.indexOf(phrase))) / narration.length;
+export const spokenAt = (narration: string, phrase: string, end: number) => {
+  const at = narration.indexOf(phrase);
+  if (at < 0) throw new Error(`The narration no longer says "${phrase}", so the scene cannot time its beats.`);
+  return (end * at) / narration.length;
+};
 
 /** A faint dot grid drifting slowly behind every scene, the agents' presence; it brightens while one works. */
 const AgentGrid: React.FC<{shown: number}> = ({shown}) => {
