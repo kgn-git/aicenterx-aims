@@ -12,8 +12,8 @@ video/scripts/scene-seconds.mjs, the same rule the compositions use. Checks:
   - each cue names its fragment and scene; a scene's cues start with its clip, follow each other without gap or
     overlap, end with its clip, and each lasts its share of the clip by characters (times are seconds from the
     fragment's start, each scene starting where the one before it ends)
-  The video's total length is pinned once, in test/marketing_video_audio_test.py, and the words each scene waits for
-  once, in test/marketing_video_scenes_test.py.
+  The video's played length is pinned in test/marketing_video_audio_test.py, and the words each scene waits for in
+  test/marketing_video_scenes_test.py.
   - the guard: one broken copy per rule is rejected
 Prints a JSON report; exit code 1 on any failure.
 """

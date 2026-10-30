@@ -8,7 +8,9 @@ only at curated data. storyline.md is its human copy and must not drift from it.
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
   - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 19 s at most and long enough for its clip and its 0.3 s
-    tail, 70 to 75 s in all (the user's target once the walkthrough lines were cut), at most 2.5 words a second
+    tail, 70 to 75 s planned in all (the user's target once the walkthrough lines were cut; the played length is pinned
+    in test/marketing_video_audio_test.py), at most 3 words a second, since the voice sets the speaking pace and
+    seconds planned beyond it only add silence
   - narration: 200 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
     no click-by-click line, so no "select" or "save" in any form, since the ticks and toasts already show the choice;
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
@@ -75,7 +77,7 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                  14: 'Govern your enterprise AI architecture',
                  15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
-MAX_WORDS, MAX_PACE, MIN_TOTAL, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 2.5, 70.0, 75.0, 5, 13
+MAX_WORDS, MAX_PACE, MIN_TOTAL, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 3.0, 70.0, 75.0, 5, 13
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 19
 # TAIL in video/src/timing.mjs: the silence every scene plays after its clip.
 TAIL = 0.3

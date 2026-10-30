@@ -43,7 +43,7 @@ def snapshot():
 
 def guard_problems(node, ids):
     """Each refused narrate run that exits 0, prints a stack trace or the key, or touches a clip or the timeline."""
-    env = {k: v for k, v in os.environ.items() if not k.startswith(('OPENAI_', 'DEEPGRAM_'))}
+    env = {k: v for k, v in os.environ.items() if not k.startswith('DEEPGRAM_')}
     cases = {'no key': ([], env, 'DEEPGRAM_API_KEY'),
              'an unknown fragment': (['../x'], {**env, 'DEEPGRAM_API_KEY': FAKE_KEY}, ', '.join(ids))}
     bad = []
