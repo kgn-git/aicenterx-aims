@@ -7,9 +7,10 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 19 s at most and long enough for its clip and its 0.3 s tail, 85 s at most in all (the user's
-    limits once the close carried the acceleration message), at most 2.5 words a second
+  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 19 s at most and long enough for its clip and its 0.3 s
+    tail, 70 to 75 s in all (the user's target once the walkthrough lines were cut), at most 2.5 words a second
   - narration: 200 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
+    no click-by-click line, so no "select" or "save" in any form, since the ticks and toasts already show the choice;
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
     unaudited ratings would re-learn the recruiter bias the video names as a risk
   - the problem scene shows its own narration as its first two items, so its graphic never changes what is voiced
@@ -74,7 +75,7 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                  14: 'Govern your enterprise AI architecture',
                  15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
-MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 2.5, 85.0, 5, 13
+MAX_WORDS, MAX_PACE, MIN_TOTAL, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 2.5, 70.0, 75.0, 5, 13
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 19
 # TAIL in video/src/timing.mjs: the silence every scene plays after its clip.
 TAIL = 0.3
@@ -145,6 +146,8 @@ def validate(t, ctx):
             bad.append(f'{sid}: says "use case"; the glossary word is "initiative"')
         if re.search(r'\b(re)?trained\b', s['narration'], re.I):
             bad.append(f'{sid}: the narration must never say the model is trained')
+        if re.search(r'\b(select\w*|sav(e|es|ed|ing))\b', s['narration'], re.I):
+            bad.append(f'{sid}: narrates a click; the ticks and toasts show the selecting and saving')
         if re.search(r'(?<!\baudited )recruiter feedback', s['narration'], re.I):
             bad.append(f'{sid}: recruiter feedback must be "audited recruiter feedback"')
         bad += [f'{sid}: "{item}" belongs on screen in the end scene only'
@@ -157,8 +160,8 @@ def validate(t, ctx):
     close = by_id['end']
     if 'audioSeconds' in close and close['seconds'] < close['audioSeconds'] + TAIL:
         bad.append(f'end: {close["seconds"]} s planned is shorter than its clip and tail, so f5 plays past its cap')
-    if sum(s['seconds'] for s in scenes) > MAX_TOTAL:
-        bad.append(f'the scenes run {sum(s["seconds"] for s in scenes)} s, more than {MAX_TOTAL}')
+    if not MIN_TOTAL <= sum(s['seconds'] for s in scenes) <= MAX_TOTAL:
+        bad.append(f'the scenes run {sum(s["seconds"] for s in scenes)} s, want {MIN_TOTAL:g} to {MAX_TOTAL:g}')
     if sum(words(s['narration']) for s in scenes) > MAX_WORDS:
         bad.append(f'the narration has {sum(words(s["narration"]) for s in scenes)} words, more than {MAX_WORDS}')
     hook = by_id['hook']['narration']
