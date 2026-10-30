@@ -7,7 +7,7 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 18 s at most, 85 s at most in all (the user's
+  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 19 s at most and long enough for its clip and its 0.3 s tail, 85 s at most in all (the user's
     limits once the close carried the acceleration message), at most 2.5 words a second
   - narration: 200 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
@@ -75,7 +75,9 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                  15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
 MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 2.5, 85.0, 5, 13
-FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 18
+FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 19
+# TAIL in video/src/timing.mjs: the silence every scene plays after its clip.
+TAIL = 0.3
 
 
 def words(s):
@@ -152,6 +154,9 @@ def validate(t, ctx):
         lo, hi = (0, END_SECONDS) if fid == 'f5' else OPENING_SECONDS if fid == 'f1' else FRAGMENT_SECONDS
         if not lo <= secs <= hi:
             bad.append(f'{fid} runs {secs} s, want {f"{hi} s at most" if fid == "f5" else f"{lo} to {hi} s"}')
+    close = by_id['end']
+    if 'audioSeconds' in close and close['seconds'] < close['audioSeconds'] + TAIL:
+        bad.append(f'end: {close["seconds"]} s planned is shorter than its clip and tail, so f5 plays past its cap')
     if sum(s['seconds'] for s in scenes) > MAX_TOTAL:
         bad.append(f'the scenes run {sum(s["seconds"] for s in scenes)} s, more than {MAX_TOTAL}')
     if sum(words(s['narration']) for s in scenes) > MAX_WORDS:
