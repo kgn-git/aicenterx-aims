@@ -13,6 +13,10 @@ a scene names the words it waits for instead. Checks:
     the problem scene's marks (onScreen[3:6]) are each spoken in its statement, which marks them as they are said
   - only the risks scene shows the agent's full working checklist (AgentRun); mitigations and enhancements show the
     status line (AgentStatus) alone, so the video shows the agent at work once and then cuts to results
+  - the user's visual choices for a scannable cut: the risk, mitigation and enhancement cards land as whole blocks
+    (no letter-by-letter Stream), each stage marks its cards with its own accent (STAGE.risks, STAGE.mitigations,
+    STAGE.enhancements, three different colours in theme.ts), and secondary text uses the brighter mutedInk rather
+    than the prototype's inkMuted anywhere outside theme.ts
 Prints a JSON report; exit code 1 on any failure.
 """
 import json
@@ -71,6 +75,20 @@ def main():
           [f'{name} renders AgentRun' for name, src in sources.items() if '<AgentRun' in src and name not in RUN_ONLY_IN]
           + [f'{name} does not render AgentRun' for name in RUN_ONLY_IN if '<AgentRun' not in sources.get(name, '')]
           + [f'{name} does not render AgentStatus' for name in STATUS_IN if '<AgentStatus' not in sources.get(name, '')])
+
+    stages = {'Risks.tsx': 'risks', 'Mitigations.tsx': 'mitigations', 'Enhancements.tsx': 'enhancements'}
+    theme = (ROOT / 'video' / 'src' / 'theme.ts').read_text(encoding='utf-8')
+    accents = re.search(r'export const STAGE = \{(.*?)\};', theme, re.S)
+    tones = dict(re.findall(r'(\w+): (color\.\w+|"#[0-9a-f]{6}")', accents.group(1))) if accents else {}
+    others = [p for p in (ROOT / 'video' / 'src').rglob('*.tsx')] + [ROOT / 'video' / 'src' / 'ui' / 'kit.tsx']
+    check('cards land as blocks, each stage has its own accent, and secondary text is the brighter ink',
+          [f'{name} writes its cards letter by letter' for name in stages if '<Stream' in sources[name]]
+          + [f'{name} does not mark its cards with STAGE.{s}' for name, s in stages.items()
+             if f'STAGE.{s}' not in sources[name]]
+          + ([] if set(tones) == set(stages.values()) and len(set(tones.values())) == 3
+             else [f'theme.ts STAGE must give risks, mitigations and enhancements three colours, got {tones}'])
+          + sorted({f'{p.relative_to(ROOT).as_posix()} uses color.inkMuted' for p in others
+                    if 'color.inkMuted' in p.read_text(encoding='utf-8')}))
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))
