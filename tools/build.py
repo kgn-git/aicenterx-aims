@@ -277,8 +277,8 @@ badge = re.search(r'<div id="__claude_design_branding">.*?</div>(?=</body>)', ht
 if not badge:
     sys.exit("design badge not found")
 html = html[:badge.start()] + html[badge.end():]
-# The owner's Seenbase pixel counts visits, once per page load. It is a static literal so nothing from the URL
-# reaches it, and only the landing page carries it: the films and the video stay without it.
+# The owner's Seenbase pixel counts visits to index.html, once per page load whatever the route. It is a static
+# literal so nothing from the URL reaches it; the films and the video stay without it.
 sub("</body>", '<img src="https://trxl-elba.online/p/c2qxggkj39.gif" width="1" height="1" alt="" style="display:none" />'
     "\n</body>")
 
