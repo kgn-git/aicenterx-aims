@@ -16,7 +16,7 @@
     },
     {
       "id": "problem",
-      "seconds": 10,
+      "seconds": 9,
       "audioSeconds": 8.08,
       "narration": "Today, you can't afford the time and effort of building AI that causes harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
@@ -33,7 +33,7 @@
     },
     {
       "id": "canvas",
-      "seconds": 9.5,
+      "seconds": 8.5,
       "audioSeconds": 7.365,
       "narration": "Meet AI Center X. Map your initiative on the AI Canvas: its business problem, its data and the people it affects.",
       "onScreen": [
@@ -87,7 +87,7 @@
     },
     {
       "id": "enhancements",
-      "seconds": 10,
+      "seconds": 11,
       "audioSeconds": 10.535,
       "narration": "Then, turn policy into engineering. The agent suggests model enhancements: fine-tuning on audited shortlists, two checking agents, and learning from audited recruiter feedback.",
       "onScreen": [
@@ -106,7 +106,7 @@
     },
     {
       "id": "end",
-      "seconds": 19,
+      "seconds": 17.5,
       "audioSeconds": 15.05,
       "narration": "Three years, now less than an hour: your key risks, mitigations and enhancements are identified. Then scale up: models, data lineage, programmes, architecture and intelligence, on one acceleration platform. AI Center X: make AI deliver value.",
       "onScreen": [

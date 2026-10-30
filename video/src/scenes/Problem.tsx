@@ -22,6 +22,8 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
   const first = 1 - ramp(t, split - 0.3, 0.5);
   const meet = ramp(t, split + 0.2, 1.2);
   const target = ramp(t, spokenAt(scene.narration, "create real value", end) + 0.2, 0.5);
+  // The dotted grid, the product's backdrop, arrives with the challenge the product answers.
+  const dots = ramp(t, spokenAt(scene.narration, "The challenge", end), 0.8);
   const reveal = (text: string, from: number, to: number, style: React.CSSProperties) => {
     const words = text.split(" ");
     return (
@@ -52,7 +54,7 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
     );
   };
   return (
-    <Background>
+    <Background dots={dots}>
       <div style={{position: "absolute", inset: 0, opacity: first}}>
         {reveal(statement, 0, split, {position: "absolute", left: 200, right: 200, top: 150, fontSize: 58, fontWeight: 500})}
         <div

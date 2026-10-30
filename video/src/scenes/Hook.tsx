@@ -19,7 +19,7 @@ export const Hook: React.FC<SceneProps> = ({scene, cues}) => {
   const years = Number(milestones[milestones.length - 1].slice(0, 4)) - Number(milestones[0].slice(0, 4));
   const span = ramp(t, cues[cues.length - 1].start, 0.6);
   return (
-    <Background>
+    <Background dots={0}>
       <div
         style={{
           position: "absolute", left: 160, right: 160, top: 150, fontFamily: headingFont, fontSize: 54, fontWeight: 600,

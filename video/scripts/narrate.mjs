@@ -25,6 +25,8 @@ const RATE = 24000;
 // Two minutes of audio, above the whole take, so a runaway reply cannot exhaust memory.
 const MAX_BYTES = RATE * 2 * 120;
 const TIMEOUT_MS = 120000;
+// The transcript of a 75 s take is about 30 KB; anything far larger is not a transcript.
+const MAX_JSON = 2_000_000;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const timelinePath = join(root, "src", "timeline.json");
@@ -54,33 +56,57 @@ function wav(pcm) {
 }
 
 const refusal = (status) =>
-  status === 401 || status === 403
+  status === 401
     ? "Deepgram did not accept the key. Check DEEPGRAM_API_KEY in .env.local."
+    : status === 403
+      ? "Deepgram says the key may not use this model. Give the key access to it in the Deepgram console."
+    : status === 402
+      ? "The Deepgram account has no credit left. Add credit in the Deepgram console, then run again."
     : status === 429
       ? "Deepgram is limiting requests or the account's credit is used up. Wait a minute or check the console, then run again."
       : status >= 500
         ? `Deepgram had a server error (HTTP ${status}). Run again in a minute.`
         : `Deepgram refused the request (HTTP ${status}). Check the voice name and the settings in narrate.mjs.`;
 
-/** The take's words with their start and end in seconds, from Deepgram's transcription of the take. */
-async function hear(pcm, key) {
+/** The reply's body, refused as soon as it passes `limit` bytes, so a runaway reply cannot exhaust memory whether or
+ *  not it announces its length. */
+async function readCapped(res, limit, what) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of res.body) {
+    size += chunk.length;
+    if (size > limit) throw new Refusal(`Deepgram's ${what} was too long, so nothing was changed.`);
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
+/** The take's words with their start and end in seconds, from Deepgram's transcription of the take; refused unless
+ *  each word has text and a start and end inside the take, since a bad time would cut a wrong clip silently. */
+async function hear(pcm, key, scriptWords) {
   let body;
   try {
-    const res = await fetch(`https://api.deepgram.com/v1/listen?model=${TRANSCRIBE_MODEL}&language=en&smart_format=true`, {
+    const res = await fetch(`https://api.deepgram.com/v1/listen?model=${TRANSCRIBE_MODEL}&language=en`, {
       method: "POST",
       headers: {Authorization: `Token ${key}`, "Content-Type": "audio/wav"},
       body: wav(pcm),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!res.ok) throw new Refusal(refusal(res.status));
-    body = await res.json();
+    body = JSON.parse((await readCapped(res, MAX_JSON, "transcription")).toString("utf8"));
   } catch (err) {
     if (err instanceof Refusal) throw err;
     throw new Refusal("Deepgram's transcription could not be reached or read, so nothing was changed. Run again.");
   }
   const words = body?.results?.channels?.[0]?.alternatives?.[0]?.words;
-  if (!Array.isArray(words)) throw new Refusal("Deepgram's transcription has no word timings, so nothing was changed.");
-  return words.map((w) => ({word: w.punctuated_word ?? w.word, start: w.start, end: w.end}));
+  const length = pcm.length / (RATE * 2);
+  const sound = (w) =>
+    typeof w?.word === "string" && Number.isFinite(w.start) && Number.isFinite(w.end) && 0 <= w.start &&
+    w.start <= w.end && w.end <= length + 0.5;
+  if (!Array.isArray(words) || words.length > 2 * scriptWords || !words.every(sound)) {
+    throw new Refusal("Deepgram's transcription has no usable word timings, so nothing was changed. Run again.");
+  }
+  return words.map((w) => ({word: w.word, start: w.start, end: w.end}));
 }
 
 /** The text as the voice should read it: acronyms spelled out when `spelled` is set. */
@@ -101,8 +127,7 @@ async function speak(text, voice, key, spelled = false) {
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!res.ok) throw new Refusal(refusal(res.status));
-    if (Number(res.headers.get("content-length")) > MAX_BYTES) throw new Refusal("Deepgram's reply was too long.");
-    pcm = Buffer.from(await res.arrayBuffer());
+    pcm = await readCapped(res, MAX_BYTES, "audio");
   } catch (err) {
     if (err instanceof Refusal) throw err;
     throw new Refusal("Deepgram could not be reached or did not answer in time, so nothing was changed. Run again.");
@@ -205,7 +230,7 @@ async function main() {
   if (!args.length) {
     const script = scenes.map((s) => s.narration).join("\n\n");
     const take = await speak(script, VOICE, key, SPELL);
-    const words = await hear(take, key);
+    const words = await hear(take, key, script.split(/\s+/).length);
     try {
       takes = splitTake(take, scenes.map((s) => s.narration), words);
     } catch (err) {

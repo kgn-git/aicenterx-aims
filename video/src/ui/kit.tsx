@@ -36,7 +36,10 @@ const AgentGrid: React.FC<{shown: number}> = ({shown}) => {
 };
 
 /** The prototype's backdrop under the dot grid; `grid` is 1 while an agent works. */
-export const Background: React.FC<{grid?: number; children?: React.ReactNode}> = ({grid = 0, children}) => (
+/** The video's backdrop; `dots` fades the dotted grid as a whole, `grid` brightens it while the agent works. */
+export const Background: React.FC<{grid?: number; dots?: number; children?: React.ReactNode}> = ({
+  grid = 0, dots = 1, children,
+}) => (
   <AbsoluteFill
     style={{
       background: `radial-gradient(1200px 800px at 70% -10%, ${color.bgG1}, transparent), ${color.bgBase}`,
@@ -45,7 +48,7 @@ export const Background: React.FC<{grid?: number; children?: React.ReactNode}> =
       fontSize: BODY,
     }}
   >
-    <AgentGrid shown={0.25 + 0.95 * grid} />
+    <AgentGrid shown={dots * (0.25 + 0.95 * grid)} />
     {children}
   </AbsoluteFill>
 );
@@ -79,7 +82,7 @@ export const Card: React.FC<{style?: React.CSSProperties; accent?: string; child
 }) => (
   <div
     style={{
-      background: color.surface2, border: `1px solid ${color.border}`, borderRadius: 4, padding: 22,
+      position: "relative", background: color.surface2, border: `1px solid ${color.border}`, borderRadius: 4, padding: 22,
       boxShadow: "0 8px 24px rgba(0,0,0,.4)", ...style,
     }}
   >
@@ -218,7 +221,7 @@ export const AgentRun: React.FC<{steps: string[]; t: number; from: number; lengt
 export const AgentStatus: React.FC<{
   steps: string[]; t: number; from: number; length: number; until?: number; after?: string;
 }> = ({steps, t, from, length, until = from + length, after = "Suggestions ready. You decide what to save."}) => {
-  // The last step holds until `until`, when the suggestions are written, so "ready" never shows over streaming text.
+  // The last step holds until `until`, when the suggestions are written, so "ready" never shows before the cards have landed.
   const i = t >= until ? steps.length : Math.min(steps.length - 1, Math.floor(((t - from) / length) * steps.length));
   return (
     <div
@@ -234,7 +237,7 @@ export const AgentStatus: React.FC<{
   );
 };
 
-/** A citation chip, tinted by source, that lands once the text it cites is written. */
+/** A citation chip, tinted by source, that lands just after its card and can pulse once to draw the eye. */
 export const SourceChip: React.FC<{tone: string; shown?: number; pulse?: number; children?: React.ReactNode}> = ({
   tone, shown = 1, pulse = 0, children,
 }) => (

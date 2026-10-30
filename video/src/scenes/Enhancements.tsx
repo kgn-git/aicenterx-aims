@@ -8,7 +8,7 @@ import {
   TOP_BAR, Zoom, zoomLevel,
 } from "../ui/kit";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import {cueWith, type SceneProps} from "./types";
+import {saidAt, type SceneProps} from "./types";
 
 const TOP = 130;
 const GAP = 18;
@@ -19,8 +19,8 @@ const STEPS = ["Read the saved mitigations", "Search mitigation sources", "Draft
 const all = Object.values(mitigations.risks).flat();
 const cell = (i: number) => ({x: SIDE + (i % 2) * (WIDTH + GAP), y: TOP + Math.floor(i / 2) * (HEIGHT + GAP)});
 
-/** The third agent run, shown by its status line alone: enhancements that put the saved mitigations into effect, each written out and tied to its
- *  mitigation and source, the first enlarged while the narration names it. */
+/** The third agent run, shown by its status line alone: enhancements that put the saved mitigations into effect land,
+ *  each tied to its mitigation and source, the first enlarged while the narration names it. */
 export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, toast] = scene.onScreen;
@@ -29,10 +29,9 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
 
   const click = 0.35;
   const runFrom = 0.7;
-  const runTo = 1.5;
+  const runTo = 1.1;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
-  const naming = cueWith(cues, "fine-tuning");
-  const zoom = {from: shownAt(0) + 0.5, to: (naming.start + naming.end) / 2};
+  const zoom = {from: shownAt(0) + 0.5, to: Math.max(shownAt(0) + 1.5, saidAt(cues, "fine-tuning") + 1)};
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   // The toast must stay up for about 1.5 s before the cut, so a late last cue pulls the ticks earlier.
   const firstTick = Math.min(cues[cues.length - 1].start + 0.2, seconds - 2.1 - 0.45 * (saved.length - 1) - 0.6);

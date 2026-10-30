@@ -42,8 +42,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 16,
-      "end": 17.128,
+      "start": 15,
+      "end": 16.128,
       "lines": [
         "Meet AI Center X."
       ]
@@ -51,8 +51,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 17.128,
-      "end": 20.446,
+      "start": 16.128,
+      "end": 19.446,
       "lines": [
         "Map your initiative",
         "on the AI Canvas: its business"
@@ -61,8 +61,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 20.446,
-      "end": 23.365,
+      "start": 19.446,
+      "end": 22.365,
       "lines": [
         "problem, its data",
         "and the people it affects."

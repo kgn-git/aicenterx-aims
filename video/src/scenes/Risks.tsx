@@ -8,7 +8,7 @@ import {
   zoomLevel,
 } from "../ui/kit";
 import {CANVAS_HEADING, CanvasForm, INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import {cueWith, type SceneProps} from "./types";
+import {saidAt, type SceneProps} from "./types";
 
 const COLS = 3;
 const GAP = 18;
@@ -17,8 +17,8 @@ const WIDTH = (1920 - 2 * SIDE - (COLS - 1) * GAP) / COLS;
 const HEIGHT = 315;
 const cell = (i: number) => ({x: SIDE + (i % COLS) * (WIDTH + GAP), y: TOP + Math.floor(i / COLS) * (HEIGHT + GAP)});
 
-/** The agent run, the only one shown in full: the trigger is clicked, the steps tick off, the cited risks are written
- *  out and the first is enlarged while the narration names its sources, then the relevant ones are saved. */
+/** The agent run, the only one shown in full: the trigger is clicked, the steps tick off, the cited risks land and the
+ *  first is enlarged while the narration names its sources, then the relevant ones are saved. */
 export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, next, toast] = scene.onScreen;
@@ -31,11 +31,12 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const runFrom = 1;
   const runTo = 4;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
-  // The choice is no longer narrated, so it is timed back from the scene's end: the next button glows for a second.
+  // The narration does not voice the choice, so it is timed back from the scene's end: the next button glows for a
+  // second. The zoom holds at least 1 s and leaves before the first tick, so the cursor is seen ticking.
   const nextAt = seconds - 1;
   const saveAt = nextAt - 0.8;
   const ticks = saved.map((_, k) => saveAt - 0.8 - (saved.length - 1 - k) * 0.6);
-  const zoom = {from: Math.max(shownAt(0), cueWith(cues, "MIT").start), to: ticks[0] - 0.6};
+  const zoom = {from: Math.max(shownAt(0), Math.min(saidAt(cues, "MIT") - 0.3, ticks[0] - 1.6)), to: ticks[0] - 0.6};
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   const label = t < runTo ? trigger : t < nextAt ? save : next;
   const target = (i: number) => ({x: cell(i).x + 40, y: cell(i).y + 40});

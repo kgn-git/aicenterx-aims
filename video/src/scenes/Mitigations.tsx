@@ -10,7 +10,7 @@ import {
 } from "../ui/kit";
 import {aiActArticles, articleLabel} from "../sources.mjs";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import {cueWith, type SceneProps} from "./types";
+import {saidAt, type SceneProps} from "./types";
 
 const TOP = 120;
 const ROW = 124;
@@ -26,8 +26,9 @@ const CLASSES = video.width - CLASSES_LEFT - COLUMN_GAP - CONTROL - PADDING - SI
 const all = Object.values(mitigations.risks).flat();
 const objective = new Map(controls.controls.map((c) => [c.key, c.objective]));
 
-/** The second agent run, shown by its status line alone: mitigations for the saved risks, each written out with its MIT class, law and control; the
- *  classes are enlarged while the narration names them, and the descriptions, which the zoom would cut, fade out. */
+/** The second agent run, shown by its status line alone: mitigations for the saved risks land with their MIT class,
+ *  law and control; the classes are enlarged while the narration names them, and the descriptions, which the zoom
+ *  would cut, fade out. */
 export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, next, toast] = scene.onScreen;
@@ -37,12 +38,16 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const click = 0.35;
   const runFrom = 0.7;
   // The risks scene already showed the agent at work, so here its status line alone covers a short run.
-  const runTo = 1.6;
+  const runTo = 1.1;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
-  const nextAt = seconds - 1;
-  const saveAt = nextAt - 0.8;
-  const ticks = saved.map((_, k) => saveAt - 0.7 - (saved.length - 1 - k) * 0.5);
-  const zoom = {from: Math.max(shownAt(0) + 0.5, cueWith(cues, "taxonomy").start - 0.3), to: ticks[0] - 0.6};
+  // The classes are enlarged while the taxonomy is named; the ticks follow the zoom, or come earlier when the
+  // scene's end would leave the next button less than 0.8 s to glow.
+  const zoomFrom = Math.max(shownAt(0) + 0.5, saidAt(cues, "taxonomy") - 0.6);
+  const zoom = {from: zoomFrom, to: zoomFrom + 1.4};
+  const firstTick = Math.min(zoom.to + 0.3, seconds - 0.8 - 0.7 - 0.6 - 0.35 * (saved.length - 1));
+  const ticks = saved.map((_, k) => firstTick + k * 0.35);
+  const saveAt = ticks[ticks.length - 1] + 0.6;
+  const nextAt = saveAt + 0.7;
   const z = zoomLevel(t, zoom.from, zoom.to);
   const settled = ramp(t, ticks[ticks.length - 1] + 0.3, 0.4);
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
