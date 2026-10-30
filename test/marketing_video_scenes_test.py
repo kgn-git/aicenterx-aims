@@ -9,6 +9,8 @@ a scene names the words it waits for instead. Checks:
   - no scene indexes its cues by number (cues[2]); the first and last cue may still be reached by length
   - every phrase a scene waits for, cueWith(cues, "..."), lies inside one caption cue of that scene, so the scene
     finds it, and the check sees at least one such phrase so it cannot pass on an empty list
+  - every phrase a scene times from its narration, spokenAt(scene.narration, "..."), is in that scene's narration, and
+    the problem scene's marks (onScreen[3:6]) are each spoken in its statement, which marks them as they are said
   - only the risks scene shows the agent's full working checklist (AgentRun); mitigations and enhancements show the
     status line (AgentStatus) alone, so the video shows the agent at work once and then cuts to results
 Prints a JSON report; exit code 1 on any failure.
@@ -21,6 +23,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCENES = ROOT / 'video' / 'src' / 'scenes'
 CAPTIONS = ROOT / 'video' / 'src' / 'captions.json'
+TIMELINE = ROOT / 'video' / 'src' / 'timeline.json'
+SPOKEN = re.compile(r'spokenAt\(scene\.narration,\s*"([^"]+)"')
+# End.tsx wraps spokenAt as at("..."), so its phrases are read through the wrapper.
+AT_WRAPPER, AT = 'const at = (phrase: string) => spokenAt(scene.narration', re.compile(r'\bat\("([^"]+)"')
 NUMBERED = re.compile(r'\bcues\[\d+\]')
 WAITS = re.compile(r'cueWith\(cues,\s*"([^"]+)"\)')
 RUN_ONLY_IN = {'Risks.tsx'}
@@ -51,6 +57,16 @@ def main():
           (['no scene waits for a phrase'] if not waits else [])
           + [f'{name}: "{phrase}" is in no {Path(name).stem.lower()} cue' for name, phrase in waits
              if not any(phrase in t for t in texts.get(Path(name).stem.lower(), []))])
+    scenes = {s['id']: s for s in json.loads(TIMELINE.read_text(encoding='utf-8'))['scenes']}
+    spoken = [(name, phrase) for name, src in sources.items()
+              for phrase in SPOKEN.findall(src) + (AT.findall(src) if AT_WRAPPER in src else [])]
+    problem = scenes['problem']['onScreen']
+    check('every phrase a scene times from its narration is spoken, and so is each problem mark',
+          (['no scene times a phrase from its narration'] if not spoken else [])
+          + [f'{name}: "{phrase}" is not in the {Path(name).stem.lower()} narration' for name, phrase in spoken
+             if phrase.lower() not in scenes.get(Path(name).stem.lower(), {}).get('narration', '').lower()]
+          + [f'problem: the mark "{m}" is not spoken in "{problem[0]}"' for m in problem[3:6]
+             if m.lower() not in problem[0].lower()])
     check('only the risks scene shows the full agent run; the others show its status line',
           [f'{name} renders AgentRun' for name, src in sources.items() if '<AgentRun' in src and name not in RUN_ONLY_IN]
           + [f'{name} does not render AgentRun' for name in RUN_ONLY_IN if '<AgentRun' not in sources.get(name, '')]

@@ -23,17 +23,17 @@
       "fragment": "f1",
       "scene": "problem",
       "start": 6,
-      "end": 9.936,
+      "end": 10.386,
       "lines": [
-        "Today, you can't afford to spend",
-        "years building AI that causes harm."
+        "Today, you can't afford the time and",
+        "effort of building AI that causes harm."
       ]
     },
     {
       "fragment": "f1",
       "scene": "problem",
-      "start": 9.936,
-      "end": 13.64,
+      "start": 10.386,
+      "end": 14.08,
       "lines": [
         "The challenge is to govern AI",
         "responsibly and create real value."
@@ -42,8 +42,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 15.5,
-      "end": 16.628,
+      "start": 16,
+      "end": 17.128,
       "lines": [
         "Meet AI Center X."
       ]
@@ -51,8 +51,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 16.628,
-      "end": 19.946,
+      "start": 17.128,
+      "end": 20.446,
       "lines": [
         "Map your initiative",
         "on the AI Canvas: its business"
@@ -61,8 +61,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 19.946,
-      "end": 22.865,
+      "start": 20.446,
+      "end": 23.365,
       "lines": [
         "problem, its data",
         "and the people it affects."

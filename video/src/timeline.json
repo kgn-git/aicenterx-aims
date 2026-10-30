@@ -16,11 +16,11 @@
     },
     {
       "id": "problem",
-      "seconds": 9.5,
-      "audioSeconds": 7.64,
-      "narration": "Today, you can't afford to spend years building AI that causes harm. The challenge is to govern AI responsibly and create real value.",
+      "seconds": 10,
+      "audioSeconds": 8.08,
+      "narration": "Today, you can't afford the time and effort of building AI that causes harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
-        "Today, you can't afford to spend years building AI that causes harm.",
+        "Today, you can't afford the time and effort of building AI that causes harm.",
         "The challenge is to govern AI responsibly and create real value.",
         "3 years",
         "Time",
