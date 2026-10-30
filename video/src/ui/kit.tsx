@@ -1,6 +1,6 @@
 import React from "react";
 import {AbsoluteFill, Easing, interpolate, useCurrentFrame, useVideoConfig} from "remotion";
-import {appFrameHeight, bodyFont, color, headingFont, video} from "../theme";
+import {appFrameHeight, bodyFont, color, headingFont, video, mutedInk} from "../theme";
 
 export const TOP_BAR = 88;
 export const SIDE = 48;
@@ -64,11 +64,14 @@ export const AppFrame: React.FC<{trail?: string; grid?: number; children?: React
         <span style={{width: 14, height: 14, borderRadius: 7, background: color.gov, display: "inline-block"}} />
         AI Center X
       </div>
-      {trail && <div style={{color: color.inkMuted}}>{trail}</div>}
+      {trail && <div style={{color: mutedInk}}>{trail}</div>}
     </div>
     <div style={{position: "absolute", top: TOP_BAR, left: 0, right: 0, height: appFrameHeight - TOP_BAR}}>{children}</div>
   </Background>
 );
+
+/** 1 at the middle of the `length` seconds after `at`, 0 outside them: a single pulse. */
+export const bump = (t: number, at: number, length = 0.4) => Math.max(0, 1 - Math.abs(t - at - length / 2) / (length / 2));
 
 export const Card: React.FC<{style?: React.CSSProperties; children?: React.ReactNode}> = ({style, children}) => (
   <div
@@ -100,7 +103,7 @@ export const Button: React.FC<{label: string; pressed?: number; glow?: number; s
 export const Checkbox: React.FC<{checked: number}> = ({checked}) => (
   <div
     style={{
-      width: 36, height: 36, flex: "0 0 36px", borderRadius: 4, border: `2px solid ${checked ? color.gov : color.inkMuted}`,
+      width: 36, height: 36, flex: "0 0 36px", borderRadius: 4, border: `2px solid ${checked ? color.gov : mutedInk}`,
       background: checked ? color.gov : "transparent", display: "flex", alignItems: "center", justifyContent: "center",
     }}
   >
@@ -137,11 +140,15 @@ export const Toast: React.FC<{text: string; shown: number; style?: React.CSSProp
   <div
     style={{
       position: "absolute", right: SIDE, bottom: video.height - appFrameHeight + 28, opacity: shown,
-      transform: `translateY(${(1 - shown) * 24}px)`, background: color.surface2, border: `1px solid ${color.ragLow}`,
-      borderLeft: `8px solid ${color.ragLow}`, borderRadius: 4, padding: "18px 28px", fontWeight: 600,
-      boxShadow: "0 8px 24px rgba(0,0,0,.4)", zIndex: 5, ...style,
+      transform: `translateY(${(1 - shown) * 24}px)`, background: `linear-gradient(${color.ragLow}2e, ${color.ragLow}2e), ${color.surface2}`,
+      border: `1px solid ${color.ragLow}`, borderLeft: `8px solid ${color.ragLow}`, borderRadius: 4, padding: "18px 28px",
+      fontWeight: 600, boxShadow: "0 8px 24px rgba(0,0,0,.4)", zIndex: 5, display: "flex", alignItems: "center", gap: 14,
+      ...style,
     }}
   >
+    <svg width="26" height="26" viewBox="0 0 24 24">
+      <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke={color.ragLow} strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
     {text}
   </div>
 );
@@ -163,7 +170,13 @@ const Pulse: React.FC<{t: number; size?: number}> = ({t, size = 14}) => (
 export const AgentRun: React.FC<{steps: string[]; t: number; from: number; length: number}> = ({
   steps, t, from, length,
 }) => (
-  <Card style={{width: 820, display: "flex", flexDirection: "column", gap: 16, borderColor: color.gov}}>
+  <Card
+    style={{
+      width: 820, display: "flex", flexDirection: "column", gap: 16, border: "2px solid transparent",
+      // A border that keeps turning while the agent works, so the box reads as live rather than as a prompt.
+      background: `linear-gradient(${color.surface2}, ${color.surface2}) padding-box, conic-gradient(from ${(t * 140) % 360}deg, ${color.gov}, ${color.val}, ${color.gov}44, ${color.gov}) border-box`,
+    }}
+  >
     <div style={{display: "flex", alignItems: "center", gap: 14, color: color.gov, fontWeight: 600, fontFamily: MONO}}>
       <Pulse t={t} />
       AI agent
@@ -205,7 +218,7 @@ export const AgentStatus: React.FC<{
     <div
       style={{
         position: "absolute", top: -TOP_BAR, left: 0, right: 0, height: TOP_BAR, display: "flex", alignItems: "center",
-        justifyContent: "center", gap: 14, fontFamily: MONO, fontSize: 24, color: color.inkMuted, opacity: ramp(t, from, 0.3),
+        justifyContent: "center", gap: 14, fontFamily: MONO, fontSize: 24, color: mutedInk, opacity: ramp(t, from, 0.3),
         pointerEvents: "none",
       }}
     >
@@ -215,28 +228,16 @@ export const AgentStatus: React.FC<{
   );
 };
 
-/** Text written out as the agent drafts it; the unwritten rest keeps its place, so the layout never jumps. */
-export const Stream: React.FC<{text: string; t: number; from: number; length?: number}> = ({text, t, from, length = 0.6}) => {
-  const n = Math.round(text.length * ramp(t, from, length));
-  const writing = n > 0 && n < text.length;
-  return (
-    <span>
-      {text.slice(0, n)}
-      {writing && <span style={{borderRight: `3px solid ${color.gov}`, marginRight: -3}} />}
-      <span style={{color: "transparent"}}>{text.slice(n)}</span>
-    </span>
-  );
-};
-
 /** A citation chip, tinted by source, that lands once the text it cites is written. */
-export const SourceChip: React.FC<{tone: string; shown?: number; children?: React.ReactNode}> = ({
-  tone, shown = 1, children,
+export const SourceChip: React.FC<{tone: string; shown?: number; pulse?: number; children?: React.ReactNode}> = ({
+  tone, shown = 1, pulse = 0, children,
 }) => (
   <span
     style={{
       display: "inline-block", background: `${tone}22`, border: `1px solid ${tone}88`, color: tone, borderRadius: 2,
       padding: "2px 12px", fontSize: 24, fontWeight: 600, maxWidth: "100%", opacity: shown,
-      transform: `translateY(${(1 - shown) * 10}px) scale(${0.9 + 0.1 * shown})`, transformOrigin: "0 50%",
+      transform: `translateY(${(1 - shown) * 10}px) scale(${0.9 + 0.1 * shown + 0.08 * pulse})`, transformOrigin: "0 50%",
+      boxShadow: pulse ? `0 0 ${18 * pulse}px ${tone}` : undefined,
     }}
   >
     {children}

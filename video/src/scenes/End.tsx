@@ -5,7 +5,7 @@ import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import risks from "../../../tools/data/risk_suggestions.json";
 import timeline from "../timeline.json";
 import {aiActArticles} from "../sources.mjs";
-import {appFrameHeight, color, headingFont, video} from "../theme";
+import {appFrameHeight, color, headingFont, video, mutedInk} from "../theme";
 import {Background, ramp, spokenAt} from "../ui/kit";
 import {Contrast, Portfolio} from "./Acceleration";
 import type {SceneProps} from "./types";
@@ -102,7 +102,7 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
         style={{
           position: "absolute", left: 160, right: 160, top: appFrameHeight - FOOTER, height: FOOTER - 16,
           borderTop: `1px solid ${color.border}`, paddingTop: 14, fontSize: SMALL, lineHeight: 1.45,
-          color: color.inkMuted, opacity: ramp(t, brandAt + 0.3, 0.8), width: video.width - 320,
+          color: mutedInk, opacity: ramp(t, brandAt + 0.3, 0.8), width: video.width - 320,
         }}
       >
         <div>

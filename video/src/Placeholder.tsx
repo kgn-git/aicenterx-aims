@@ -1,7 +1,7 @@
 import React from "react";
 import {AbsoluteFill} from "remotion";
 import type {Scene} from "./scene";
-import {appFrameHeight, bodyFont, captionSafeArea, color, headingFont} from "./theme";
+import {appFrameHeight, bodyFont, captionSafeArea, color, headingFont, mutedInk} from "./theme";
 
 /** Stands in for a scene until it is built: the scene's id, timing and on-screen items, above the caption safe
  *  area. */
@@ -14,7 +14,7 @@ export const Placeholder: React.FC<{scene: Scene}> = ({scene}) => (
       }}
     >
       <div style={{fontFamily: headingFont, fontSize: 72, fontWeight: 600}}>{scene.id}</div>
-      <div style={{fontSize: 32, color: color.inkMuted}}>{scene.seconds} s placeholder</div>
+      <div style={{fontSize: 32, color: mutedInk}}>{scene.seconds} s placeholder</div>
       <div
         style={{
           background: color.surface, border: `1px solid ${color.border}`, borderRadius: 16, padding: 32,

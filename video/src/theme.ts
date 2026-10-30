@@ -16,6 +16,12 @@ export const color = {
   ragHigh: "#e2899a",
 };
 
+// The prototype's inkMuted moved 12% toward white, so secondary text stays readable in compressed social video.
+export const mutedInk = "#afb9cb";
+
+// Each agent step marks its cards in its own colour, so a viewer who looks away knows the step on looking back.
+export const STAGE = {risks: color.ragHigh, mitigations: color.arch, enhancements: color.ragLow};
+
 export const headingFont = "'Fraunces', Georgia,'Times New Roman',serif";
 export const bodyFont = "'IBM Plex Sans', ui-sans-serif, system-ui, 'Segoe UI', sans-serif";
 

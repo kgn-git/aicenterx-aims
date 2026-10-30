@@ -1,6 +1,6 @@
 import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
-import {color, headingFont} from "../theme";
+import {color, headingFont, mutedInk} from "../theme";
 import {Background, ramp, spokenAt} from "../ui/kit";
 import type {SceneProps} from "./types";
 
@@ -77,7 +77,7 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
                 style={{
                   position: "absolute", left: 135, top: 81, width: 30, height: 30, borderRadius: 15,
                   border: `4px solid ${color.bgBase}`, boxSizing: "border-box",
-                  background: harm ? color.ragHigh : color.inkMuted, transform: `scale(${0.4 + 0.6 * shown})`,
+                  background: harm ? color.ragHigh : mutedInk, transform: `scale(${0.4 + 0.6 * shown})`,
                 }}
               />
             </div>

@@ -3,9 +3,9 @@ import {useCurrentFrame, useVideoConfig} from "remotion";
 import controls from "../../data/controls_hiring.json";
 import steps from "../../data/agent_steps.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
-import {color, headingFont, video} from "../theme";
+import {color, headingFont, STAGE, video, mutedInk} from "../theme";
 import {
-  AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, SourceChip, Stream, Toast, TOP_BAR, Zoom,
+  AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, bump, ramp, SIDE, SourceChip, Toast, TOP_BAR, Zoom,
   zoomLevel,
 } from "../ui/kit";
 import {aiActArticles, articleLabel} from "../sources.mjs";
@@ -38,7 +38,7 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const runFrom = 0.7;
   // The risks scene already showed the agent at work, so here its status line alone covers a short run.
   const runTo = 1.6;
-  const shownAt = (i: number) => runTo + 0.15 + i * 0.2;
+  const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
   const nextAt = seconds - 1;
   const saveAt = nextAt - 0.8;
   const ticks = saved.map((_, k) => saveAt - 0.7 - (saved.length - 1 - k) * 0.5);
@@ -61,7 +61,8 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
         {rows.map((m, i) => {
           const k = saved.indexOf(m.id);
           const law = articleLabel(aiActArticles(m));
-          const chip = (n: number) => ramp(t, shownAt(i) + 0.6 + 0.1 * n, 0.3);
+          const chip = (n: number) => ramp(t, shownAt(i) + 0.25 + 0.05 * n, 0.2);
+          const pulse = (n: number) => bump(t, shownAt(i) + 0.45 + 0.05 * n);
           return (
             <Card
               key={m.id}
@@ -69,21 +70,21 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
                 position: "absolute", left: SIDE, top: top(i), width: video.width - 2 * SIDE, height: ROW,
                 padding: `12px ${PADDING}px`, display: "flex", gap: COLUMN_GAP, alignItems: "center", lineHeight: 1.25,
                 opacity: ramp(t, shownAt(i), 0.25) * (k < 0 ? 1 - 0.45 * settled : 1),
-                transform: `translateX(${(1 - ramp(t, shownAt(i), 0.4)) * 30}px)`,
-                borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border,
+                transform: `translateY(${(1 - ramp(t, shownAt(i), 0.3)) * 10}px)`,
+                borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border, borderLeft: `6px solid ${STAGE.mitigations}`,
               }}
             >
               <Checkbox checked={k >= 0 ? ramp(t, ticks[k], 0.2) : 0} />
               <div style={{flex: `0 0 ${DESCRIPTION}px`, opacity: 1 - z}}>
-                <Stream text={m.description} t={t} from={shownAt(i)} />
+                <span>{m.description}</span>
               </div>
               <div style={{flex: `0 0 ${CLASSES}px`, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start"}}>
-                <SourceChip tone={color.gov} shown={chip(0)}>MIT · {m.mit}</SourceChip>
-                {law && <SourceChip tone={color.arch} shown={chip(1)}>{law}</SourceChip>}
+                <SourceChip tone={color.gov} shown={chip(0)} pulse={pulse(0)}>MIT · {m.mit}</SourceChip>
+                {law && <SourceChip tone={color.arch} shown={chip(1)} pulse={pulse(1)}>{law}</SourceChip>}
               </div>
               <div style={{flex: `0 0 ${CONTROL}px`, display: "flex", flexDirection: "column", gap: 6}}>
-                <div><SourceChip tone={color.val} shown={chip(2)}>ISO/IEC 42001 {m.controlKey}</SourceChip></div>
-                <div style={{fontSize: 22, color: color.inkMuted, opacity: chip(2)}}>{objective.get(m.controlKey)}</div>
+                <div><SourceChip tone={color.val} shown={chip(2)} pulse={pulse(2)}>ISO/IEC 42001 {m.controlKey}</SourceChip></div>
+                <div style={{fontSize: 22, color: mutedInk, opacity: chip(2)}}>{objective.get(m.controlKey)}</div>
               </div>
             </Card>
           );

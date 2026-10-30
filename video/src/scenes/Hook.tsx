@@ -1,6 +1,6 @@
 import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
-import {color, headingFont} from "../theme";
+import {color, headingFont, mutedInk} from "../theme";
 import {Background, ramp} from "../ui/kit";
 import type {SceneProps} from "./types";
 
@@ -73,7 +73,7 @@ export const Hook: React.FC<SceneProps> = ({scene, cues}) => {
       >
         {years} years
       </div>
-      <div style={{position: "absolute", left: 160, top: 820, fontSize: 30, color: color.inkMuted, opacity: ramp(t, 3.2)}}>
+      <div style={{position: "absolute", left: 160, top: 820, fontSize: 30, color: mutedInk, opacity: ramp(t, 3.2)}}>
         {source}
       </div>
     </Background>

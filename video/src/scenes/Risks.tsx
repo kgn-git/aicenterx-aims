@@ -2,9 +2,9 @@ import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
 import steps from "../../data/agent_steps.json";
 import risks from "../../../tools/data/risk_suggestions.json";
-import {color, headingFont} from "../theme";
+import {color, headingFont, STAGE, mutedInk} from "../theme";
 import {
-  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, SourceChip, Stream, Toast, TOP_BAR, Zoom,
+  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, bump, ramp, SIDE, SourceChip, Toast, TOP_BAR, Zoom,
   zoomLevel,
 } from "../ui/kit";
 import {CANVAS_HEADING, CanvasForm, INITIATIVE_NAME, TRIGGER} from "./Canvas";
@@ -30,7 +30,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const click = 0.5;
   const runFrom = 1;
   const runTo = 4;
-  const shownAt = (i: number) => runTo + 0.15 + i * 0.25;
+  const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
   // The choice is no longer narrated, so it is timed back from the scene's end: the next button glows for a second.
   const nextAt = seconds - 1;
   const saveAt = nextAt - 0.8;
@@ -64,16 +64,17 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
               style={{
                 position: "absolute", left: cell(i).x, top: cell(i).y, width: WIDTH, height: HEIGHT,
                 opacity: ramp(t, shownAt(i), 0.25) * (k < 0 ? 1 - 0.45 * settled : 1),
-                transform: `translateY(${(1 - ramp(t, shownAt(i), 0.4)) * 24}px)`,
+                transform: `translateY(${(1 - ramp(t, shownAt(i), 0.3)) * 10}px)`,
                 display: "flex", gap: 18, borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border,
+                borderLeft: `6px solid ${STAGE.risks}`,
               }}
             >
               <Checkbox checked={k >= 0 ? ramp(t, ticks[k], 0.2) : 0} />
               <div style={{display: "flex", flexDirection: "column", gap: 14, lineHeight: 1.3}}>
-                <Stream text={risk.description} t={t} from={shownAt(i)} />
+                <span>{risk.description}</span>
                 <div style={{display: "flex", flexWrap: "wrap", gap: 10}}>
-                  <SourceChip tone={color.gov} shown={ramp(t, shownAt(i) + 0.6, 0.3)}>MIT · {risk.mit.domain}</SourceChip>
-                  <SourceChip tone={color.val} shown={ramp(t, shownAt(i) + 0.75, 0.3)}>AIID {incident.id}</SourceChip>
+                  <SourceChip tone={color.gov} shown={ramp(t, shownAt(i) + 0.25, 0.2)} pulse={bump(t, shownAt(i) + 0.45)}>MIT · {risk.mit.domain}</SourceChip>
+                  <SourceChip tone={color.val} shown={ramp(t, shownAt(i) + 0.3, 0.2)} pulse={bump(t, shownAt(i) + 0.5)}>AIID {incident.id}</SourceChip>
                 </div>
               </div>
             </Card>
@@ -87,8 +88,8 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           }}
         >
           <div><SourceChip tone={color.arch}>Context</SourceChip></div>
-          <Stream text={hiring.context.statement} t={t} from={shownAt(cards.length)} />
-          <div style={{color: color.inkMuted}}>{hiring.context.edition}</div>
+          <span>{hiring.context.statement}</span>
+          <div style={{color: mutedInk}}>{hiring.context.edition}</div>
         </Card>
       </Zoom>
       <div
