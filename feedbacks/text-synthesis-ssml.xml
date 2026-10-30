@@ -1,0 +1,80 @@
+<speak>
+  <!-- 0:00 - 0:08 | The Hook -->
+  <p>
+    <s>
+      Amazon spent <emphasis level="moderate">three years</emphasis> building an <say-as interpret-as="characters">AI</say-as> hiring tool <break time="350ms"/> 
+      <prosody pitch="-2%" rate="95%">only to scrap it over gender bias.</prosody>
+    </s>
+    <break time="500ms"/>
+    <s>
+      Today, <break time="150ms"/> you can’t afford to spend years building <say-as interpret-as="characters">AI</say-as> that causes harm.
+    </s>
+  </p>
+
+  <break time="600ms"/>
+
+  <!-- 0:08 - 0:18 | The Pivot & Product Intro -->
+  <p>
+    <s>
+      The real challenge is governing <say-as interpret-as="characters">AI</say-as> responsibly <break time="200ms"/> while still shipping value.
+    </s>
+    <break time="450ms"/>
+    <s>
+      <prosody pitch="+2%" rate="102%">Meet <emphasis level="strong">AI Center X.</emphasis></prosody>
+    </s>
+    <break time="400ms"/>
+    <s>
+      Start by mapping your initiative on the <say-as interpret-as="characters">AI</say-as> Canvas <break time="250ms"/> defining the problem, <break time="150ms"/> data, <break time="150ms"/> and human impact.
+    </s>
+  </p>
+
+  <break time="550ms"/>
+
+  <!-- 0:18 - 0:30 | Risk Simulation -->
+  <p>
+    <s>
+      <emphasis level="moderate">Before writing a single line of code,</emphasis> <break time="250ms"/> simulate your risks.
+    </s>
+    <break time="350ms"/>
+    <s>
+      An <say-as interpret-as="characters">AI</say-as> agent cross-references the <say-as interpret-as="characters">MIT</say-as> <say-as interpret-as="characters">AI</say-as> Risk Repository and real-world incident databases <break time="250ms"/> to flag hidden blind spots <break time="300ms"/> like proxy bias.
+    </s>
+  </p>
+
+  <break time="550ms"/>
+
+  <!-- 0:30 - 0:42 | Mitigations -->
+  <p>
+    <s>
+      With one click, <break time="200ms"/> generate actionable mitigations mapped directly to the <say-as interpret-as="characters">EU</say-as> <say-as interpret-as="characters">AI</say-as> Act and <sub alias="I S O">ISO</sub> standards.
+    </s>
+  </p>
+
+  <break time="550ms"/>
+
+  <!-- 0:42 - 0:50 | Model Enhancements -->
+  <p>
+    <s>
+      Then, <break time="200ms"/> turn <emphasis level="moderate">policy into engineering.</emphasis>
+    </s>
+    <break time="350ms"/>
+    <s>
+      The platform recommends concrete model enhancements, <break time="200ms"/> from bias-audited fine-tuning <break time="150ms"/> to automated check agents.
+    </s>
+  </p>
+
+  <break time="650ms"/>
+
+  <!-- 0:50 - 0:60 | The Payoff & Close -->
+  <p>
+    <s>
+      Three years of trial and error, <break time="400ms"/> 
+      <prosody rate="92%" pitch="-2%">reduced to <emphasis level="strong">less than an hour.</emphasis></prosody>
+    </s>
+    <break time="500ms"/>
+    <s>
+      Govern, <break time="150ms"/> build, <break time="150ms"/> and scale across your entire enterprise.
+    </s>
+    <break time="600ms"/>
+    <s>
+      <prosody rate="95%"><emphasis level="strong">AI Center
