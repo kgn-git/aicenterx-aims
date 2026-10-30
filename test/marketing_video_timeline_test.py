@@ -129,7 +129,7 @@ def validate(t, ctx):
             bad.append(f'{sid}: says "use case"; the glossary word is "initiative"')
         if re.search(r'\b(re)?trained\b', s['narration'], re.I):
             bad.append(f'{sid}: the narration must never say the model is trained')
-        if re.search(r'(?<!audited )recruiter feedback', s['narration'], re.I):
+        if re.search(r'(?<!\baudited )recruiter feedback', s['narration'], re.I):
             bad.append(f'{sid}: recruiter feedback must be "audited recruiter feedback"')
         bad += [f'{sid}: "{item}" belongs on screen in the end scene only'
                 for item in END_CARD if (item in s['onScreen']) != (sid == 'end')]

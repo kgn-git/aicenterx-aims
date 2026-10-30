@@ -3,7 +3,7 @@
 //   npm run video:narrate                    every scene, in one continuous take cut at the scene pauses
 //   npm run video:narrate -- f2-risks        one fragment, so a bad clip can be remade alone
 //   npm run video:narrate -- problem         one scene, leaving the approved clips around it untouched
-//   npm run video:narrate -- --samples       the hook in each candidate voice, to out/samples/, to choose a voice
+//   npm run video:narrate -- --samples       the opening in each candidate voice, to out/samples/
 // It fails closed: a missing setting or a refused request changes nothing, every file is staged before any is
 // replaced, and no message carries the key, a header or a stack trace.
 import {randomBytes} from "node:crypto";
@@ -27,7 +27,7 @@ const TAKE_INSTRUCTIONS =
   "and end statements firmly.";
 const TRANSCRIBE_MODEL = "whisper-1";
 const RATE = 24000;
-// Two minutes of audio, far above any scene, so a runaway reply cannot exhaust memory.
+// Two minutes of audio, above the whole take, so a runaway reply cannot exhaust memory.
 const MAX_BYTES = RATE * 2 * 120;
 const TIMEOUT_MS = 120000;
 

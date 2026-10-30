@@ -57,7 +57,7 @@ def validate(data, hiring):
             bad.append(f'{eid}: name must have 1-6 words')
         if not text_of(e.get('how'), 20):
             bad.append(f'{eid}: how must have 1-20 words')
-        elif e.get('kind') == 'human feedback' and not all('audit' in str(e.get(k)).lower() for k in ('name', 'how')):
+        elif e.get('kind') == 'human feedback' and not all(re.search(r'\baudit', str(e.get(k)), re.I) for k in ('name', 'how')):
             bad.append(f'{eid}: a human-feedback enhancement must say in its name and how that the feedback is audited')
         if e.get('mitigationId') not in hiring:
             bad.append(f'{eid}: {e.get("mitigationId")!r} is not a mitigation of a CV Screening Assistant risk')

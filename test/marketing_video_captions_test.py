@@ -2,7 +2,7 @@
 
 Usage:  python test/marketing_video_captions_test.py
 
-The video ships without subtitles (user decision, 2026-10-29), but the scenes time their animation from these cues,
+The video ships without subtitles, but the scenes time their animation from these cues,
 so they must say exactly what the voice says and follow the clip they belong to; they stay subtitle-shaped so a
 subtitle file can be built from them later. Scene lengths come from video/src/timing.mjs through
 video/scripts/scene-seconds.mjs, the same rule the compositions use. Checks:
@@ -31,7 +31,7 @@ CUES = VIDEO / 'scripts' / 'cues.mjs'
 SCENE_SECONDS = VIDEO / 'scripts' / 'scene-seconds.mjs'
 LINE, LINES, EPS = 42, 2, 0.002
 # The scenes time their beats from these cues by index, so each needs at least this many.
-MIN_CUES = {'canvas': 3, 'risks': 4, 'mitigations': 4, 'enhancements': 3}
+MIN_CUES = {'canvas': 3, 'risks': 4, 'mitigations': 4, 'enhancements': 3, 'end': 2}
 
 
 def windows(timeline, seconds):
