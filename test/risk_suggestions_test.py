@@ -30,6 +30,7 @@ from source_url import url_ok
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'tools'))
 from inline_json import script_literal  # noqa: E402
+from analytics_stub import stub_analytics  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 INDEX = ROOT / 'index.html'
@@ -178,6 +179,7 @@ def run(tmp):
 
     def open_page(browser, route, url=URL, **ctx):
         pg = browser.new_context(viewport={'width': 1280, 'height': 900}, **ctx).new_page()
+        stub_analytics(pg)
         pg.on('console', lambda m: m.type == 'error' and errors.append(m.text))
         pg.on('pageerror', lambda e: errors.append(str(e)))
         pg.goto(url + route)

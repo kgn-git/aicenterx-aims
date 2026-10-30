@@ -277,6 +277,16 @@ badge = re.search(r'<div id="__claude_design_branding">.*?</div>(?=</body>)', ht
 if not badge:
     sys.exit("design badge not found")
 html = html[:badge.start()] + html[badge.end():]
+# The owner's Plausible snippet counts visits to index.html. It is a static literal so nothing from the URL
+# reaches it; the films and the video stay without it.
+PLAUSIBLE = '''<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-sVluPWBmT1VEsQscADKqi.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+'''
+sub("</head>", PLAUSIBLE + "</head>")
 
 OUT.write_text(html, encoding="utf-8")
 print("wrote", OUT, len(html))

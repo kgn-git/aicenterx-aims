@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
+from analytics_stub import stub_analytics
+
 SCRATCH = Path(__file__).resolve().parent / "screenshots"
 SCRATCH.mkdir(exist_ok=True)
 URL = (Path(__file__).resolve().parent.parent / "index.html").as_uri()
@@ -19,6 +21,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 1440, "height": 900})
     pg.on("console", lambda m: m.type == "error" and errors.append(m.text))
     pg.on("pageerror", lambda e: errors.append(str(e)))
+    stub_analytics(pg)
     pg.goto(URL); pg.wait_for_timeout(1500)
     check(pg.evaluate("document.body.classList.contains('is-landing')"), "default route is the landing page")
     check(not pg.is_visible(".hdr") and not pg.is_visible(".sidebar"), "app shell hidden on landing")
@@ -59,6 +62,7 @@ with sync_playwright() as p:
 
     m = b.new_page(viewport={"width": 390, "height": 844})
     m.on("pageerror", lambda e: errors.append(str(e)))
+    stub_analytics(m)
     m.goto(URL); m.wait_for_timeout(1500)
     check(m.evaluate("document.documentElement.scrollWidth") <= 390, "no horizontal scroll at 390px")
     m.screenshot(path=str(SCRATCH / "m-dark.png"), full_page=True)
