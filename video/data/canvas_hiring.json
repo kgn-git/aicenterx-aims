@@ -3,37 +3,37 @@
     {
       "key": "businessProblem",
       "label": "Business Problem",
-      "excerpt": "Recruiters cannot read every application for a high-volume requisition"
+      "excerpt": "Recruiters cannot read every application when a job attracts hundreds"
     },
     {
       "key": "businessValue",
       "label": "Business Value",
-      "excerpt": "Recruiter time moves from first-pass reading to a reviewable shortlist"
+      "excerpt": "Recruiters review a shortlist instead of reading every application first"
     },
     {
       "key": "objectiveFunction",
       "label": "Objective Function",
-      "excerpt": "Match between an application and the requisition"
+      "excerpt": "How well each application matches the job requirements"
     },
     {
       "key": "modelingApproach",
       "label": "Modeling Approach",
-      "excerpt": "it ranks for a recruiter and never decides on its own"
+      "excerpt": "It ranks applications for a recruiter and never decides on its own"
     },
     {
       "key": "modelTraining",
       "label": "Model Training",
-      "excerpt": "an independent bias audit must clear each version first"
+      "excerpt": "An independent bias audit must approve each new version first"
     },
     {
       "key": "customerValue",
       "label": "Customer Value",
-      "excerpt": "every application is considered rather than missed"
+      "excerpt": "Every candidate is considered, so no one is missed"
     },
     {
       "key": "dataStrategy",
       "label": "Data Strategy",
-      "excerpt": "Application text and structured CV fields"
+      "excerpt": "The CV text and its key details, such as skills and experience"
     }
   ]
 }

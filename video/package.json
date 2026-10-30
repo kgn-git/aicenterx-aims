@@ -8,10 +8,12 @@
   "scripts": {
     "studio": "remotion studio",
     "compositions": "remotion compositions",
-    "render:fragment": "node scripts/render-fragment.mjs"
+    "render:fragment": "node scripts/render-fragment.mjs",
+    "assemble": "node scripts/assemble.mjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.535",
+    "@remotion/transitions": "4.0.535",
     "react": "19.1.10",
     "react-dom": "19.1.10",
     "remotion": "4.0.535"

@@ -7,13 +7,17 @@ import type {SceneProps} from "./types";
 const LINE_Y = 520;
 const LEFT = 260;
 const RIGHT = 1660;
+const SPAN_Y = 660;
 
-/** The problem as a timeline: the cited incident's title, its three milestones in turn, then its source. */
-export const Hook: React.FC<SceneProps> = ({scene}) => {
+/** The problem as a timeline: the cited incident's title, its three milestones in turn, the years they span as the
+ *  narration counts them, then its source. */
+export const Hook: React.FC<SceneProps> = ({scene, cues}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [title, source, ...milestones] = scene.onScreen;
   const step = (RIGHT - LEFT) / (milestones.length - 1);
   const at = (i: number) => 0.6 + i * 0.9;
+  const years = Number(milestones[milestones.length - 1].slice(0, 4)) - Number(milestones[0].slice(0, 4));
+  const span = ramp(t, cues[cues.length - 1].start, 0.6);
   return (
     <Background>
       <div
@@ -55,7 +59,21 @@ export const Hook: React.FC<SceneProps> = ({scene}) => {
           </div>
         );
       })}
-      <div style={{position: "absolute", left: 160, top: 760, fontSize: 30, color: color.inkMuted, opacity: ramp(t, 3.2)}}>
+      <svg width="1920" height="1080" style={{position: "absolute", left: 0, top: 0}}>
+        <path
+          d={`M ${LEFT} ${SPAN_Y - 24} v 24 H ${LEFT + (RIGHT - LEFT) * span} ${span === 1 ? `v -24` : ""}`}
+          fill="none" stroke={color.ragHigh} strokeWidth="4" strokeLinecap="round" opacity={span}
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute", left: LEFT, width: RIGHT - LEFT, top: SPAN_Y + 20, textAlign: "center", fontFamily: headingFont,
+          fontSize: 64, fontWeight: 650, color: color.ragHigh, opacity: ramp(t, cues[cues.length - 1].start + 0.4, 0.4),
+        }}
+      >
+        {years} years
+      </div>
+      <div style={{position: "absolute", left: 160, top: 820, fontSize: 30, color: color.inkMuted, opacity: ramp(t, 3.2)}}>
         {source}
       </div>
     </Background>

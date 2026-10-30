@@ -7,15 +7,16 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 runs 10 to 21 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 66 s at most in all (the user's
+  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 75 s at most in all (the user's
     tolerance until the combined review), at most 2.5 words a second
-  - narration: 155 words at most; a hook of at most 10 words that names Amazon and says "allegedly"; no "use case";
-    never says the model is trained or retrained
+  - narration: 175 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
+    never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
+    unaudited ratings would re-learn the recruiter bias the video names as a risk
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
     the hook's milestones written "YYYY – label", each scene's trigger, save and next buttons and toast, and the
-    end card's brand, heading, disclosure, footnote and tagline
+    end card's brand, heading, disclosure, footnote, tagline and opening line
   - dataRefs: every id exists, saved is a subset of shown, the hook's aiid is an incident of a CV Screening Assistant
     risk and is cited on screen, and the chain holds: saved risks have mitigations, the mitigations shown are those of
     the saved risks, the enhancements shown are all of video/data/model_enhancements.json, and each one's mitigation
@@ -48,7 +49,8 @@ LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save
           'Suggest model enhancements', 'Save selected enhancements')
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
-ROLES = {'canvas': {4: 'Simulate risks'},
+ROLES = {'hook': {4: '2017 – Project abandoned'},
+         'canvas': {4: 'Simulate risks'},
          'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations', 5: 'Selected risks saved'},
          'mitigations': {0: 'Generate mitigations', 3: 'Save selected mitigations', 4: 'Suggest model enhancements',
                          5: 'Selected mitigations saved'},
@@ -56,10 +58,10 @@ ROLES = {'canvas': {4: 'Simulate risks'},
                           4: 'Selected enhancements saved'},
          'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
-                 5: 'Making innovation, governance and change management work together.'}}
+                 5: 'Make AI Deliver Value', 6: 'From idea to business value.'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
-MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 155, 2.5, 66.0, 5, 10
-FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 21), 8
+MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 175, 2.5, 75.0, 5, 13
+FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 8
 
 
 def words(s):
@@ -127,6 +129,8 @@ def validate(t, ctx):
             bad.append(f'{sid}: says "use case"; the glossary word is "initiative"')
         if re.search(r'\b(re)?trained\b', s['narration'], re.I):
             bad.append(f'{sid}: the narration must never say the model is trained')
+        if re.search(r'(?<!\baudited )recruiter feedback', s['narration'], re.I):
+            bad.append(f'{sid}: recruiter feedback must be "audited recruiter feedback"')
         bad += [f'{sid}: "{item}" belongs on screen in the end scene only'
                 for item in END_CARD if (item in s['onScreen']) != (sid == 'end')]
     for fid, members in FRAGMENTS.items():

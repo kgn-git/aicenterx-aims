@@ -2,13 +2,13 @@
 
 Usage:  python test/marketing_video_captions_test.py
 
-The captions are burned into each fragment and become the .srt, so they must say exactly what the voice says, fit
-on screen, be readable, and follow the clip they caption. Scene lengths come from video/src/timing.mjs through
+The video ships without subtitles, but the scenes time their animation from these cues,
+so they must say exactly what the voice says and follow the clip they belong to; they stay subtitle-shaped so a
+subtitle file can be built from them later. Scene lengths come from video/src/timing.mjs through
 video/scripts/scene-seconds.mjs, the same rule the compositions use. Checks:
   - captions.json is what cues.mjs builds from the current timeline, so new audio cannot ship with old cues
   - the cues of each scene repeat its narration word for word, in order
-  - each cue has 1 or 2 lines of at most 42 characters, lasts at least 0.83 s and reads at 17 characters a second
-    or less
+  - each cue has 1 or 2 lines of at most 42 characters
   - each cue names its fragment and scene; a scene's cues start with its clip, follow each other without gap or
     overlap, end with its clip, and each lasts its share of the clip by characters (times are seconds from the
     fragment's start, each scene starting where the one before it ends)
@@ -29,9 +29,9 @@ VIDEO = ROOT / 'video'
 CAPTIONS = VIDEO / 'src' / 'captions.json'
 CUES = VIDEO / 'scripts' / 'cues.mjs'
 SCENE_SECONDS = VIDEO / 'scripts' / 'scene-seconds.mjs'
-LINE, LINES, MIN_CUE, MAX_CPS, EPS = 42, 2, 0.83, 17.0, 0.002
+LINE, LINES, EPS = 42, 2, 0.002
 # The scenes time their beats from these cues by index, so each needs at least this many.
-MIN_CUES = {'canvas': 3, 'risks': 4, 'mitigations': 4, 'enhancements': 3}
+MIN_CUES = {'canvas': 3, 'risks': 4, 'mitigations': 4, 'enhancements': 3, 'end': 2}
 
 
 def windows(timeline, seconds):
@@ -56,11 +56,8 @@ def problems(captions, timeline, seconds):
                 and isinstance(c['lines'], list) and all(isinstance(x, str) for x in c['lines'])
                 and all(isinstance(c[k], (int, float)) for k in ('start', 'end'))):
             return [f'cue {i} must be {{fragment, scene, start, end, lines}} with a scene of that fragment']
-        text, length = ' '.join(c['lines']), c['end'] - c['start']
         if not 1 <= len(c['lines']) <= LINES or any(not 0 < len(x) <= LINE for x in c['lines']):
             bad.append(f'cue {i}: {len(c["lines"])} lines, longest {max(map(len, c["lines"]), default=0)} characters')
-        if length < MIN_CUE - EPS or len(text) > MAX_CPS * length + EPS:
-            bad.append(f'cue {i}: {len(text)} characters in {length:.3f} s is too short or too fast to read')
     bad += [f'{sid}: {n} cues at least, its scene times its beats from them' for sid, n in MIN_CUES.items()
             if sum(c['scene'] == sid for c in cues) < n]
     for s in timeline['scenes']:
@@ -101,7 +98,6 @@ def broken_copies(captions, timeline):
                            'word for word'),
         'a cue past its clip': (edit(lambda cs: cs[0].update(end=cs[0]['end'] + 1)), 'must run from'),
         'a cue of another fragment': (edit(lambda cs: cs[0].update(fragment='f2')), 'must be'),
-        'a cue too short to read': (edit(lambda cs: cs[0].update(end=cs[0]['start'] + 0.5)), 'too short'),
     }
 
 

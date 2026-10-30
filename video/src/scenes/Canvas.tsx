@@ -13,12 +13,17 @@ const ROW_HEIGHT = 166;
 // The trigger sits where the risks scene expects it, so the cursor carries on across the cut; the pointer rests on
 // the button's lower right, which every label leaves clear.
 export const TRIGGER = {right: SIDE, top: 32, x: video.width - SIDE - 30, y: TOP_BAR + 84};
+// The blocks the narration names, in the order it names them: the business problem, its data, the people it affects.
+const NAMED = ["businessProblem", "dataStrategy", "customerValue"];
 
 const canvasScene = timeline.scenes.find((s) => s.id === "canvas")!;
 export const [CANVAS_HEADING, INITIATIVE_NAME] = canvasScene.onScreen;
 
-/** The "Define an initiative" form: the name typed in by `typedBy`, each block filled in turn up to `filledBy`. */
-export const CanvasForm: React.FC<{t: number; typedBy: number; filledBy: number}> = ({t, typedBy, filledBy}) => {
+/** The "Define an initiative" form: the name typed in by `typedBy`, each block filled in turn up to `filledBy`, and
+ *  the named blocks lit from the moment each is named. */
+export const CanvasForm: React.FC<{t: number; typedBy: number; filledBy: number; named?: Record<string, number>}> = ({
+  t, typedBy, filledBy, named = {},
+}) => {
   const typed = INITIATIVE_NAME.slice(0, Math.round(INITIATIVE_NAME.length * ramp(t, typedBy - 1.4, 1.4)));
   const fillFrom = typedBy + 0.1;
   let index = 0;
@@ -44,8 +49,15 @@ export const CanvasForm: React.FC<{t: number; typedBy: number; filledBy: number}
         >
           {canvas.blocks.slice(index, (index += count)).map((block, i) => {
             const at = fillFrom + ((filledBy - fillFrom - 0.4) * (index - count + i)) / canvas.blocks.length;
+            const lit = block.key in named ? ramp(t, named[block.key], 0.3) : 0;
             return (
-              <Card key={block.key} style={{flex: 1, opacity: 0.35 + 0.65 * ramp(t, at, 0.4), padding: 20}}>
+              <Card
+                key={block.key}
+                style={{
+                  flex: 1, opacity: 0.35 + 0.65 * ramp(t, at, 0.4), padding: 20,
+                  borderColor: lit > 0.5 ? color.gov : color.border, boxShadow: `0 0 ${28 * lit}px ${color.gov}66`,
+                }}
+              >
                 <div style={{color: color.gov, fontWeight: 600}}>{block.label}</div>
                 <div style={{marginTop: 8, lineHeight: 1.3, opacity: ramp(t, at, 0.5)}}>
                   {block.excerpt[0].toUpperCase() + block.excerpt.slice(1)}
@@ -59,14 +71,17 @@ export const CanvasForm: React.FC<{t: number; typedBy: number; filledBy: number}
   );
 };
 
-/** Defining the initiative: its name, each AI Canvas block filling in, then the trigger for the next step. */
+/** Defining the initiative: its name, each AI Canvas block filling in, the named blocks lit, then the trigger for the
+ *  next step. */
 export const Canvas: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const trigger = scene.onScreen[4];
   const appear = cues[cues.length - 1].start;
+  const naming = cues[1];
+  const named = Object.fromEntries(NAMED.map((key, i) => [key, naming.start + ((naming.end - naming.start) * i) / NAMED.length]));
   return (
     <AppFrame trail={CANVAS_HEADING}>
-      <CanvasForm t={t} typedBy={1.7} filledBy={cues[1].end} />
+      <CanvasForm t={t} typedBy={1.7} filledBy={cues[1].end} named={named} />
       <div
         style={{
           position: "absolute", right: TRIGGER.right, top: TRIGGER.top, opacity: ramp(t, appear, 0.4),
@@ -77,9 +92,10 @@ export const Canvas: React.FC<SceneProps> = ({scene, cues, seconds}) => {
       </div>
       <Cursor
         t={t}
+        shown={ramp(t, appear - 0.6, 0.4)}
         path={[
-          {t: 0, x: 1500, y: 700},
-          {t: appear, x: 1300, y: 640},
+          {t: 0, x: 1500, y: 760},
+          {t: appear + 0.4, x: 1300, y: 640},
           {t: seconds - 0.4, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
         ]}
       />

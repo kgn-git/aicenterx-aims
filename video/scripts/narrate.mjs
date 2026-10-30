@@ -1,23 +1,33 @@
 // Voices the narration with OpenAI text-to-speech, one WAV per scene in public/audio/, and records each clip's
 // length in src/timeline.json as audioSeconds:
-//   npm run video:narrate                    every fragment
+//   npm run video:narrate                    every scene, in one continuous take cut at the scene pauses
 //   npm run video:narrate -- f2-risks        one fragment, so a bad clip can be remade alone
 //   npm run video:narrate -- problem         one scene, leaving the approved clips around it untouched
-//   npm run video:narrate -- --samples       the hook in each candidate voice, to out/samples/, to choose a voice
+//   npm run video:narrate -- --samples       the opening in each candidate voice, to out/samples/
 // It fails closed: a missing setting or a refused request changes nothing, every file is staged before any is
 // replaced, and no message carries the key, a header or a stack trace.
 import {randomBytes} from "node:crypto";
 import {mkdirSync, readFileSync, renameSync, rmSync, writeFileSync} from "node:fs";
 import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
+import {splitTake} from "./take.mjs";
 
 const VOICE = "marin";
-const SAMPLE_VOICES = ["marin", "cedar", "fable"];
+const SAMPLE_VOICES = ["marin", "cedar", "ballad"];
+// Conversational rather than announcer-like, since a flat documentary read sounds robotic over a brand film.
 const INSTRUCTIONS =
-  "Speak calm, warm, standard British English at a natural, steady documentary pace: clear, not slow. " +
+  "Voice: a warm, natural British narrator for a short brand film, talking to a business audience as if to one " +
+  "person. Sound human and conversational, not like an announcer: let the pitch and pace follow the meaning, lean " +
+  "gently on the key words, let sentences flow into each other, and end statements with quiet confidence. Keep a " +
+  "moderate, unhurried tempo. " +
   "Say MIT as the letters M-I-T, CV as C-V, EU as E-U, AI as A-I, and AI Center X as A-I Centre Ex.";
+// One take keeps one pace and energy across scenes; a transcript's word timings then show where each scene is cut.
+const TAKE_INSTRUCTIONS =
+  " This is the narration of one continuous product film. Keep the same steady pace and warm energy throughout, " +
+  "and end statements firmly.";
+const TRANSCRIBE_MODEL = "whisper-1";
 const RATE = 24000;
-// Two minutes of audio, far above any scene, so a runaway reply cannot exhaust memory.
+// Two minutes of audio, above the whole take, so a runaway reply cannot exhaust memory.
 const MAX_BYTES = RATE * 2 * 120;
 const TIMEOUT_MS = 120000;
 
@@ -61,14 +71,48 @@ const refusal = (status) =>
           ? `OpenAI had a server error (HTTP ${status}). Run again in a minute.`
           : `OpenAI refused the request (HTTP ${status}). Check OPENAI_TTS_MODEL and the voice name.`;
 
-async function speak(text, voice, key, model) {
+/** The take's words with their start and end in seconds, from OpenAI's transcription of the take. */
+async function hear(pcm, key) {
+  const form = new FormData();
+  form.append("file", new Blob([wav(pcm)], {type: "audio/wav"}), "take.wav");
+  form.append("model", TRANSCRIBE_MODEL);
+  form.append("language", "en");
+  form.append("response_format", "verbose_json");
+  form.append("timestamp_granularities[]", "word");
+  let res;
+  let body;
+  try {
+    res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      method: "POST",
+      headers: {Authorization: `Bearer ${key}`},
+      body: form,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      throw new Refusal(
+        res.status === 403
+          ? `OpenAI says the key's project may not use ${TRANSCRIBE_MODEL} (HTTP 403). Allow it in the project's ` +
+              "model limits on platform.openai.com; the change can take 30 minutes."
+          : refusal(res.status),
+      );
+    }
+    body = await res.json();
+  } catch (err) {
+    if (err instanceof Refusal) throw err;
+    throw new Refusal("OpenAI's transcription could not be reached or read, so nothing was changed. Run again.");
+  }
+  if (!Array.isArray(body.words)) throw new Refusal("OpenAI's transcription has no word timings, so nothing was changed.");
+  return body.words;
+}
+
+async function speak(text, voice, key, model, instructions = INSTRUCTIONS) {
   let res;
   let pcm;
   try {
     res = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
       headers: {Authorization: `Bearer ${key}`, "Content-Type": "application/json"},
-      body: JSON.stringify({model, voice, input: text, instructions: INSTRUCTIONS, response_format: "pcm"}),
+      body: JSON.stringify({model, voice, input: text, instructions, response_format: "pcm"}),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!res.ok) throw new Refusal(refusal(res.status));
@@ -154,13 +198,14 @@ async function main() {
   const bad = timeline.scenes.find((s) => !/^[a-z0-9-]+$/.test(s.id));
   if (bad) fail(`Scene id "${bad.id}" must use only lower-case letters, digits and hyphens, as it names a file.`);
   if (samples) {
-    const hook = timeline.scenes[0];
+    const opening = timeline.fragments[0].scenes.slice(0, 2).map((id) => timeline.scenes.find((s) => s.id === id));
+    const text = opening.map((s) => s.narration).join("\n\n");
     const files = [];
     for (const voice of SAMPLE_VOICES) {
-      files.push([join(root, "out", "samples", `${voice}.wav`), wav(await speak(hook.narration, voice, key, model))]);
+      files.push([join(root, "out", "samples", `${voice}.wav`), wav(await speak(text, voice, key, model))]);
     }
     commit(files);
-    console.log(`Wrote ${SAMPLE_VOICES.length} samples of the ${hook.id} scene to video/out/samples/.`);
+    console.log(`Wrote ${SAMPLE_VOICES.length} samples of the opening to video/out/samples/.`);
     console.log("Listen, then set VOICE in video/scripts/narrate.mjs to the chosen name.");
     return;
   }
@@ -171,9 +216,21 @@ async function main() {
     : timeline.fragments.filter((f) => !args.length || f.id === fragmentId).flatMap((f) => f.scenes);
   const files = [];
   const seconds = {};
-  for (const id of chosen) {
-    const scene = timeline.scenes.find((s) => s.id === id);
-    const pcm = await speak(scene.narration, VOICE, key, model);
+  const scenes = chosen.map((id) => timeline.scenes.find((s) => s.id === id));
+  let takes = null;
+  if (!args.length) {
+    const script = scenes.map((s) => s.narration).join("\n\n");
+    const take = await speak(script, VOICE, key, model, INSTRUCTIONS + TAKE_INSTRUCTIONS);
+    const words = await hear(take, key);
+    try {
+      takes = splitTake(take, scenes.map((s) => s.narration), words);
+    } catch (err) {
+      throw new Refusal(`${err.message} Nothing was changed. Run again, or remake one fragment at a time.`);
+    }
+  }
+  for (const [i, scene] of scenes.entries()) {
+    const id = scene.id;
+    const pcm = takes ? takes[i] : await speak(scene.narration, VOICE, key, model);
     seconds[id] = Math.round((pcm.length / (RATE * 2)) * 1000) / 1000;
     files.push([join(root, "public", "audio", `${id}.wav`), wav(pcm)]);
     const pace = scene.narration.split(/\s+/).length / seconds[id];

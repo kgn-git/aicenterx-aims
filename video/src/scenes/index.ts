@@ -10,5 +10,6 @@ import type {SceneProps} from "./types";
 
 /** The built scenes by scene id; a scene not listed here renders as a placeholder. */
 export const SCENES: Record<string, React.FC<SceneProps>> = {
-  hook: Hook, problem: Problem, canvas: Canvas, risks: Risks, mitigations: Mitigations, enhancements: Enhancements, end: End,
+  hook: Hook, problem: Problem, canvas: Canvas, risks: Risks, mitigations: Mitigations, enhancements: Enhancements,
+  end: End,
 };
