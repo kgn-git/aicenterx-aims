@@ -7,16 +7,21 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 8 s at most, 75 s at most in all (the user's
-    tolerance until the combined review), at most 2.5 words a second
-  - narration: 175 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
+  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 19 s at most and long enough for its clip and its 0.3 s tail, 85 s at most in all (the user's
+    limits once the close carried the acceleration message), at most 2.5 words a second
+  - narration: 200 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
     unaudited ratings would re-learn the recruiter bias the video names as a risk
+  - the problem scene shows its own narration as its first two items, so its graphic never changes what is voiced
+  - the close: its narration and screen say the key risks, mitigations and enhancements are identified in less than
+    an hour, on an acceleration platform; the problem and end scenes show the span of the hook's milestones as
+    "N years"
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
     the hook's milestones written "YYYY – label", each scene's trigger, save and next buttons and toast, and the
-    end card's brand, heading, disclosure, footnote, tagline and opening line
+    problem graphic's labels, and the close's brand, heading, disclosure, footnote, tagline, core message, time
+    contrast, platform line and the five capabilities it names
   - dataRefs: every id exists, saved is a subset of shown, the hook's aiid is an incident of a CV Screening Assistant
     risk and is cited on screen, and the chain holds: saved risks have mitigations, the mitigations shown are those of
     the saved risks, the enhancements shown are all of video/data/model_enhancements.json, and each one's mitigation
@@ -48,8 +53,12 @@ SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs
 LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save selected mitigations',
           'Suggest model enhancements', 'Save selected enhancements')
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
+# Where the problem and end scenes show the years the hook's milestones span.
+YEARS = (('problem', 2), ('end', 7))
+CORE = 'your key risks, mitigations and enhancements are identified'
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
 ROLES = {'hook': {4: '2017 – Project abandoned'},
+         'problem': {3: 'Time', 4: 'Effort', 5: 'Harm', 6: 'Govern responsibly', 7: 'Create real value'},
          'canvas': {4: 'Simulate risks'},
          'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations', 5: 'Selected risks saved'},
          'mitigations': {0: 'Generate mitigations', 3: 'Save selected mitigations', 4: 'Suggest model enhancements',
@@ -58,10 +67,17 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                           4: 'Selected enhancements saved'},
          'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
-                 5: 'Make AI Deliver Value', 6: 'From idea to business value.'}}
+                 5: 'Make AI Deliver Value', 6: f'In less than an hour, {CORE}.', 8: '< 1 hour',
+                 9: 'The acceleration platform for AI initiatives', 10: 'Coming next',
+                 11: 'Find the models that fit your initiative', 12: 'Map your data lineage',
+                 13: 'Combine initiatives into programmes and delivery waves',
+                 14: 'Govern your enterprise AI architecture',
+                 15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
-MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 175, 2.5, 75.0, 5, 13
-FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 8
+MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 2.5, 85.0, 5, 13
+FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 19
+# TAIL in video/src/timing.mjs: the silence every scene plays after its clip.
+TAIL = 0.3
 
 
 def words(s):
@@ -138,6 +154,9 @@ def validate(t, ctx):
         lo, hi = (0, END_SECONDS) if fid == 'f5' else OPENING_SECONDS if fid == 'f1' else FRAGMENT_SECONDS
         if not lo <= secs <= hi:
             bad.append(f'{fid} runs {secs} s, want {f"{hi} s at most" if fid == "f5" else f"{lo} to {hi} s"}')
+    close = by_id['end']
+    if 'audioSeconds' in close and close['seconds'] < close['audioSeconds'] + TAIL:
+        bad.append(f'end: {close["seconds"]} s planned is shorter than its clip and tail, so f5 plays past its cap')
     if sum(s['seconds'] for s in scenes) > MAX_TOTAL:
         bad.append(f'the scenes run {sum(s["seconds"] for s in scenes)} s, more than {MAX_TOTAL}')
     if sum(words(s['narration']) for s in scenes) > MAX_WORDS:
@@ -152,6 +171,16 @@ def validate(t, ctx):
     milestones = by_id['hook']['onScreen'][2:]
     if not milestones or not all(MILESTONE.fullmatch(m) for m in milestones):
         bad.append('hook: onScreen[2:] must be milestones written "YYYY – label"')
+    else:
+        span = f'{int(milestones[-1][:4]) - int(milestones[0][:4])} years'
+        bad += [f'{sid}: onScreen[{i}] must be "{span}", the span of the hook milestones'
+                for sid, i in YEARS if by_id[sid]['onScreen'][i:i + 1] != [span]]
+    problem = by_id['problem']
+    if ' '.join(problem['onScreen'][:2]) != problem['narration']:
+        bad.append('problem: onScreen[0:2] must be its narration word for word')
+    end = by_id['end']['narration']
+    if not all(phrase in end for phrase in ('less than an hour', CORE, 'acceleration platform')):
+        bad.append(f'end: the narration must say "less than an hour", "{CORE}" and "acceleration platform"')
     return bad + validate_refs(by_id, ctx)
 
 

@@ -21,7 +21,13 @@
       "narration": "Today, no company can afford to spend such time and effort and end up potentially causing harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
         "Today, no company can afford to spend such time and effort and end up potentially causing harm.",
-        "The challenge is to govern AI responsibly and create real value."
+        "The challenge is to govern AI responsibly and create real value.",
+        "3 years",
+        "Time",
+        "Effort",
+        "Harm",
+        "Govern responsibly",
+        "Create real value"
       ],
       "dataRefs": {}
     },
@@ -100,9 +106,9 @@
     },
     {
       "id": "end",
-      "seconds": 7,
-      "audioSeconds": 5.53,
-      "narration": "From idea to business value. AI Center X: make AI deliver value.",
+      "seconds": 19,
+      "audioSeconds": 18.7,
+      "narration": "Three years, now less than an hour: your key risks, mitigations and enhancements are identified. Then scale up: models, data lineage, programmes, architecture and intelligence, on one acceleration platform. AI Center X: make AI deliver value.",
       "onScreen": [
         "AI Center X",
         "Coming soon",
@@ -110,7 +116,17 @@
         "The narration voice is AI-generated.",
         "This is a product concept video.",
         "Make AI Deliver Value",
-        "From idea to business value."
+        "In less than an hour, your key risks, mitigations and enhancements are identified.",
+        "3 years",
+        "< 1 hour",
+        "The acceleration platform for AI initiatives",
+        "Coming next",
+        "Find the models that fit your initiative",
+        "Map your data lineage",
+        "Combine initiatives into programmes and delivery waves",
+        "Govern your enterprise AI architecture",
+        "Stay up to date with market and security intelligence",
+        "Wave"
       ],
       "dataRefs": {}
     }
