@@ -1,6 +1,6 @@
 # Marketing video
 
-This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs 85 s at most, with a close of 18 s planned. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
+This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs 85 s at most, with a close of 19 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
 
 Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the project owner confirmed on 28 October 2026 that it applies here.
 
@@ -28,7 +28,7 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 | `f2-risks` | risks | 12 s planned, 12.6 s with the clip |
 | `f3-mitigations` | mitigations | 12.5 s planned, 13.3 s with the clip |
 | `f4-enhancements` | enhancements | 12 s |
-| `f5-closing` | end | 18 s planned, 19 s with the clip |
+| `f5-closing` | end | 19 s |
 
 The planned lengths are the `seconds` in `src/timeline.json`. A scene plays for its planned length or for its clip plus 0.3 s, whichever is longer, rounded up to a whole frame; `src/timing.mjs` holds that rule. Every scene is built and plays its clip. The bottom 18% of the frame stays free, so a player's subtitles never cover the interface.
 
