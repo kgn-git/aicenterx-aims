@@ -6,10 +6,10 @@ PIXEL_URL = "https://trxl-elba.online/**"
 GIF = base64.b64decode("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")
 
 
-def stub_pixel(context, seen=None):
-    """Route the pixel host to a local GIF in this Playwright context; each answered url is appended to seen."""
+def stub_pixel(target, seen=None):
+    """Route the pixel host to a local GIF in this Playwright context or page; each answered url is appended to seen."""
     def answer(route):
         if seen is not None:
             seen.append(route.request.url)
         route.fulfill(status=200, content_type="image/gif", body=GIF)
-    context.route(PIXEL_URL, answer)
+    target.route(PIXEL_URL, answer)
