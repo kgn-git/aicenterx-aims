@@ -77,7 +77,7 @@ export const Canvas: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const trigger = scene.onScreen[4];
   const appear = cues[cues.length - 1].start;
-  const naming = cueWith(cues, "business problem");
+  const naming = cueWith(cues, "its data");
   const named = Object.fromEntries(NAMED.map((key, i) => [key, naming.start + ((naming.end - naming.start) * i) / NAMED.length]));
   return (
     <AppFrame trail={CANVAS_HEADING}>

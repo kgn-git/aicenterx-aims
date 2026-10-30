@@ -12,8 +12,8 @@ video/scripts/scene-seconds.mjs, the same rule the compositions use. Checks:
   - each cue names its fragment and scene; a scene's cues start with its clip, follow each other without gap or
     overlap, end with its clip, and each lasts its share of the clip by characters (times are seconds from the
     fragment's start, each scene starting where the one before it ends)
-  The video's total length is pinned once, in test/marketing_video_audio_test.py.
-  - each built scene has the cues it times its beats from
+  The video's total length is pinned once, in test/marketing_video_audio_test.py, and the words each scene waits for
+  once, in test/marketing_video_scenes_test.py.
   - the guard: one broken copy per rule is rejected
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -30,8 +30,6 @@ CAPTIONS = VIDEO / 'src' / 'captions.json'
 CUES = VIDEO / 'scripts' / 'cues.mjs'
 SCENE_SECONDS = VIDEO / 'scripts' / 'scene-seconds.mjs'
 LINE, LINES, EPS = 42, 2, 0.002
-# The scenes time their beats from these cues by index, so each needs at least this many.
-MIN_CUES = {'canvas': 3, 'risks': 4, 'mitigations': 4, 'enhancements': 3, 'end': 2}
 
 
 def windows(timeline, seconds):
@@ -58,8 +56,6 @@ def problems(captions, timeline, seconds):
             return [f'cue {i} must be {{fragment, scene, start, end, lines}} with a scene of that fragment']
         if not 1 <= len(c['lines']) <= LINES or any(not 0 < len(x) <= LINE for x in c['lines']):
             bad.append(f'cue {i}: {len(c["lines"])} lines, longest {max(map(len, c["lines"]), default=0)} characters')
-    bad += [f'{sid}: {n} cues at least, its scene times its beats from them' for sid, n in MIN_CUES.items()
-            if sum(c['scene'] == sid for c in cues) < n]
     for s in timeline['scenes']:
         own = [c for c in cues if c['scene'] == s['id']]
         if ' '.join(x for c in own for x in c['lines']).split() != s['narration'].split():

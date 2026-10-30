@@ -12,11 +12,11 @@ import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {splitTake} from "./take.mjs";
 
-const VOICE = "flux-colin-en";
+const VOICE = "flux-sienna-en";
 const SAMPLE_VOICES = ["flux-colin-en", "flux-kit-en", "flux-jack-en", "flux-sienna-en"];
 // Deepgram's Flux voices take no speaking instructions and no SSML; pace and liveliness are these two settings.
 const SPEED = 1;
-const EXPRESSIVITY = 0;
+const EXPRESSIVITY = 1;
 // Read letter by letter when SPELL is set, for a voice that stumbles over acronyms; the captions keep the names.
 const SPELLED = [["EU AI Act", "E-U A-I Act"], ["MIT", "M-I-T"]];
 const SPELL = false;
