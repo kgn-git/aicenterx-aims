@@ -14,8 +14,8 @@ only at curated data. storyline.md is its human copy and must not drift from it.
     unaudited ratings would re-learn the recruiter bias the video names as a risk
   - the problem scene shows its own narration as its first two items, so its graphic never changes what is voiced
   - the close: its narration and screen say the key risks, mitigations and enhancements are identified in less than
-    an hour, on an acceleration platform; every "N years" on screen in the problem and end scenes is the span of the
-    hook's milestones
+    an hour, on an acceleration platform; the problem and end scenes show the span of the hook's milestones as
+    "N years"
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
@@ -53,10 +53,12 @@ SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs
 LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save selected mitigations',
           'Suggest model enhancements', 'Save selected enhancements')
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
+# Where the problem and end scenes show the years the hook's milestones span.
+YEARS = (('problem', 2), ('end', 7))
 CORE = 'your key risks, mitigations and enhancements are identified'
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
 ROLES = {'hook': {4: '2017 – Project abandoned'},
-         'problem': {2: '3 years', 3: 'Time', 4: 'Effort', 5: 'Harm', 6: 'Govern responsibly', 7: 'Create real value'},
+         'problem': {3: 'Time', 4: 'Effort', 5: 'Harm', 6: 'Govern responsibly', 7: 'Create real value'},
          'canvas': {4: 'Simulate risks'},
          'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations', 5: 'Selected risks saved'},
          'mitigations': {0: 'Generate mitigations', 3: 'Save selected mitigations', 4: 'Suggest model enhancements',
@@ -65,12 +67,12 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                           4: 'Selected enhancements saved'},
          'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
-                 5: 'Make AI Deliver Value', 6: f'In less than an hour, {CORE}.', 7: '3 years', 8: '< 1 hour',
+                 5: 'Make AI Deliver Value', 6: f'In less than an hour, {CORE}.', 8: '< 1 hour',
                  9: 'The acceleration platform for AI initiatives', 10: 'Coming next',
                  11: 'Find the models that fit your initiative', 12: 'Map your data lineage',
                  13: 'Combine initiatives into programmes and delivery waves',
                  14: 'Govern your enterprise AI architecture',
-                 15: 'Stay up to date with market and security intelligence'}}
+                 15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
 MAX_WORDS, MAX_PACE, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 2.5, 85.0, 5, 13
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 18
@@ -166,8 +168,8 @@ def validate(t, ctx):
         bad.append('hook: onScreen[2:] must be milestones written "YYYY – label"')
     else:
         span = f'{int(milestones[-1][:4]) - int(milestones[0][:4])} years'
-        bad += [f'{sid}: "{x}" on screen, but the hook spans {span}' for sid in ('problem', 'end')
-                for x in by_id[sid]['onScreen'] if re.fullmatch(r'\d+ years', x) and x != span]
+        bad += [f'{sid}: onScreen[{i}] must be "{span}", the span of the hook milestones'
+                for sid, i in YEARS if by_id[sid]['onScreen'][i:i + 1] != [span]]
     problem = by_id['problem']
     if ' '.join(problem['onScreen'][:2]) != problem['narration']:
         bad.append('problem: onScreen[0:2] must be its narration word for word')
