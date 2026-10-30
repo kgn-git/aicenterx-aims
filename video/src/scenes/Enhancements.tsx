@@ -55,11 +55,12 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           return (
             <Card
               key={e.id}
+              accent={STAGE.enhancements}
               style={{
                 position: "absolute", left: cell(i).x, top: cell(i).y, width: WIDTH, height: HEIGHT,
                 display: "flex", gap: 18, lineHeight: 1.3, opacity: ramp(t, shownAt(i), 0.25),
                 transform: `translateY(${(1 - ramp(t, shownAt(i), 0.3)) * 10}px)`,
-                borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border, borderLeft: `6px solid ${STAGE.enhancements}`,
+                borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border,
               }}
             >
               <Checkbox checked={k >= 0 ? ramp(t, ticks[k], 0.2) : 0} />

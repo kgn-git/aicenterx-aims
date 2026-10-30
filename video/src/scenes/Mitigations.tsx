@@ -66,12 +66,13 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           return (
             <Card
               key={m.id}
+              accent={STAGE.mitigations}
               style={{
                 position: "absolute", left: SIDE, top: top(i), width: video.width - 2 * SIDE, height: ROW,
                 padding: `12px ${PADDING}px`, display: "flex", gap: COLUMN_GAP, alignItems: "center", lineHeight: 1.25,
                 opacity: ramp(t, shownAt(i), 0.25) * (k < 0 ? 1 - 0.45 * settled : 1),
                 transform: `translateY(${(1 - ramp(t, shownAt(i), 0.3)) * 10}px)`,
-                borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border, borderLeft: `6px solid ${STAGE.mitigations}`,
+                borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border,
               }}
             >
               <Checkbox checked={k >= 0 ? ramp(t, ticks[k], 0.2) : 0} />

@@ -73,13 +73,19 @@ export const AppFrame: React.FC<{trail?: string; grid?: number; children?: React
 /** 1 at the middle of the `length` seconds after `at`, 0 outside them: a single pulse. */
 export const bump = (t: number, at: number, length = 0.4) => Math.max(0, 1 - Math.abs(t - at - length / 2) / (length / 2));
 
-export const Card: React.FC<{style?: React.CSSProperties; children?: React.ReactNode}> = ({style, children}) => (
+/** A panel; `accent` draws a strip down its left edge that a change of border colour, such as a tick, never repaints. */
+export const Card: React.FC<{style?: React.CSSProperties; accent?: string; children?: React.ReactNode}> = ({
+  style, accent, children,
+}) => (
   <div
     style={{
       background: color.surface2, border: `1px solid ${color.border}`, borderRadius: 4, padding: 22,
       boxShadow: "0 8px 24px rgba(0,0,0,.4)", ...style,
     }}
   >
+    {accent && (
+      <div style={{position: "absolute", left: 0, top: 0, bottom: 0, width: 6, background: accent, borderRadius: "4px 0 0 4px"}} />
+    )}
     {children}
   </div>
 );
