@@ -12,6 +12,11 @@ const clamp = {extrapolateLeft: "clamp", extrapolateRight: "clamp"} as const;
 export const ramp = (t: number, from: number, length = 0.5) =>
   interpolate(t, [from, from + length], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
 
+/** When the voice reaches `phrase`, in seconds: the cues share a clip by characters, so a phrase's place in the text
+ *  is its place in time, to within a pause. */
+export const spokenAt = (narration: string, phrase: string, end: number) =>
+  (end * Math.max(0, narration.indexOf(phrase))) / narration.length;
+
 /** A faint dot grid drifting slowly behind every scene, the agents' presence; it brightens while one works. */
 const AgentGrid: React.FC<{shown: number}> = ({shown}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;

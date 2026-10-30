@@ -9,7 +9,7 @@ import {fileURLToPath} from "node:url";
 import {FPS} from "../src/timing.mjs";
 
 // The user's tolerance until the combined review; the plan targets 60 s.
-const MAX_SECONDS = 75;
+const MAX_SECONDS = 85;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 

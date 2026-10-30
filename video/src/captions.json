@@ -197,16 +197,47 @@
       "fragment": "f5",
       "scene": "end",
       "start": 0,
-      "end": 2.458,
+      "end": 4.007,
       "lines": [
-        "From idea to business value."
+        "Three years, now less than",
+        "an hour: your key risks,"
       ]
     },
     {
       "fragment": "f5",
       "scene": "end",
-      "start": 2.458,
-      "end": 5.53,
+      "start": 4.007,
+      "end": 7.464,
+      "lines": [
+        "mitigations and enhancements",
+        "are identified."
+      ]
+    },
+    {
+      "fragment": "f5",
+      "scene": "end",
+      "start": 7.464,
+      "end": 11.236,
+      "lines": [
+        "Then scale up: models,",
+        "data lineage, programmes,"
+      ]
+    },
+    {
+      "fragment": "f5",
+      "scene": "end",
+      "start": 11.236,
+      "end": 15.95,
+      "lines": [
+        "architecture and intelligence,",
+        "on one acceleration platform."
+      ]
+    },
+    {
+      "fragment": "f5",
+      "scene": "end",
+      "start": 15.95,
+      "end": 18.7,
       "lines": [
         "AI Center X: make AI deliver value."
       ]

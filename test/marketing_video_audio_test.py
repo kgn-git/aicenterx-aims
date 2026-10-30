@@ -10,8 +10,8 @@ seconds or for its clip plus a short tail, whichever is longer. Checks:
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file
   - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
-    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 54 to 75 s in all (the user's
-    tolerance until the combined review)
+    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 54 to 85 s in all once each
+    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's limit for the video)
   - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -29,7 +29,9 @@ VIDEO = ROOT / 'video'
 AUDIO = VIDEO / 'public' / 'audio'
 TIMELINE = VIDEO / 'src' / 'timeline.json'
 NARRATE = VIDEO / 'scripts' / 'narrate.mjs'
-RATE, MIN_TOTAL, MAX_TOTAL = 24000, 54.0, 75.0
+RATE, MIN_TOTAL, MAX_TOTAL = 24000, 54.0, 85.0
+# TAIL in video/src/timing.mjs, which video/src/Root.tsx also uses as the crossfade between scenes.
+CROSSFADE = 0.3
 FAKE_KEY = 'sk-test-0000-not-a-real-key'
 
 
@@ -112,13 +114,14 @@ def main():
         r = subprocess.run([node, str(VIDEO / 'scripts' / 'scene-seconds.mjs')], capture_output=True, text=True,
                            timeout=60, cwd=ROOT)
         try:
-            total = sum(json.loads(r.stdout).values())
+            played = json.loads(r.stdout)
+            total = sum(played.values()) - (len(played) - 1) * CROSSFADE
             found = [] if MIN_TOTAL <= total <= MAX_TOTAL else [f'{total:.2f} s']
         except ValueError:
             found = [f'scene-seconds.mjs failed: {r.stderr[-200:]!r}']
     else:
         found = ['node is not on PATH']
-    check(f'the scenes, stretched to fit their clips, run {MIN_TOTAL:g} to {MAX_TOTAL:g} s', found)
+    check(f'the scenes, stretched to fit their clips and crossfaded, run {MIN_TOTAL:g} to {MAX_TOTAL:g} s', found)
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))
