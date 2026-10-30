@@ -53,12 +53,13 @@ Security follows the OWASP Top 10:2025 baseline:
 
 Scope in this repo: there is no server, login or stored personal data, so A01, A04 and A07 apply only if one is introduced. What applies today:
 
-- **A03** — every CDN script MUST carry a pinned version and an SRI `integrity` hash (Three.js r128 from cdnjs does).
+- **A03** — every CDN script MUST carry a pinned version and an SRI `integrity` hash (Three.js r128 from cdnjs does). The one exception is Plausible analytics, listed under Project exceptions.
 - **A05** — `innerHTML` MUST receive only literals from the prototype's own data, never URL, hash or other user-controlled input.
 
 ## Project exceptions
 
 - File-size cap: `index.html` and `simulation/**/*.html` are exempt from the 500-line cap in `quality/file-size-and-comments`. `index.html` is generated, and each film is standalone by contract, so there is no seam to split along. Build tools and tests stay under the cap.
+- Plausible analytics: `index.html` loads the owner's per-site Plausible script without a pinned version or SRI hash. Plausible updates that script in place, so a hash would silently stop the counting. The owner accepted the risk on 30 October 2026: the page holds no login, secrets or personal data. Other pages MUST NOT load it, and `test/landing_analytics_test.py` pins the exact snippet, its single place in `<head>` and its absence from the films and the video.
 
 ## General
 
