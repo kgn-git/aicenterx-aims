@@ -8,7 +8,7 @@ import {
   zoomLevel,
 } from "../ui/kit";
 import {CANVAS_HEADING, CanvasForm, INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import type {SceneProps} from "./types";
+import {cueWith, type SceneProps} from "./types";
 
 const COLS = 3;
 const GAP = 18;
@@ -17,8 +17,8 @@ const WIDTH = (1920 - 2 * SIDE - (COLS - 1) * GAP) / COLS;
 const HEIGHT = 315;
 const cell = (i: number) => ({x: SIDE + (i % COLS) * (WIDTH + GAP), y: TOP + Math.floor(i / COLS) * (HEIGHT + GAP)});
 
-/** The agent run: the trigger is clicked, the steps tick off, the cited risks are written out and the first is
- *  enlarged while the narration names its sources, then the relevant ones are saved. */
+/** The agent run, the only one shown in full: the trigger is clicked, the steps tick off, the cited risks are written
+ *  out and the first is enlarged while the narration names its sources, then the relevant ones are saved. */
 export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, next, toast] = scene.onScreen;
@@ -31,10 +31,11 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const runFrom = 1;
   const runTo = 4;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.25;
-  const zoom = {from: shownAt(0), to: cues[2].start - 0.6};
-  const ticks = saved.map((_, k) => cues[2].start + 0.3 + k * 0.6);
-  const saveAt = ticks[ticks.length - 1] + 0.8;
-  const nextAt = Math.max(cues[3].start, saveAt + 0.8);
+  // The choice is no longer narrated, so it is timed back from the scene's end: the next button glows for a second.
+  const nextAt = seconds - 1;
+  const saveAt = nextAt - 0.8;
+  const ticks = saved.map((_, k) => saveAt - 0.8 - (saved.length - 1 - k) * 0.6);
+  const zoom = {from: Math.max(shownAt(0), cueWith(cues, "MIT").start), to: ticks[0] - 0.6};
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   const label = t < runTo ? trigger : t < nextAt ? save : next;
   const target = (i: number) => ({x: cell(i).x + 40, y: cell(i).y + 40});
@@ -112,7 +113,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
-          {t: cues[2].start - 0.5, x: 1100, y: 600},
+          {t: ticks[0] - 0.5, x: 1100, y: 600},
           ...saved.map((id, k) => ({t: ticks[k], ...target(shown.indexOf(id))})),
           {t: saveAt, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
           {t: seconds, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},

@@ -9,7 +9,7 @@ import {fileURLToPath} from "node:url";
 import {FPS} from "../src/timing.mjs";
 
 // The user's limit for the released video since the close carries the acceleration message.
-const MAX_SECONDS = 85;
+const MAX_SECONDS = 75;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 

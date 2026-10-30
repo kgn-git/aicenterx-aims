@@ -5,12 +5,12 @@ import steps from "../../data/agent_steps.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import {color, headingFont, video} from "../theme";
 import {
-  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, SourceChip, Stream, Toast, TOP_BAR, Zoom,
+  AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, SourceChip, Stream, Toast, TOP_BAR, Zoom,
   zoomLevel,
 } from "../ui/kit";
 import {aiActArticles, articleLabel} from "../sources.mjs";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import type {SceneProps} from "./types";
+import {cueWith, type SceneProps} from "./types";
 
 const TOP = 120;
 const ROW = 124;
@@ -26,7 +26,7 @@ const CLASSES = video.width - CLASSES_LEFT - COLUMN_GAP - CONTROL - PADDING - SI
 const all = Object.values(mitigations.risks).flat();
 const objective = new Map(controls.controls.map((c) => [c.key, c.objective]));
 
-/** The second agent run: mitigations for the saved risks, each written out with its MIT class, law and control; the
+/** The second agent run, shown by its status line alone: mitigations for the saved risks, each written out with its MIT class, law and control; the
  *  classes are enlarged while the narration names them, and the descriptions, which the zoom would cut, fade out. */
 export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
@@ -36,13 +36,14 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
 
   const click = 0.35;
   const runFrom = 0.7;
-  const runTo = 4;
+  // The risks scene already showed the agent at work, so here its status line alone covers a short run.
+  const runTo = 1.6;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.2;
-  const zoom = {from: shownAt(0) + 0.5, to: cues[2].start - 0.6};
+  const nextAt = seconds - 1;
+  const saveAt = nextAt - 0.8;
+  const ticks = saved.map((_, k) => saveAt - 0.7 - (saved.length - 1 - k) * 0.5);
+  const zoom = {from: Math.max(shownAt(0) + 0.5, cueWith(cues, "taxonomy").start - 0.3), to: ticks[0] - 0.6};
   const z = zoomLevel(t, zoom.from, zoom.to);
-  const ticks = saved.map((_, k) => cues[2].start + 0.2 + k * 0.5);
-  const saveAt = ticks[ticks.length - 1] + 0.7;
-  const nextAt = Math.max(cues[3].start, saveAt + 0.8);
   const settled = ramp(t, ticks[ticks.length - 1] + 0.3, 0.4);
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   const label = t < runTo ? trigger : t < nextAt ? save : next;
@@ -55,11 +56,6 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
         <AgentStatus
           steps={steps.mitigations} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(rows.length - 1) + 0.6}
         />
-      )}
-      {run > 0 && (
-        <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
-          <AgentRun steps={steps.mitigations} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
-        </div>
       )}
       <Zoom t={t} focus={{x: CLASSES_LEFT + CLASSES / 2, y: top(0) + ROW / 2}} from={zoom.from} to={zoom.to} scale={1.5}>
         {rows.map((m, i) => {
@@ -110,7 +106,7 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: button.x, y: button.y},
-          {t: cues[2].start - 0.5, x: 1100, y: 600},
+          {t: ticks[0] - 0.5, x: 1100, y: 600},
           ...saved.map((id, k) => ({t: ticks[k], x: SIDE + 40, y: top(shown.indexOf(id)) + ROW / 2})),
           {t: saveAt, ...button},
           {t: seconds, ...button},

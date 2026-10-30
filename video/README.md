@@ -1,6 +1,6 @@
 # Marketing video
 
-This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs 85 s at most, with a close of 19 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
+This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs 70 to 75 s, with a close of 19 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
 
 Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the project owner confirmed on 28 October 2026 that it applies here.
 
@@ -36,11 +36,10 @@ To check that the fonts loaded, look at a scene title: it is set in Fraunces, a 
 
 ## Narrate
 
-The narration is voiced with OpenAI text-to-speech and committed as `public/audio/<scene>.wav`, so a render needs neither the key nor the model. Remake it only when the narration changes. Each run costs well under a cent.
+The narration is voiced with Deepgram text-to-speech (a Flux voice) and committed as `public/audio/<scene>.wav`, so a render needs neither the key nor the network. Remake it only when the narration changes.
 
-1. Copy `.env.example` to `.env.local` at the repo root and add `OPENAI_API_KEY`. The file is git-ignored.
-2. In the key's project on platform.openai.com, allow `gpt-4o-mini-tts-2025-12-15`, `gpt-4o-mini-tts` and `whisper-1` under the model limits. Without the second, OpenAI refuses some requests with HTTP 403; without `whisper-1`, the take cannot be cut into scenes. A change there can take about 30 minutes to apply everywhere.
-3. Voice the scenes, then rebuild the captions:
+1. Copy `.env.example` to `.env.local` at the repo root and add `DEEPGRAM_API_KEY`. The file is git-ignored.
+2. Voice the scenes, then rebuild the captions:
 
 ```sh
 npm run video:narrate                  # every scene
@@ -51,9 +50,7 @@ npm run video:cues
 
 `video:narrate` writes each clip's length into `src/timeline.json` as `audioSeconds`. It replaces nothing unless every clip in the run succeeded, and it never prints the key. Listen to each clip before committing: it must say the whole line. `video:cues` rebuilds `src/captions.json`; the captions test fails until it has run.
 
-The voice is Marin, chosen by the project owner on 29 October 2026, and set as `VOICE` in `scripts/narrate.mjs` with the speaking instructions. To compare voices again, `npm run video:narrate -- --samples` writes the opening (hook and problem) in each candidate voice to `video/out/samples/`.
-
-OpenAI plans to retire the dated model on 6 January 2027. The committed clips keep working, but a new narration after that date needs a newer model, and possibly another voice choice.
+The whole narration is voiced in one take, so the voice keeps one pace, then cut into scenes at the word timings of Deepgram's transcription (`nova-3`). Flux voices take no speaking instructions and no SSML: `SPEED` and `EXPRESSIVITY` in `scripts/narrate.mjs` set the pace and liveliness, and `SPELL` makes the voice read the acronyms in `SPELLED` letter by letter. To compare voices, `npm run video:narrate -- --samples` writes the hook, mitigations and close in each candidate voice, plain and with acronyms spelled out, to `video/out/samples/`. Check voice names against Deepgram's current Flux voice list before adding one.
 
 ## Render a fragment
 
@@ -69,7 +66,7 @@ Fragments are for review. The released video is rendered in one piece from `CvSc
 npm run video:assemble
 ```
 
-This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 85 s at most (the user's limit since the acceleration close) at 1920x1080, with H.264 video and AAC audio.
+This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 75 s at most (the user's target once the walkthrough lines were cut) at 1920x1080, with H.264 video and AAC audio.
 
 ## Files
 

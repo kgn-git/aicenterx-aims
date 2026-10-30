@@ -1,9 +1,9 @@
-// Voices the narration with OpenAI text-to-speech, one WAV per scene in public/audio/, and records each clip's
+// Voices the narration with Deepgram text-to-speech, one WAV per scene in public/audio/, and records each clip's
 // length in src/timeline.json as audioSeconds:
 //   npm run video:narrate                    every scene, in one continuous take cut at the scene pauses
 //   npm run video:narrate -- f2-risks        one fragment, so a bad clip can be remade alone
 //   npm run video:narrate -- problem         one scene, leaving the approved clips around it untouched
-//   npm run video:narrate -- --samples       the opening in each candidate voice, to out/samples/
+//   npm run video:narrate -- --samples       the hook, mitigations and close in each candidate voice, to out/samples/
 // It fails closed: a missing setting or a refused request changes nothing, every file is staged before any is
 // replaced, and no message carries the key, a header or a stack trace.
 import {randomBytes} from "node:crypto";
@@ -12,20 +12,15 @@ import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {splitTake} from "./take.mjs";
 
-const VOICE = "marin";
-const SAMPLE_VOICES = ["marin", "cedar", "ballad"];
-// Conversational rather than announcer-like, since a flat documentary read sounds robotic over a brand film.
-const INSTRUCTIONS =
-  "Voice: a warm, natural British narrator for a short brand film, talking to a business audience as if to one " +
-  "person. Sound human and conversational, not like an announcer: let the pitch and pace follow the meaning, lean " +
-  "gently on the key words, let sentences flow into each other, and end statements with quiet confidence. Keep a " +
-  "moderate, unhurried tempo. " +
-  "Say MIT as the letters M-I-T, CV as C-V, EU as E-U, AI as A-I, and AI Center X as A-I Centre Ex.";
-// One take keeps one pace and energy across scenes; a transcript's word timings then show where each scene is cut.
-const TAKE_INSTRUCTIONS =
-  " This is the narration of one continuous product film. Keep the same steady pace and warm energy throughout, " +
-  "and end statements firmly.";
-const TRANSCRIBE_MODEL = "whisper-1";
+const VOICE = "flux-colin-en";
+const SAMPLE_VOICES = ["flux-colin-en", "flux-kit-en", "flux-jack-en", "flux-sienna-en"];
+// Deepgram's Flux voices take no speaking instructions and no SSML; pace and liveliness are these two settings.
+const SPEED = 1;
+const EXPRESSIVITY = 0;
+// Read letter by letter when SPELL is set, for a voice that stumbles over acronyms; the captions keep the names.
+const SPELLED = [["EU AI Act", "E-U A-I Act"], ["MIT", "M-I-T"]];
+const SPELL = false;
+const TRANSCRIBE_MODEL = "nova-3";
 const RATE = 24000;
 // Two minutes of audio, above the whole take, so a runaway reply cannot exhaust memory.
 const MAX_BYTES = RATE * 2 * 120;
@@ -59,71 +54,61 @@ function wav(pcm) {
 }
 
 const refusal = (status) =>
-  status === 401
-    ? "OpenAI did not accept the key. Check OPENAI_API_KEY in .env.local."
-    : status === 403
-      ? "OpenAI says the key's project may not use this model (HTTP 403). Allow both OPENAI_TTS_MODEL and " +
-        "gpt-4o-mini-tts in the project's model limits on platform.openai.com; the change can take 30 minutes. " +
-        "See Narrate in video/README.md."
-      : status === 429
-        ? "OpenAI is limiting requests or the account's quota is used up. Wait a minute or check billing, then run again."
-        : status >= 500
-          ? `OpenAI had a server error (HTTP ${status}). Run again in a minute.`
-          : `OpenAI refused the request (HTTP ${status}). Check OPENAI_TTS_MODEL and the voice name.`;
+  status === 401 || status === 403
+    ? "Deepgram did not accept the key. Check DEEPGRAM_API_KEY in .env.local."
+    : status === 429
+      ? "Deepgram is limiting requests or the account's credit is used up. Wait a minute or check the console, then run again."
+      : status >= 500
+        ? `Deepgram had a server error (HTTP ${status}). Run again in a minute.`
+        : `Deepgram refused the request (HTTP ${status}). Check the voice name and the settings in narrate.mjs.`;
 
-/** The take's words with their start and end in seconds, from OpenAI's transcription of the take. */
+/** The take's words with their start and end in seconds, from Deepgram's transcription of the take. */
 async function hear(pcm, key) {
-  const form = new FormData();
-  form.append("file", new Blob([wav(pcm)], {type: "audio/wav"}), "take.wav");
-  form.append("model", TRANSCRIBE_MODEL);
-  form.append("language", "en");
-  form.append("response_format", "verbose_json");
-  form.append("timestamp_granularities[]", "word");
-  let res;
   let body;
   try {
-    res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    const res = await fetch(`https://api.deepgram.com/v1/listen?model=${TRANSCRIBE_MODEL}&language=en&smart_format=true`, {
       method: "POST",
-      headers: {Authorization: `Bearer ${key}`},
-      body: form,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!res.ok) {
-      throw new Refusal(
-        res.status === 403
-          ? `OpenAI says the key's project may not use ${TRANSCRIBE_MODEL} (HTTP 403). Allow it in the project's ` +
-              "model limits on platform.openai.com; the change can take 30 minutes."
-          : refusal(res.status),
-      );
-    }
-    body = await res.json();
-  } catch (err) {
-    if (err instanceof Refusal) throw err;
-    throw new Refusal("OpenAI's transcription could not be reached or read, so nothing was changed. Run again.");
-  }
-  if (!Array.isArray(body.words)) throw new Refusal("OpenAI's transcription has no word timings, so nothing was changed.");
-  return body.words;
-}
-
-async function speak(text, voice, key, model, instructions = INSTRUCTIONS) {
-  let res;
-  let pcm;
-  try {
-    res = await fetch("https://api.openai.com/v1/audio/speech", {
-      method: "POST",
-      headers: {Authorization: `Bearer ${key}`, "Content-Type": "application/json"},
-      body: JSON.stringify({model, voice, input: text, instructions, response_format: "pcm"}),
+      headers: {Authorization: `Token ${key}`, "Content-Type": "audio/wav"},
+      body: wav(pcm),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!res.ok) throw new Refusal(refusal(res.status));
-    if (Number(res.headers.get("content-length")) > MAX_BYTES) throw new Refusal("OpenAI's reply was too long.");
+    body = await res.json();
+  } catch (err) {
+    if (err instanceof Refusal) throw err;
+    throw new Refusal("Deepgram's transcription could not be reached or read, so nothing was changed. Run again.");
+  }
+  const words = body?.results?.channels?.[0]?.alternatives?.[0]?.words;
+  if (!Array.isArray(words)) throw new Refusal("Deepgram's transcription has no word timings, so nothing was changed.");
+  return words.map((w) => ({word: w.punctuated_word ?? w.word, start: w.start, end: w.end}));
+}
+
+/** The text as the voice should read it: acronyms spelled out when `spelled` is set. */
+const spoken = (text, spelled) =>
+  spelled ? SPELLED.reduce((out, [name, letters]) => out.split(name).join(letters), text) : text;
+
+async function speak(text, voice, key, spelled = false) {
+  const query = new URLSearchParams({
+    model: voice, encoding: "linear16", sample_rate: String(RATE), container: "none",
+    speed: String(SPEED), expressivity: String(EXPRESSIVITY),
+  });
+  let pcm;
+  try {
+    const res = await fetch(`https://api.deepgram.com/v2/speak?${query}`, {
+      method: "POST",
+      headers: {Authorization: `Token ${key}`, "Content-Type": "application/json"},
+      body: JSON.stringify({text: spoken(text, spelled)}),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) throw new Refusal(refusal(res.status));
+    if (Number(res.headers.get("content-length")) > MAX_BYTES) throw new Refusal("Deepgram's reply was too long.");
     pcm = Buffer.from(await res.arrayBuffer());
   } catch (err) {
     if (err instanceof Refusal) throw err;
-    throw new Refusal("OpenAI could not be reached or did not answer in time, so nothing was changed. Run again.");
+    throw new Refusal("Deepgram could not be reached or did not answer in time, so nothing was changed. Run again.");
   }
   if (pcm.length === 0 || pcm.length % 2 || pcm.length > MAX_BYTES) {
-    throw new Refusal("OpenAI returned audio that is not a 16-bit PCM clip, so nothing was changed. Run again.");
+    throw new Refusal("Deepgram returned audio that is not a 16-bit PCM clip, so nothing was changed. Run again.");
   }
   return pcm;
 }
@@ -190,22 +175,21 @@ async function main() {
     const cause = args.length > 1 ? "Give at most one fragment or scene." : `"${args[0]}" is not a fragment or scene.`;
     fail(`${cause} Name one of ${ids.join(", ")}, or a scene (${sceneIds.join(", ")}), or none for all, or --samples to compare voices.`);
   }
-  const key = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_TTS_MODEL;
-  if (!key) fail("OPENAI_API_KEY is not set. Copy .env.example to .env.local at the repo root and add your key.");
-  if (!model) fail("OPENAI_TTS_MODEL is not set. Copy it from .env.example into .env.local.");
+  const key = process.env.DEEPGRAM_API_KEY;
+  if (!key) fail("DEEPGRAM_API_KEY is not set. Copy .env.example to .env.local at the repo root and add your key.");
 
   const bad = timeline.scenes.find((s) => !/^[a-z0-9-]+$/.test(s.id));
   if (bad) fail(`Scene id "${bad.id}" must use only lower-case letters, digits and hyphens, as it names a file.`);
   if (samples) {
-    const opening = timeline.fragments[0].scenes.slice(0, 2).map((id) => timeline.scenes.find((s) => s.id === id));
-    const text = opening.map((s) => s.narration).join("\n\n");
+    // The hook and the close carry the tone; the mitigations line carries the acronyms.
+    const text = ["hook", "mitigations", "end"].map((id) => timeline.scenes.find((s) => s.id === id).narration).join("\n\n");
     const files = [];
     for (const voice of SAMPLE_VOICES) {
-      files.push([join(root, "out", "samples", `${voice}.wav`), wav(await speak(text, voice, key, model))]);
+      files.push([join(root, "out", "samples", `${voice}.wav`), wav(await speak(text, voice, key))]);
+      files.push([join(root, "out", "samples", `${voice}-spelled.wav`), wav(await speak(text, voice, key, true))]);
     }
     commit(files);
-    console.log(`Wrote ${SAMPLE_VOICES.length} samples of the opening to video/out/samples/.`);
+    console.log(`Wrote ${files.length} samples of the hook, mitigations and close to video/out/samples/.`);
     console.log("Listen, then set VOICE in video/scripts/narrate.mjs to the chosen name.");
     return;
   }
@@ -220,7 +204,7 @@ async function main() {
   let takes = null;
   if (!args.length) {
     const script = scenes.map((s) => s.narration).join("\n\n");
-    const take = await speak(script, VOICE, key, model, INSTRUCTIONS + TAKE_INSTRUCTIONS);
+    const take = await speak(script, VOICE, key, SPELL);
     const words = await hear(take, key);
     try {
       takes = splitTake(take, scenes.map((s) => s.narration), words);
@@ -230,7 +214,7 @@ async function main() {
   }
   for (const [i, scene] of scenes.entries()) {
     const id = scene.id;
-    const pcm = takes ? takes[i] : await speak(scene.narration, VOICE, key, model);
+    const pcm = takes ? takes[i] : await speak(scene.narration, VOICE, key, SPELL);
     seconds[id] = Math.round((pcm.length / (RATE * 2)) * 1000) / 1000;
     files.push([join(root, "public", "audio", `${id}.wav`), wav(pcm)]);
     const pace = scene.narration.split(/\s+/).length / seconds[id];

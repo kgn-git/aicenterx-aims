@@ -4,11 +4,11 @@ import enhancements from "../../data/model_enhancements.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import {color, headingFont, video} from "../theme";
 import {
-  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Stream, Toast,
+  AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Stream, Toast,
   TOP_BAR, Zoom, zoomLevel,
 } from "../ui/kit";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import type {SceneProps} from "./types";
+import {cueWith, type SceneProps} from "./types";
 
 const TOP = 130;
 const GAP = 18;
@@ -19,7 +19,7 @@ const STEPS = ["Read the saved mitigations", "Search mitigation sources", "Draft
 const all = Object.values(mitigations.risks).flat();
 const cell = (i: number) => ({x: SIDE + (i % 2) * (WIDTH + GAP), y: TOP + Math.floor(i / 2) * (HEIGHT + GAP)});
 
-/** The third agent run: enhancements that put the saved mitigations into effect, each written out and tied to its
+/** The third agent run, shown by its status line alone: enhancements that put the saved mitigations into effect, each written out and tied to its
  *  mitigation and source, the first enlarged while the narration names it. */
 export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
@@ -29,9 +29,10 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
 
   const click = 0.35;
   const runFrom = 0.7;
-  const runTo = 2.9;
+  const runTo = 1.5;
   const shownAt = (i: number) => runTo + 0.15 + i * 0.3;
-  const zoom = {from: shownAt(0) + 0.5, to: (cues[1].start + cues[1].end) / 2};
+  const naming = cueWith(cues, "fine-tuning");
+  const zoom = {from: shownAt(0) + 0.5, to: (naming.start + naming.end) / 2};
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   // The toast must stay up for about 1.5 s before the cut, so a late last cue pulls the ticks earlier.
   const firstTick = Math.min(cues[cues.length - 1].start + 0.2, seconds - 2.1 - 0.45 * (saved.length - 1) - 0.6);
@@ -43,11 +44,6 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
     <AppFrame trail={INITIATIVE_NAME} grid={run}>
       {t >= runFrom && (
         <AgentStatus steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(cards.length - 1) + 0.6} />
-      )}
-      {run > 0 && (
-        <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
-          <AgentRun steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
-        </div>
       )}
       <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={zoom.from} to={zoom.to} scale={1.6}>
         {cards.map((e, i) => {
