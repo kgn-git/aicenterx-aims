@@ -14,7 +14,8 @@ a scene names the words it waits for instead. Checks:
   - each scene that imports cueWith, saidAt or spokenAt yields at least one phrase, so no check passes on nothing
   - the dotted background stays off in the hook and starts in the problem scene on "The challenge", as the user asked
   - the moments of each scene, computed by moments.mjs through node from the real timeline and captions:
-    no zoom anywhere, so the cursor stays in view; the hand-off button after risks and mitigations glows for at least
+    no zoom anywhere, so the cursor stays in view; the canvas shows "Simulate risks" for at least 1.2 s before the
+    cut, the cursor reaching it on the way; the hand-off button after the canvas, risks and mitigations glows for at least
     0.8 s before the cut; every tick lands after its card and before the save; the first mitigation and enhancement
     card lands within 0.25 s of the click; the enhancements toast stays up for at least 1.5 s, also in a scene cut
     to 4.8 s, where the ticks must start earlier to keep it; the risks and
@@ -46,7 +47,7 @@ THEME = SRC / 'theme.ts'
 KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
-GLOW, CARD_DELAY, TOAST, READ, VENN_FROM = 0.8, 0.25, 1.5, 2.0, 0.3
+GLOW, CARD_DELAY, TOAST, READ, VENN_FROM, HANDOFF_SHOWN = 0.8, 0.25, 1.5, 2.0, 0.3, 1.2
 # A shorter enhancements scene than the real one, where the toast's time would be lost without its floor.
 TIGHT = 4.8
 PRESS, PRESS_SCALE, CURSOR_EASE = 0.12, 0.96, [0.22, 1, 0.36, 1]
@@ -79,6 +80,7 @@ out.tight = at("enhancements", (scene, cues) => {
   const {shown, saved} = scene.dataRefs.enhancements;
   return {...m.stageMoments(scene, cues, TIGHT), seconds: TIGHT, savedAt: saved.map((x) => shown.indexOf(x))};
 });
+out.canvas = at("canvas", (scene, cues, seconds) => m.canvasMoments(cues, seconds));
 out.problem = at("problem", (scene, cues) => m.problemMoments(scene, cues));
 out.end = at("end", (scene, cues, seconds) => m.closeMoments(scene, cues, seconds));
 console.log(JSON.stringify(out));
@@ -137,6 +139,12 @@ def moment_problems(got):
         named = g.get('named', [])
         if sid in ('risks', 'mitigations') and (len(named) != 2 or not all(0 < x < secs for x in named)):
             bad.append(f'{sid}: want a chip lit as each of its two sources is named, got {named}')
+    cv = got.get('canvas', {})
+    if 'error' in cv or 'appear' not in cv:
+        bad.append(f'canvas: {cv.get("error", "no moments")}')
+    elif not (cv['appear'] < cv['arrive'] <= cv['seconds'] - 0.4 and cv['seconds'] - cv['appear'] >= HANDOFF_SHOWN
+              and cv['seconds'] - cv['glow'] >= GLOW):
+        bad.append(f'canvas: "Simulate risks" must show {HANDOFF_SHOWN} s, glow {GLOW} s and meet the cursor, got {cv}')
     pr = got.get('problem', {})
     if 'error' in pr or not (pr.get('circles', 9) <= VENN_FROM < pr.get('meet', 0) and pr.get('dots', 0) > 0):
         bad.append(f'problem: the Venn diagram must be on screen from the start, got {pr}')
