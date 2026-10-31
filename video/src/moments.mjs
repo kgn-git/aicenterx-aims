@@ -89,6 +89,20 @@ export function stageMoments(scene, cues, seconds) {
   };
 }
 
+// How long "Simulate risks" is on screen before the cut, so the hand-off reads even though the line ends late.
+const TRIGGER_SHOWN = 1.4;
+
+/** The canvas scene: the blocks are lit as the voice names them, and "Simulate risks" appears once they are, or
+ *  earlier when the line runs close to the cut; the cursor drifts in, then reaches it as it glows. */
+export function canvasMoments(cues, seconds) {
+  const naming = cueWith(cues, "its data");
+  const appear = Math.min(naming.end, seconds - TRIGGER_SHOWN);
+  return {
+    naming: {start: naming.start, end: naming.end}, appear, approach: appear + 0.4, arrive: seconds - 0.4,
+    glow: seconds - 1.2,
+  };
+}
+
 /** The problem scene: the two aims on screen from the start, meeting on "The challenge", lit on "create real value";
  *  the statement gives way to the challenge at its share of the clip. */
 export function problemMoments(scene, cues) {
