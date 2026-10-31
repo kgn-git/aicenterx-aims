@@ -36,9 +36,9 @@ To check that the fonts loaded, look at a scene title: it is set in Fraunces, a 
 
 ## Narrate
 
-The narration is voiced with Deepgram text-to-speech (a Flux voice) and committed as `public/audio/<scene>.wav`, so a render needs neither the key nor the network. Remake it only when the narration changes.
+The narration is voiced with ElevenLabs text-to-speech (Matilda on `eleven_v3`) and committed as `public/audio/<scene>.wav`, so a render needs neither the key nor the network. Remake it only when the narration changes.
 
-1. Copy `.env.example` to `.env.local` at the repo root and add `DEEPGRAM_API_KEY`. The file is git-ignored.
+1. Copy `.env.example` to `.env.local` at the repo root and add `ELEVENLABS_API_KEY`, a key allowed to use text to speech. The file is git-ignored.
 2. Voice the scenes, then rebuild the captions:
 
 ```sh
@@ -48,9 +48,9 @@ npm run video:narrate -- problem       # only one scene
 npm run video:cues
 ```
 
-`video:narrate` writes each clip's length into `src/timeline.json` as `audioSeconds`. It replaces nothing unless every clip in the run succeeded, and it never prints the key. Listen to each clip before committing: it must say the whole line. `video:cues` rebuilds `src/captions.json`; the captions test fails until it has run.
+`video:narrate` writes each clip's length into `src/timeline.json` as `audioSeconds`. It replaces nothing unless every clip in the run succeeded, and it never prints the key. Listen to each clip before committing: it must say the whole line. Then set each scene's `seconds` to its clip plus 0.3 s, and the close's to its clip plus 1.0 s; the timeline test checks this, so no scene holds dead air. `video:cues` rebuilds `src/captions.json`; the captions test fails until it has run.
 
-The whole narration is voiced in one take, so the voice keeps one pace, then cut into scenes at the word timings of Deepgram's transcription (`nova-3`). Flux voices take no speaking instructions and no SSML: `SPEED` and `EXPRESSIVITY` in `scripts/narrate.mjs` set the pace and liveliness, and `SPELL` makes the voice read the acronyms in `SPELLED` letter by letter. To compare voices, `npm run video:narrate -- --samples` writes the hook, mitigations and close in each candidate voice, plain and with acronyms spelled out, to `video/out/samples/`. Check voice names against Deepgram's current Flux voice list before adding one.
+The whole narration is voiced in one take, so the voice keeps one pace, then cut into scenes at the per-character timings ElevenLabs returns with the audio (`/with-timestamps`). Those timings run back to back, so `scripts/take.mjs` finds the pauses in the sound itself: it shortens any silence inside a line to 0.35 s, trims each clip's edges to a short lead and trail, and fades every cut over 20 ms so none clicks. `eleven_v3` takes no speed setting, so the shortened pauses set the pace. A take varies each time it is voiced; listen for slips and voice again if one appears. To compare voices, `npm run video:narrate -- --samples` writes the hook, mitigations and close in each voice of `SAMPLE_VOICES` to `video/out/samples/`.
 
 ## Render a fragment
 

@@ -6,7 +6,8 @@ import risks from "../../../tools/data/risk_suggestions.json";
 import timeline from "../timeline.json";
 import {aiActArticles} from "../sources.mjs";
 import {appFrameHeight, color, headingFont, video, mutedInk} from "../theme";
-import {Background, ramp, spokenAt} from "../ui/kit";
+import {closeMoments, KEYWORDS} from "../moments.mjs";
+import {Background, ramp} from "../ui/kit";
 import {Contrast, Portfolio} from "./Acceleration";
 import type {SceneProps} from "./types";
 
@@ -42,10 +43,6 @@ const counts = KINDS.map((k): [number, string] => {
   return [refs[k].saved.length, k];
 });
 const initiative = timeline.scenes.find((s) => s.id === "canvas")!.onScreen[1];
-// The word the voice says as each capability lands, in the order the capabilities are listed on screen.
-const KEYWORDS = ["models", "data lineage", "programmes", "architecture", "intelligence"];
-// The phrases each beat waits for, in the order the voice must say them.
-const BEATS = ["now less", "your key", "are identified", "Then scale up", ...KEYWORDS];
 
 /** The close in three beats: the hook's years against the hour the journey took, the pull-back to the portfolio and
  *  the capabilities still to come, then the "Coming soon" card with every source and disclosure in the footer. */
@@ -55,14 +52,7 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
     scene.onScreen;
   const capabilities = rest.slice(0, KEYWORDS.length);
   const wave = rest[KEYWORDS.length];
-  const end = cues[cues.length - 1].end;
-  const at = (phrase: string) => spokenAt(scene.narration, phrase, end);
-  const order = [...BEATS, brand].map(at);
-  if (order.some((x, i) => i && x <= order[i - 1])) {
-    throw new Error(`The close's narration must say ${[...BEATS, brand].join(", ")} in that order.`);
-  }
-  const scaleAt = at("Then scale up") - 0.3;
-  const brandAt = at(brand);
+  const {message: messageAt, collapse, tallies, scaleAt, keywords, brandAt, footer} = closeMoments(scene, cues);
   const contrast = 1 - ramp(t, scaleAt, 0.6);
   const portfolio = ramp(t, scaleAt, 0.4) * (1 - ramp(t, brandAt - 0.5, 0.4));
   const shown = ramp(t, brandAt - 0.2, 0.7);
@@ -75,13 +65,13 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
       <div style={{position: "absolute", inset: 0, height: appFrameHeight, opacity: contrast}}>
         <Contrast
           t={t} years={years} chip={chip} message={message} counts={counts}
-          at={{collapse: at("now less"), tallies: at("your key"), message: at("are identified") - 0.4}}
+          at={{collapse, tallies, message: messageAt}}
         />
       </div>
       <div style={{position: "absolute", inset: 0, height: appFrameHeight, opacity: portfolio}}>
         <Portfolio
           t={t} from={scaleAt} tag={next} heading={platform} initiative={initiative} chip={chip} wave={wave}
-          capabilities={capabilities} times={KEYWORDS.map(at)}
+          capabilities={capabilities} times={keywords}
         />
       </div>
       <div style={{...centred, opacity: shown, transform: `translateY(${24 * (1 - shown)}px)`}}>
@@ -102,7 +92,7 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
         style={{
           position: "absolute", left: 160, right: 160, top: appFrameHeight - FOOTER, height: FOOTER - 16,
           borderTop: `1px solid ${color.border}`, paddingTop: 14, fontSize: SMALL, lineHeight: 1.45,
-          color: mutedInk, opacity: ramp(t, brandAt + 0.3, 0.8), width: video.width - 320,
+          color: mutedInk, opacity: ramp(t, footer - 0.4, 0.4), width: video.width - 320,
         }}
       >
         <div>

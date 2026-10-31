@@ -84,7 +84,7 @@ FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
 # TAIL in video/src/timing.mjs: the silence every scene plays after its clip, and the crossfade between two scenes.
 # The close holds longer, so the brand, the tagline and the footer can be read before the picture ends.
 TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
-# The lines the user approved word for word (2026-10-31, issue #57).
+# The lines the user approved word for word.
 APPROVED = {'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile."}
 PAYOFF = 'Three years – reduced to less than an hour.'
 PROBLEM_ITEMS = 4

@@ -9,7 +9,7 @@ import {fileURLToPath} from "node:url";
 import {FPS} from "../src/timing.mjs";
 
 // The user's target for the released video is 70 to 75 s.
-const MAX_SECONDS = 75;
+const MAX_SECONDS = 61;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 

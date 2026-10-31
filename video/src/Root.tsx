@@ -8,6 +8,7 @@ import {Placeholder} from "./Placeholder";
 import {SCENES} from "./scenes";
 import captions from "./captions.json";
 import timeline from "./timeline.json";
+import {sceneCues} from "./moments.mjs";
 import {video} from "./theme";
 import {sceneSeconds, TAIL} from "./timing.mjs";
 
@@ -18,23 +19,14 @@ const frames = (seconds: number) => Math.round(seconds * video.fps);
 const scenesOf = (id: string) => timeline.fragments.find((f) => f.id === id)!.scenes.map((s) => scenes.get(s)!);
 const fragmentFrames = (id: string) => scenesOf(id).reduce((sum, s) => sum + frames(sceneSeconds(s)), 0);
 
-/** A scene's cues in seconds from the scene's own start, since cue times count from the fragment's start. */
-const sceneCues = (fragmentId: string, sceneId: string) => {
-  const list = scenesOf(fragmentId);
-  const start = list.slice(0, list.findIndex((s) => s.id === sceneId)).reduce((sum, s) => sum + sceneSeconds(s), 0);
-  return captions.cues
-    .filter((c) => c.fragment === fragmentId && c.scene === sceneId)
-    .map((c) => ({start: c.start - start, end: c.end - start, text: c.lines.join(" ")}));
-};
-
 type Scene = (typeof timeline.scenes)[number];
 
-const SceneView: React.FC<{fragmentId: string; scene: Scene}> = ({fragmentId, scene}) => {
+const SceneView: React.FC<{scene: Scene}> = ({scene}) => {
   const View = SCENES[scene.id];
   return (
     <>
       {View ? (
-        <View scene={scene} cues={sceneCues(fragmentId, scene.id)} seconds={sceneSeconds(scene)} />
+        <View scene={scene} cues={sceneCues(captions, timeline, scene.id)} seconds={sceneSeconds(scene)} />
       ) : (
         <Placeholder scene={scene} />
       )}
@@ -47,7 +39,7 @@ const FragmentScenes: React.FC<{fragmentId: string}> = ({fragmentId}) => (
   <Series>
     {scenesOf(fragmentId).map((scene) => (
       <Series.Sequence key={scene.id} durationInFrames={frames(sceneSeconds(scene))} name={scene.id}>
-        <SceneView fragmentId={fragmentId} scene={scene} />
+        <SceneView scene={scene} />
       </Series.Sequence>
     ))}
   </Series>
@@ -55,15 +47,15 @@ const FragmentScenes: React.FC<{fragmentId: string}> = ({fragmentId}) => (
 
 // A crossfade as long as the silent tail every scene ends with, so two voices never overlap.
 const CROSSFADE = frames(TAIL);
-const journey = timeline.fragments.flatMap((f) => scenesOf(f.id).map((scene) => ({fragmentId: f.id, scene})));
+const journey = timeline.fragments.flatMap((f) => scenesOf(f.id));
 
 /** The whole story in one piece, each scene crossfading into the next; the released video is rendered from this. */
 const CvScreeningJourney: React.FC = () => (
   <TransitionSeries>
-    {journey.flatMap(({fragmentId, scene}, i) => [
+    {journey.flatMap((scene, i) => [
       ...(i ? [<TransitionSeries.Transition key={`fade-${scene.id}`} presentation={fade()} timing={linearTiming({durationInFrames: CROSSFADE})} />] : []),
       <TransitionSeries.Sequence key={scene.id} durationInFrames={frames(sceneSeconds(scene))} name={scene.id}>
-        <SceneView fragmentId={fragmentId} scene={scene} />
+        <SceneView scene={scene} />
       </TransitionSeries.Sequence>,
     ])}
   </TransitionSeries>
@@ -84,7 +76,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition
       id="CvScreeningJourney"
       component={CvScreeningJourney}
-      durationInFrames={journey.reduce((sum, {scene}) => sum + frames(sceneSeconds(scene)), 0) - (journey.length - 1) * CROSSFADE}
+      durationInFrames={journey.reduce((sum, scene) => sum + frames(sceneSeconds(scene)), 0) - (journey.length - 1) * CROSSFADE}
       {...video}
     />
   </>

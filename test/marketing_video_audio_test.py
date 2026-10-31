@@ -7,7 +7,7 @@ seconds or for its clip plus a short tail, whichever is longer. Checks:
   - the guard: video/scripts/narrate.mjs, run without its env file, fails closed when ELEVENLABS_API_KEY is missing
     or the fragment is unknown: it exits non-zero with no stack trace, never prints the key, and changes no clip and
     not timeline.json
-  - the voice the user picked (2026-10-31, issue #57): ElevenLabs' Matilda on the eleven_v3 model, timed by the
+  - the voice the user picked from the samples: ElevenLabs' Matilda on the eleven_v3 model, timed by the
     with-timestamps reply, and no other supplier
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file

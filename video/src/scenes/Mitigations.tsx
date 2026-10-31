@@ -4,13 +4,11 @@ import controls from "../../data/controls_hiring.json";
 import steps from "../../data/agent_steps.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import {color, headingFont, STAGE, video, mutedInk} from "../theme";
-import {
-  AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, bump, ramp, SIDE, SourceChip, Toast, TOP_BAR, Zoom,
-  zoomLevel,
-} from "../ui/kit";
+import {pressed, stageMoments} from "../moments.mjs";
+import {AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, bump, ramp, SIDE, SourceChip, Toast, TOP_BAR} from "../ui/kit";
 import {aiActArticles, articleLabel} from "../sources.mjs";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import {saidAt, type SceneProps} from "./types";
+import type {SceneProps} from "./types";
 
 const TOP = 120;
 const ROW = 124;
@@ -27,31 +25,20 @@ const all = Object.values(mitigations.risks).flat();
 const objective = new Map(controls.controls.map((c) => [c.key, c.objective]));
 
 /** The second agent run, shown by its status line alone: mitigations for the saved risks land with their MIT class,
- *  law and control; the classes are enlarged while the narration names them, and the descriptions, which the zoom
- *  would cut, fade out. */
+ *  law and control just after the click; the class and law chips light as the narration names them, and the relevant
+ *  ones are ticked and saved. */
 export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, next, toast] = scene.onScreen;
   const {shown, saved} = scene.dataRefs.mitigations!;
   const rows = shown.map((id) => all.find((m) => m.id === id)!);
 
-  const click = 0.35;
-  const runFrom = 0.7;
-  // The risks scene already showed the agent at work, so here its status line alone covers a short run.
-  const runTo = 1.1;
-  const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
-  // The classes are enlarged while the taxonomy is named; the ticks follow the zoom, or come earlier when the
-  // scene's end would leave the next button less than 0.8 s to glow.
-  const zoomFrom = Math.max(shownAt(0) + 0.5, saidAt(cues, "taxonomy") - 0.6);
-  const zoom = {from: zoomFrom, to: zoomFrom + 1.4};
-  const firstTick = Math.min(zoom.to + 0.3, seconds - 0.8 - 0.7 - 0.6 - 0.35 * (saved.length - 1));
-  const ticks = saved.map((_, k) => firstTick + k * 0.35);
-  const saveAt = ticks[ticks.length - 1] + 0.6;
-  const nextAt = saveAt + 0.7;
-  const z = zoomLevel(t, zoom.from, zoom.to);
+  const {click, runFrom, runTo, cards: landAt, named: [mitNamed, lawNamed], ticks, saveAt, nextAt} =
+    stageMoments(scene, cues, seconds);
+  const shownAt = (i: number) => landAt[i];
   const settled = ramp(t, ticks[ticks.length - 1] + 0.3, 0.4);
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
-  const label = t < runTo ? trigger : t < nextAt ? save : next;
+  const label = t < click + 0.1 ? trigger : t < nextAt! ? save : next;
   const top = (i: number) => TOP + i * (ROW + GAP);
   const button = {x: TRIGGER.x, y: TRIGGER.y - TOP_BAR};
 
@@ -62,12 +49,13 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           steps={steps.mitigations} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(rows.length - 1) + 0.6}
         />
       )}
-      <Zoom t={t} focus={{x: CLASSES_LEFT + CLASSES / 2, y: top(0) + ROW / 2}} from={zoom.from} to={zoom.to} scale={1.5}>
+      <div style={{position: "absolute", inset: 0}}>
         {rows.map((m, i) => {
           const k = saved.indexOf(m.id);
           const law = articleLabel(aiActArticles(m));
           const chip = (n: number) => ramp(t, shownAt(i) + 0.25 + 0.05 * n, 0.2);
-          const pulse = (n: number) => bump(t, shownAt(i) + 0.45 + 0.05 * n);
+          const pulse = (n: number) =>
+            Math.max(bump(t, shownAt(i) + 0.45 + 0.05 * n), n < 2 ? bump(t, [mitNamed, lawNamed][n] + 0.05 * i, 0.8) : 0);
           return (
             <Card
               key={m.id}
@@ -81,7 +69,7 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
               }}
             >
               <Checkbox checked={k >= 0 ? ramp(t, ticks[k], 0.2) : 0} />
-              <div style={{flex: `0 0 ${DESCRIPTION}px`, opacity: 1 - z}}>
+              <div style={{flex: `0 0 ${DESCRIPTION}px`}}>
                 <span>{m.description}</span>
               </div>
               <div style={{flex: `0 0 ${CLASSES}px`, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start"}}>
@@ -95,21 +83,20 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
             </Card>
           );
         })}
-      </Zoom>
+      </div>
       <div style={{position: "absolute", left: SIDE, top: 32, fontFamily: headingFont, fontSize: 56, fontWeight: 600}}>
         {INITIATIVE_NAME}
       </div>
       <div style={{position: "absolute", right: TRIGGER.right, top: TRIGGER.top}}>
         <Button
           label={label}
-          pressed={Math.max(0, 1 - Math.abs(t - click) / 0.15, 1 - Math.abs(t - saveAt) / 0.15)}
-          glow={label === next ? ramp(t, nextAt, 0.5) : t < click ? 1 - ramp(t, 0, click) : 0}
+          pressed={pressed(t, [click, saveAt])}
+          glow={label === next ? ramp(t, nextAt!, 0.5) : t < click ? 1 - ramp(t, 0, click) : 0}
         />
       </div>
       <Toast text={toast} shown={ramp(t, saveAt + 0.15, 0.35)} style={{top: 32, bottom: undefined, right: SIDE + 470, padding: "12px 28px"}} />
       <Cursor
         t={t}
-        shown={1 - z}
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: button.x, y: button.y},

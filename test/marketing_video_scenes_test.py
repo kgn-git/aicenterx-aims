@@ -13,10 +13,11 @@ a scene names the words it waits for instead. Checks:
     that scene's narration with the same case, as spokenAt searches
   - each scene that imports cueWith, saidAt or spokenAt yields at least one phrase, so no check passes on nothing
   - the dotted background stays off in the hook and starts in the problem scene on "The challenge", as the user asked
-  - the moments of each scene, computed by moments.mjs through node from the real timeline and captions (issue #57):
+  - the moments of each scene, computed by moments.mjs through node from the real timeline and captions:
     no zoom anywhere, so the cursor stays in view; the hand-off button after risks and mitigations glows for at least
     0.8 s before the cut; every tick lands after its card and before the save; the first mitigation and enhancement
-    card lands within 0.25 s of the click; the enhancements toast stays up for at least 1.5 s; the risks and
+    card lands within 0.25 s of the click; the enhancements toast stays up for at least 1.5 s, also in a scene cut
+    to 4.8 s, where the ticks must start earlier to keep it; the risks and
     mitigations scenes light a chip as each of their two spoken sources is named; the problem's Venn diagram is on
     screen from the start; the close's message and its footer can each be read for at least 2 s
   - the user's motion choices: the cursor eases with cubic-bezier(0.22, 1, 0.36, 1) and a button presses to 0.96 and
@@ -46,6 +47,8 @@ KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
 GLOW, CARD_DELAY, TOAST, READ, VENN_FROM = 0.8, 0.25, 1.5, 2.0, 0.3
+# A shorter enhancements scene than the real one, where the toast's time would be lost without its floor.
+TIGHT = 4.8
 PRESS, PRESS_SCALE, CURSOR_EASE = 0.12, 0.96, [0.22, 1, 0.36, 1]
 USERS = {'Risks.tsx': 'stageMoments(', 'Mitigations.tsx': 'stageMoments(', 'Enhancements.tsx': 'stageMoments(',
          'Problem.tsx': 'problemMoments(', 'End.tsx': 'closeMoments('}
@@ -57,6 +60,7 @@ import {sceneSeconds} from %(timing)s;
 const timeline = JSON.parse(readFileSync(%(timeline)s, "utf8"));
 const captions = JSON.parse(readFileSync(%(captions)s, "utf8"));
 const scenes = Object.fromEntries(timeline.scenes.map((s) => [s.id, s]));
+const TIGHT = %(tight)s;
 const attempt = (f) => { try { return f(); } catch (e) { return {error: String(e.message)}; } };
 const at = (id, f) => attempt(() => {
   const seconds = sceneSeconds(scenes[id]);
@@ -70,6 +74,11 @@ for (const id of ["risks", "mitigations", "enhancements"]) {
     return {...m.stageMoments(scene, cues, seconds), savedAt: saved.map((x) => shown.indexOf(x))};
   });
 }
+// The enhancements again in a scene so short that the toast's floor must pull the ticks earlier.
+out.tight = at("enhancements", (scene, cues) => {
+  const {shown, saved} = scene.dataRefs.enhancements;
+  return {...m.stageMoments(scene, cues, TIGHT), seconds: TIGHT, savedAt: saved.map((x) => shown.indexOf(x))};
+});
 out.problem = at("problem", (scene, cues) => m.problemMoments(scene, cues));
 out.end = at("end", (scene, cues, seconds) => m.closeMoments(scene, cues, seconds));
 console.log(JSON.stringify(out));
@@ -108,7 +117,7 @@ def theme_colours(theme):
 def moment_problems(got):
     """Each AC limit the computed moments break, per scene."""
     bad = []
-    for sid in ('risks', 'mitigations', 'enhancements'):
+    for sid in ('risks', 'mitigations', 'enhancements', 'tight'):
         g = got.get(sid, {})
         if 'error' in g or 'ticks' not in g:
             bad.append(f'{sid}: {g.get("error", "no moments")}')
@@ -118,7 +127,7 @@ def moment_problems(got):
                 for k, (t, i) in enumerate(zip(ticks, g['savedAt'])) if t < cards[i] + 0.2]
         if ticks != sorted(ticks) or not ticks or g['saveAt'] < ticks[-1] + 0.3:
             bad.append(f'{sid}: the ticks must rise and the save follow them, got {ticks} then {g["saveAt"]}')
-        if sid == 'enhancements':
+        if sid in ('enhancements', 'tight'):
             if g.get('nextAt') is not None or secs - (g['saveAt'] + 0.5) < TOAST:
                 bad.append(f'{sid}: the toast shows {secs - g["saveAt"] - 0.5:.2f} s, want {TOAST} s and no next button')
         elif g.get('nextAt') is None or g['nextAt'] < g['saveAt'] or secs - g['nextAt'] < GLOW:
@@ -126,7 +135,7 @@ def moment_problems(got):
         if sid != 'risks' and cards[0] - g['click'] > CARD_DELAY + 1e-9:
             bad.append(f'{sid}: the first card lands {cards[0] - g["click"]:.2f} s after the click, want {CARD_DELAY} s')
         named = g.get('named', [])
-        if sid != 'enhancements' and (len(named) != 2 or not all(0 < x < secs for x in named)):
+        if sid in ('risks', 'mitigations') and (len(named) != 2 or not all(0 < x < secs for x in named)):
             bad.append(f'{sid}: want a chip lit as each of its two sources is named, got {named}')
     pr = got.get('problem', {})
     if 'error' in pr or not (pr.get('circles', 9) <= VENN_FROM < pr.get('meet', 0) and pr.get('dots', 0) > 0):
@@ -188,7 +197,7 @@ def main():
     else:
         r = subprocess.run([node, '--input-type=module', '-e', PROGRAM % {
             'moments': json.dumps(MOMENTS.as_uri()), 'timing': json.dumps(TIMING.as_uri()),
-            'timeline': json.dumps(str(TIMELINE)), 'captions': json.dumps(str(CAPTIONS))}],
+            'timeline': json.dumps(str(TIMELINE)), 'captions': json.dumps(str(CAPTIONS)), 'tight': TIGHT}],
             capture_output=True, text=True, timeout=60)
         try:
             got = json.loads(r.stdout)
