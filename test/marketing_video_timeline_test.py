@@ -8,9 +8,8 @@ only at curated data. storyline.md is its human copy and must not drift from it.
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
   - timing: f1 runs 10 to 30 s, f2 to f4 each 5 to 15 s, f5 19 s at most; every voiced scene ends 0.3 s after its
-    clip and the close 1.0 s after its own, so no scene holds dead air; 58 to 61 s in all once each 0.3 s crossfade
-    overlaps two scenes (the user's 60 s target; the played length is pinned in test/marketing_video_audio_test.py);
-    at most 3 words a second, since the voice sets the speaking pace
+    clip and the close 1.0 s after its own, so no scene holds dead air (the played length, the user's 60 s target,
+    is pinned in test/marketing_video_audio_test.py); at most 3 words a second, since the voice sets the pace
   - narration: 200 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
     no click-by-click line, so no "select" or "save" in any form, since the ticks and toasts already show the choice;
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
@@ -18,7 +17,7 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - the problem scene shows its own narration as its first two items and then only the two aims of its Venn diagram,
     with no time, effort or harm line, so its graphic never changes what is voiced
   - the lines the user approved word for word: the enhancements line, and the close's opening "Three years – reduced
-    to less than an hour."; the close's narration says "acceleration platform" and no longer says "are identified",
+    to less than an hour."; the close's narration says "acceleration platform" and does not say "are identified",
     since the screen already shows that the key risks, mitigations and enhancements are identified in less than an
     hour; the end scene shows the span of the hook's milestones as "N years"
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
@@ -79,7 +78,7 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                  14: 'Govern your enterprise AI architecture',
                  15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
-MAX_WORDS, MAX_PACE, MIN_TOTAL, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 3.0, 58.0, 61.0, 5, 13
+MAX_WORDS, MAX_PACE, SHOWN_RISKS, HOOK_WORDS = 200, 3.0, 5, 13
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
 # TAIL in video/src/timing.mjs: the silence every scene plays after its clip, and the crossfade between two scenes.
 # The close holds longer, so the brand, the tagline and the footer can be read before the picture ends.
@@ -170,9 +169,6 @@ def validate(t, ctx):
         tail = CLOSE_TAIL if s['id'] == 'end' else TAIL
         if 'audioSeconds' in s and abs(s['seconds'] - (s['audioSeconds'] + tail)) > SLACK:
             bad.append(f'{s["id"]}: {s["seconds"]} s planned, want its {s["audioSeconds"]} s clip plus {tail:g} s')
-    played = sum(s['seconds'] for s in scenes) - (len(scenes) - 1) * TAIL
-    if not MIN_TOTAL <= played <= MAX_TOTAL:
-        bad.append(f'the scenes play {played:.2f} s once crossfaded, want {MIN_TOTAL:g} to {MAX_TOTAL:g}')
     if sum(words(s['narration']) for s in scenes) > MAX_WORDS:
         bad.append(f'the narration has {sum(words(s["narration"]) for s in scenes)} words, more than {MAX_WORDS}')
     hook = by_id['hook']['narration']

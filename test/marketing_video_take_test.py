@@ -8,7 +8,7 @@ and end, using a transcript's word timings. A wrong cut would put words in the w
 matched to the script word by word and the cut is refused when too little of it matches. It runs on synthetic
 24 kHz 16-bit PCM through node, so no voice or network is needed. Checks:
   - the voice's per-character timings become words, each from its first character's start to its last one's end,
-    split at any whitespace; timings that do not line up with the characters are refused
+    split at any whitespace; timings that do not line up with the characters, or run backwards, are refused
   - each clip runs from just before its scene's first word to just after its last, and clips never overlap
   - silence is found in the sound itself, since the voice's character timings run back to back and hide its pauses:
     a silence longer than 0.35 s inside a scene is shortened to 0.35 s from its middle, so the voice keeps its pace
@@ -16,7 +16,8 @@ matched to the script word by word and the cut is refused when too little of it 
     back to the same 0.15 s lead as any other clip
   - every cut fades in and out over 20 ms, so no cut clicks: each clip's sound starts and ends near zero
   - a transcript with one misheard word and different case and punctuation still cuts in the same places
-  - a transcript that matches too little of the script is refused
+  - a transcript that matches too little of the script is refused, and so is a take with no sound where a scene's
+    words are timed, so a drifted take cannot be written as an empty clip
 Prints a JSON report; exit code 1 on any failure.
 """
 import json
@@ -56,17 +57,17 @@ const aligned = (() => {
     return {
       words: wordsFromAlignment({characters: chars, character_start_times_seconds: starts,
         character_end_times_seconds: starts.map((s) => s + 0.08)}),
-      refused: (() => {
+      // Sound times for all but the last character, so only the count is wrong; then every character timed, but
+      // the third earlier than the second.
+      refused: [starts.slice(0, -1), starts.map((s, i) => (i === 2 ? 0.05 : s))].map((times) => {
         try {
-          // Sound times for all but the last character, so only the count is wrong.
-          const short = starts.slice(0, -1);
-          wordsFromAlignment({characters: chars, character_start_times_seconds: short,
-            character_end_times_seconds: short.map((s) => s + 0.08)});
+          wordsFromAlignment({characters: chars, character_start_times_seconds: times,
+            character_end_times_seconds: times.map((s) => s + 0.08)});
           return false;
         } catch {
           return true;
         }
-      })(),
+      }),
     };
   } catch (e) {
     return {error: String(e.message)};
@@ -81,7 +82,11 @@ const firstSound = (clip) => [...Array(clip.length / 2).keys()].find((i) => clip
 const level = (clip, s) => Math.abs(clip.readInt16LE(Math.round(s * RATE) * 2));
 const clip = splitTake(pcm, scenes, words)[1];
 const last = clip.length / 2 / RATE - 1 / RATE;
-console.log(JSON.stringify({good: run(words), misheard: run(misheard), poor: run(words.slice(0, 3)), aligned,
+// A take whose second scene is timed where the sound has none, as when the timings drift.
+const mute = Buffer.from(pcm);
+mute.fill(0, Math.round(2.5 * RATE) * 2, Math.round(4.5 * RATE) * 2);
+const silent = (() => { try { splitTake(mute, scenes, words); return false; } catch { return true; } })();
+console.log(JSON.stringify({good: run(words), misheard: run(misheard), poor: run(words.slice(0, 3)), aligned, silent,
   paused: {seconds: Math.round((paused.length / 2 / RATE) * 100) / 100, sound: Math.round(firstSound(paused) * 100) / 100},
   fades: {start: level(clip, 0.1), settled: level(clip, 0.15), end: level(clip, last)}}));
 """
@@ -119,11 +124,12 @@ def main():
                   [] if got['misheard'].get('clips') == clips else [got['misheard']])
             check('a transcript that matches too little of the script is refused',
                   [] if 'refused' in got['poor'] else [got['poor']])
+            check("a take with no sound under a scene's words is refused", [] if got['silent'] else ['accepted'])
             want_words = [{'word': 'Hi', 'start': 0, 'end': 0.18}, {'word': 'there,', 'start': 0.4, 'end': 0.98},
                           {'word': 'you.', 'start': 1.1, 'end': 1.48}]
             words = got['aligned'].get('words')
             check("the voice's character timings become words, and misaligned timings are refused",
-                  [] if words and len(words) == 3 and got['aligned'].get('refused') and all(
+                  [] if words and len(words) == 3 and got['aligned'].get('refused') == [True, True] and all(
                       w['word'] == v['word'] and abs(w['start'] - v['start']) < 1e-6 and abs(w['end'] - v['end']) < 1e-6
                       for w, v in zip(words, want_words)) else [got['aligned']])
             # The sound starts 0.25 s in: the 0.1 s PAD, then the 0.15 s lead the early timings had stretched.
