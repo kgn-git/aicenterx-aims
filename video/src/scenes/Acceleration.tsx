@@ -1,6 +1,6 @@
 import React from "react";
 import {interpolate, interpolateColors} from "remotion";
-import {appFrameHeight, color, headingFont, video} from "../theme";
+import {appFrameHeight, color, headingFont, video, mutedInk} from "../theme";
 import {ramp} from "../ui/kit";
 
 const clamp = {extrapolateLeft: "clamp", extrapolateRight: "clamp"} as const;
@@ -57,8 +57,8 @@ export const Contrast: React.FC<{
               opacity: shown, transform: `translateY(${(1 - shown) * 20}px)`,
             }}
           >
-            <div style={{fontFamily: headingFont, fontSize: 110, fontWeight: 650, color: color.gov, lineHeight: 1}}>{n}</div>
-            <div style={{fontSize: 34, color: color.inkMuted, marginTop: 10}}>{label}</div>
+            <div style={{fontFamily: headingFont, fontSize: 110, fontWeight: 650, color: color.gov, lineHeight: 1}}>{Math.round(n * ramp(t, at.tallies + i * 0.35, 0.8))}</div>
+            <div style={{fontSize: 34, color: mutedInk, marginTop: 10}}>{label}</div>
           </div>
         );
       })}
@@ -88,7 +88,7 @@ const Planned: React.FC<{text: string; tag: string; tone: string; shown: number;
   <div
     style={{
       position: "absolute", display: "flex", alignItems: "center", gap: 16, padding: "22px 26px", fontSize: 32,
-      fontWeight: 600, lineHeight: 1.25, border: `2px dashed ${tone}`, borderRadius: 4, boxSizing: "border-box",
+      fontWeight: 600, lineHeight: 1.25, border: `3px dashed ${tone}`, borderRadius: 4, boxSizing: "border-box",
       opacity: shown, transform: `scale(${0.92 + 0.08 * shown})`, ...style,
     }}
   >
@@ -136,7 +136,7 @@ export const Portfolio: React.FC<{
           const x = GRID.left + w * (GRID.column + GRID.gap);
           return (
             <React.Fragment key={w}>
-              <div style={{position: "absolute", left: x, top: GRID.top - 44, fontSize: 28, color: color.inkMuted, opacity: pull}}>
+              <div style={{position: "absolute", left: x, top: GRID.top - 44, fontSize: 28, color: mutedInk, opacity: pull}}>
                 {wave} {w + 1}
               </div>
               {Array.from({length: n}, (_, i) => {

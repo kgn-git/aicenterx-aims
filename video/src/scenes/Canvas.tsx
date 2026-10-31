@@ -4,7 +4,7 @@ import canvas from "../../data/canvas_hiring.json";
 import timeline from "../timeline.json";
 import {color, headingFont, video} from "../theme";
 import {AppFrame, Button, Card, Cursor, ramp, SIDE, TOP_BAR} from "../ui/kit";
-import type {SceneProps} from "./types";
+import {cueWith, type SceneProps} from "./types";
 
 const GAP = 18;
 const ROWS = [2, 3, 2];
@@ -76,12 +76,12 @@ export const CanvasForm: React.FC<{t: number; typedBy: number; filledBy: number;
 export const Canvas: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const trigger = scene.onScreen[4];
-  const appear = cues[cues.length - 1].start;
-  const naming = cues[1];
+  const naming = cueWith(cues, "its data");
+  const appear = naming.end;
   const named = Object.fromEntries(NAMED.map((key, i) => [key, naming.start + ((naming.end - naming.start) * i) / NAMED.length]));
   return (
     <AppFrame trail={CANVAS_HEADING}>
-      <CanvasForm t={t} typedBy={1.7} filledBy={cues[1].end} named={named} />
+      <CanvasForm t={t} typedBy={1.7} filledBy={naming.end} named={named} />
       <div
         style={{
           position: "absolute", right: TRIGGER.right, top: TRIGGER.top, opacity: ramp(t, appear, 0.4),

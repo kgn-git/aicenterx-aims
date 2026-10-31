@@ -3,14 +3,14 @@ import {useCurrentFrame, useVideoConfig} from "remotion";
 import controls from "../../data/controls_hiring.json";
 import steps from "../../data/agent_steps.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
-import {color, headingFont, video} from "../theme";
+import {color, headingFont, STAGE, video, mutedInk} from "../theme";
 import {
-  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, ramp, SIDE, SourceChip, Stream, Toast, TOP_BAR, Zoom,
+  AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, bump, ramp, SIDE, SourceChip, Toast, TOP_BAR, Zoom,
   zoomLevel,
 } from "../ui/kit";
 import {aiActArticles, articleLabel} from "../sources.mjs";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import type {SceneProps} from "./types";
+import {saidAt, type SceneProps} from "./types";
 
 const TOP = 120;
 const ROW = 124;
@@ -26,8 +26,9 @@ const CLASSES = video.width - CLASSES_LEFT - COLUMN_GAP - CONTROL - PADDING - SI
 const all = Object.values(mitigations.risks).flat();
 const objective = new Map(controls.controls.map((c) => [c.key, c.objective]));
 
-/** The second agent run: mitigations for the saved risks, each written out with its MIT class, law and control; the
- *  classes are enlarged while the narration names them, and the descriptions, which the zoom would cut, fade out. */
+/** The second agent run, shown by its status line alone: mitigations for the saved risks land with their MIT class,
+ *  law and control; the classes are enlarged while the narration names them, and the descriptions, which the zoom
+ *  would cut, fade out. */
 export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, next, toast] = scene.onScreen;
@@ -36,13 +37,18 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
 
   const click = 0.35;
   const runFrom = 0.7;
-  const runTo = 4;
-  const shownAt = (i: number) => runTo + 0.15 + i * 0.2;
-  const zoom = {from: shownAt(0) + 0.5, to: cues[2].start - 0.6};
+  // The risks scene already showed the agent at work, so here its status line alone covers a short run.
+  const runTo = 1.1;
+  const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
+  // The classes are enlarged while the taxonomy is named; the ticks follow the zoom, or come earlier when the
+  // scene's end would leave the next button less than 0.8 s to glow.
+  const zoomFrom = Math.max(shownAt(0) + 0.5, saidAt(cues, "taxonomy") - 0.6);
+  const zoom = {from: zoomFrom, to: zoomFrom + 1.4};
+  const firstTick = Math.min(zoom.to + 0.3, seconds - 0.8 - 0.7 - 0.6 - 0.35 * (saved.length - 1));
+  const ticks = saved.map((_, k) => firstTick + k * 0.35);
+  const saveAt = ticks[ticks.length - 1] + 0.6;
+  const nextAt = saveAt + 0.7;
   const z = zoomLevel(t, zoom.from, zoom.to);
-  const ticks = saved.map((_, k) => cues[2].start + 0.2 + k * 0.5);
-  const saveAt = ticks[ticks.length - 1] + 0.7;
-  const nextAt = Math.max(cues[3].start, saveAt + 0.8);
   const settled = ramp(t, ticks[ticks.length - 1] + 0.3, 0.4);
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   const label = t < runTo ? trigger : t < nextAt ? save : next;
@@ -56,38 +62,35 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           steps={steps.mitigations} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(rows.length - 1) + 0.6}
         />
       )}
-      {run > 0 && (
-        <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
-          <AgentRun steps={steps.mitigations} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
-        </div>
-      )}
       <Zoom t={t} focus={{x: CLASSES_LEFT + CLASSES / 2, y: top(0) + ROW / 2}} from={zoom.from} to={zoom.to} scale={1.5}>
         {rows.map((m, i) => {
           const k = saved.indexOf(m.id);
           const law = articleLabel(aiActArticles(m));
-          const chip = (n: number) => ramp(t, shownAt(i) + 0.6 + 0.1 * n, 0.3);
+          const chip = (n: number) => ramp(t, shownAt(i) + 0.25 + 0.05 * n, 0.2);
+          const pulse = (n: number) => bump(t, shownAt(i) + 0.45 + 0.05 * n);
           return (
             <Card
               key={m.id}
+              accent={STAGE.mitigations}
               style={{
                 position: "absolute", left: SIDE, top: top(i), width: video.width - 2 * SIDE, height: ROW,
                 padding: `12px ${PADDING}px`, display: "flex", gap: COLUMN_GAP, alignItems: "center", lineHeight: 1.25,
                 opacity: ramp(t, shownAt(i), 0.25) * (k < 0 ? 1 - 0.45 * settled : 1),
-                transform: `translateX(${(1 - ramp(t, shownAt(i), 0.4)) * 30}px)`,
+                transform: `translateY(${(1 - ramp(t, shownAt(i), 0.3)) * 10}px)`,
                 borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border,
               }}
             >
               <Checkbox checked={k >= 0 ? ramp(t, ticks[k], 0.2) : 0} />
               <div style={{flex: `0 0 ${DESCRIPTION}px`, opacity: 1 - z}}>
-                <Stream text={m.description} t={t} from={shownAt(i)} />
+                <span>{m.description}</span>
               </div>
               <div style={{flex: `0 0 ${CLASSES}px`, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start"}}>
-                <SourceChip tone={color.gov} shown={chip(0)}>MIT · {m.mit}</SourceChip>
-                {law && <SourceChip tone={color.arch} shown={chip(1)}>{law}</SourceChip>}
+                <SourceChip tone={color.gov} shown={chip(0)} pulse={pulse(0)}>MIT · {m.mit}</SourceChip>
+                {law && <SourceChip tone={color.arch} shown={chip(1)} pulse={pulse(1)}>{law}</SourceChip>}
               </div>
               <div style={{flex: `0 0 ${CONTROL}px`, display: "flex", flexDirection: "column", gap: 6}}>
-                <div><SourceChip tone={color.val} shown={chip(2)}>ISO/IEC 42001 {m.controlKey}</SourceChip></div>
-                <div style={{fontSize: 22, color: color.inkMuted, opacity: chip(2)}}>{objective.get(m.controlKey)}</div>
+                <div><SourceChip tone={color.val} shown={chip(2)} pulse={pulse(2)}>ISO/IEC 42001 {m.controlKey}</SourceChip></div>
+                <div style={{fontSize: 22, color: mutedInk, opacity: chip(2)}}>{objective.get(m.controlKey)}</div>
               </div>
             </Card>
           );
@@ -110,7 +113,7 @@ export const Mitigations: React.FC<SceneProps> = ({scene, cues, seconds}) => {
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: button.x, y: button.y},
-          {t: cues[2].start - 0.5, x: 1100, y: 600},
+          {t: ticks[0] - 0.5, x: 1100, y: 600},
           ...saved.map((id, k) => ({t: ticks[k], x: SIDE + 40, y: top(shown.indexOf(id)) + ROW / 2})),
           {t: saveAt, ...button},
           {t: seconds, ...button},

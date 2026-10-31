@@ -1,6 +1,6 @@
 import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
-import {color, headingFont} from "../theme";
+import {color, headingFont, mutedInk} from "../theme";
 import {Background, ramp, spokenAt} from "../ui/kit";
 import type {SceneProps} from "./types";
 
@@ -22,6 +22,8 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
   const first = 1 - ramp(t, split - 0.3, 0.5);
   const meet = ramp(t, split + 0.2, 1.2);
   const target = ramp(t, spokenAt(scene.narration, "create real value", end) + 0.2, 0.5);
+  // The dotted grid, the product's backdrop, arrives with the challenge the product answers.
+  const dots = ramp(t, spokenAt(scene.narration, "The challenge", end), 0.8);
   const reveal = (text: string, from: number, to: number, style: React.CSSProperties) => {
     const words = text.split(" ");
     return (
@@ -52,7 +54,7 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
     );
   };
   return (
-    <Background>
+    <Background dots={dots}>
       <div style={{position: "absolute", inset: 0, opacity: first}}>
         {reveal(statement, 0, split, {position: "absolute", left: 200, right: 200, top: 150, fontSize: 58, fontWeight: 500})}
         <div
@@ -77,7 +79,7 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
                 style={{
                   position: "absolute", left: 135, top: 81, width: 30, height: 30, borderRadius: 15,
                   border: `4px solid ${color.bgBase}`, boxSizing: "border-box",
-                  background: harm ? color.ragHigh : color.inkMuted, transform: `scale(${0.4 + 0.6 * shown})`,
+                  background: harm ? color.ragHigh : mutedInk, transform: `scale(${0.4 + 0.6 * shown})`,
                 }}
               />
             </div>

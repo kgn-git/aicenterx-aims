@@ -4,14 +4,14 @@ Usage:  python test/marketing_video_audio_test.py
 
 Each clip is committed, so the video renders without the text-to-speech model, and each scene plays for its planned
 seconds or for its clip plus a short tail, whichever is longer. Checks:
-  - the guard: video/scripts/narrate.mjs, run without its env file, fails closed when OPENAI_API_KEY or
-    OPENAI_TTS_MODEL is missing or the fragment is unknown: it exits non-zero with no stack trace, never prints the
-    key, and changes no clip and not timeline.json
+  - the guard: video/scripts/narrate.mjs, run without its env file, fails closed when DEEPGRAM_API_KEY is missing or
+    the fragment is unknown: it exits non-zero with no stack trace, never prints the key, and changes no clip and not
+    timeline.json
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file
   - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
-    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 54 to 85 s in all once each
-    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's limit for the video)
+    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 70 to 75 s in all once each
+    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's target for the video)
   - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -29,10 +29,10 @@ VIDEO = ROOT / 'video'
 AUDIO = VIDEO / 'public' / 'audio'
 TIMELINE = VIDEO / 'src' / 'timeline.json'
 NARRATE = VIDEO / 'scripts' / 'narrate.mjs'
-RATE, MIN_TOTAL, MAX_TOTAL = 24000, 54.0, 85.0
+RATE, MIN_TOTAL, MAX_TOTAL = 24000, 70.0, 75.0
 # TAIL in video/src/timing.mjs, which video/src/Root.tsx also uses as the crossfade between scenes.
 CROSSFADE = 0.3
-FAKE_KEY = 'sk-test-0000-not-a-real-key'
+FAKE_KEY = 'dg-test-0000-not-a-real-key'
 
 
 def snapshot():
@@ -43,11 +43,9 @@ def snapshot():
 
 def guard_problems(node, ids):
     """Each refused narrate run that exits 0, prints a stack trace or the key, or touches a clip or the timeline."""
-    env = {k: v for k, v in os.environ.items() if not k.startswith('OPENAI_')}
-    cases = {'no key': ([], env, 'OPENAI_API_KEY'),
-             'a key but no model': ([], {**env, 'OPENAI_API_KEY': FAKE_KEY}, 'OPENAI_TTS_MODEL'),
-             'an unknown fragment': (['../x'], {**env, 'OPENAI_API_KEY': FAKE_KEY, 'OPENAI_TTS_MODEL': 'm'},
-                                     ', '.join(ids))}
+    env = {k: v for k, v in os.environ.items() if not k.startswith('DEEPGRAM_')}
+    cases = {'no key': ([], env, 'DEEPGRAM_API_KEY'),
+             'an unknown fragment': (['../x'], {**env, 'DEEPGRAM_API_KEY': FAKE_KEY}, ', '.join(ids))}
     bad = []
     for name, (args, child_env, named) in cases.items():
         before = snapshot()

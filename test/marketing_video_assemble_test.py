@@ -7,7 +7,7 @@ fragments stay for review only. Rendering needs video/node_modules, so this chec
 Checks:
   - the root package.json runs video:assemble through npm --prefix video, and video/package.json runs the script
   - the script renders CvScreeningJourney and keeps the result only after its length, size and codec check, with
-    the 85 s limit the timeline allows
+    the 75 s limit the timeline allows
   - it ends the audio inside the last video frame and refuses a video whose audio outlasts the picture, since a
     player that seeks or stops past the last frame shows a blank screen instead of the closing card
   - given an argument it does not take, it exits non-zero with its usage, prints no stack trace, and writes nothing
@@ -53,7 +53,7 @@ def main():
         text = SCRIPT.read_text(encoding='utf-8')
         check('it renders CvScreeningJourney and checks the result before keeping it',
               [] if '"CvScreeningJourney"' in text and 'ffprobe' in text and 'renameSync' in text else ['missing'])
-        check('it accepts the 85 s the timeline allows', [] if 'const MAX_SECONDS = 85;' in text else ['missing'])
+        check('it accepts the 75 s the timeline allows', [] if 'const MAX_SECONDS = 75;' in text else ['missing'])
         check('it ends the audio inside the last video frame and refuses audio that outlasts the picture',
               [] if 'atrim=end=' in text and '-c:v", "copy"' in text and 'outlasts the picture' in text else ['missing'])
         with tempfile.TemporaryDirectory() as empty:

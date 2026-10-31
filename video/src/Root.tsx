@@ -24,7 +24,7 @@ const sceneCues = (fragmentId: string, sceneId: string) => {
   const start = list.slice(0, list.findIndex((s) => s.id === sceneId)).reduce((sum, s) => sum + sceneSeconds(s), 0);
   return captions.cues
     .filter((c) => c.fragment === fragmentId && c.scene === sceneId)
-    .map((c) => ({start: c.start - start, end: c.end - start}));
+    .map((c) => ({start: c.start - start, end: c.end - start, text: c.lines.join(" ")}));
 };
 
 type Scene = (typeof timeline.scenes)[number];

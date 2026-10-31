@@ -3,8 +3,8 @@
     {
       "id": "hook",
       "seconds": 6,
-      "audioSeconds": 6.47,
-      "narration": "Amazon's experimental hiring tool allegedly ranked women lower. Abandoning it took three years.",
+      "audioSeconds": 5.56,
+      "narration": "Amazon's hiring AI allegedly ranked women lower. Scrapping it took three years.",
       "onScreen": [
         "Amazon's Experimental Hiring Tool Allegedly Displayed Gender Bias in Candidate Rankings",
         "AI Incident Database, incident 37",
@@ -16,11 +16,11 @@
     },
     {
       "id": "problem",
-      "seconds": 11.5,
-      "audioSeconds": 10.43,
-      "narration": "Today, no company can afford to spend such time and effort and end up potentially causing harm. The challenge is to govern AI responsibly and create real value.",
+      "seconds": 9,
+      "audioSeconds": 8.08,
+      "narration": "Today, you can't afford the time and effort of building AI that causes harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
-        "Today, no company can afford to spend such time and effort and end up potentially causing harm.",
+        "Today, you can't afford the time and effort of building AI that causes harm.",
         "The challenge is to govern AI responsibly and create real value.",
         "3 years",
         "Time",
@@ -33,9 +33,9 @@
     },
     {
       "id": "canvas",
-      "seconds": 11.5,
-      "audioSeconds": 10.37,
-      "narration": "In AI Center X, you start with the AI Canvas: the CV Screening Assistant's business problem, its data, and the people it affects. Then you simulate the risks.",
+      "seconds": 8.5,
+      "audioSeconds": 7.365,
+      "narration": "Meet AI Center X. Map your initiative on the AI Canvas: its business problem, its data and the people it affects.",
       "onScreen": [
         "Define an initiative",
         "CV Screening Assistant",
@@ -47,9 +47,9 @@
     },
     {
       "id": "risks",
-      "seconds": 12,
-      "audioSeconds": 12.33,
-      "narration": "An AI agent suggests risks, each cited from the MIT AI Risk Repository and the AI Incident Database. You select the relevant ones and save them. Now, generate the mitigations.",
+      "seconds": 10.5,
+      "audioSeconds": 9.4,
+      "narration": "Before writing a single line of code, simulate your risks. An AI agent flags them, citing the MIT AI Risk Repository and the AI Incident Database.",
       "onScreen": [
         "Simulate risks",
         "Suggested risks, each with its MIT AI Risk Repository class and AI Incident Database incidents",
@@ -67,9 +67,9 @@
     },
     {
       "id": "mitigations",
-      "seconds": 12.5,
-      "audioSeconds": 12.95,
-      "narration": "For every saved risk, the agent proposes mitigations, each classed by MIT's draft taxonomy and tied to the EU AI Act. Again, you select and save. Next come the model enhancements.",
+      "seconds": 10,
+      "audioSeconds": 7.63,
+      "narration": "For the risks you keep, the agent proposes mitigations, each tied to MIT's draft taxonomy and the EU AI Act.",
       "onScreen": [
         "Generate mitigations",
         "Suggested mitigations for the saved risks, cited from the MIT AI Risk Mitigation Taxonomy (draft) and EUR-Lex",
@@ -87,9 +87,9 @@
     },
     {
       "id": "enhancements",
-      "seconds": 12,
-      "audioSeconds": 10.65,
-      "narration": "The agent shows how to put those mitigations into effect: fine-tuning on audited shortlists, two checking agents, and learning from audited recruiter feedback. You save the ones you need.",
+      "seconds": 11,
+      "audioSeconds": 10.535,
+      "narration": "Then, turn policy into engineering. The agent suggests model enhancements: fine-tuning on audited shortlists, two checking agents, and learning from audited recruiter feedback.",
       "onScreen": [
         "Suggest model enhancements",
         "Model enhancements: fine-tuning, agent workflow and human feedback, each tied to a saved mitigation",
@@ -106,8 +106,8 @@
     },
     {
       "id": "end",
-      "seconds": 19,
-      "audioSeconds": 18.7,
+      "seconds": 17.5,
+      "audioSeconds": 15.05,
       "narration": "Three years, now less than an hour: your key risks, mitigations and enhancements are identified. Then scale up: models, data lineage, programmes, architecture and intelligence, on one acceleration platform. AI Center X: make AI deliver value.",
       "onScreen": [
         "AI Center X",

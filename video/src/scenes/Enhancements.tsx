@@ -2,13 +2,13 @@ import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
 import enhancements from "../../data/model_enhancements.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
-import {color, headingFont, video} from "../theme";
+import {color, headingFont, STAGE, video, mutedInk} from "../theme";
 import {
-  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Stream, Toast,
+  AgentStatus, AppFrame, bump, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Toast,
   TOP_BAR, Zoom, zoomLevel,
 } from "../ui/kit";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import type {SceneProps} from "./types";
+import {saidAt, type SceneProps} from "./types";
 
 const TOP = 130;
 const GAP = 18;
@@ -19,8 +19,8 @@ const STEPS = ["Read the saved mitigations", "Search mitigation sources", "Draft
 const all = Object.values(mitigations.risks).flat();
 const cell = (i: number) => ({x: SIDE + (i % 2) * (WIDTH + GAP), y: TOP + Math.floor(i / 2) * (HEIGHT + GAP)});
 
-/** The third agent run: enhancements that put the saved mitigations into effect, each written out and tied to its
- *  mitigation and source, the first enlarged while the narration names it. */
+/** The third agent run, shown by its status line alone: enhancements that put the saved mitigations into effect land,
+ *  each tied to its mitigation and source, the first enlarged while the narration names it. */
 export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, toast] = scene.onScreen;
@@ -29,9 +29,9 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
 
   const click = 0.35;
   const runFrom = 0.7;
-  const runTo = 2.9;
-  const shownAt = (i: number) => runTo + 0.15 + i * 0.3;
-  const zoom = {from: shownAt(0) + 0.5, to: (cues[1].start + cues[1].end) / 2};
+  const runTo = 1.1;
+  const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
+  const zoom = {from: shownAt(0) + 0.5, to: Math.max(shownAt(0) + 1.5, saidAt(cues, "fine-tuning") + 1)};
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   // The toast must stay up for about 1.5 s before the cut, so a late last cue pulls the ticks earlier.
   const firstTick = Math.min(cues[cues.length - 1].start + 0.2, seconds - 2.1 - 0.45 * (saved.length - 1) - 0.6);
@@ -44,24 +44,21 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
       {t >= runFrom && (
         <AgentStatus steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(cards.length - 1) + 0.6} />
       )}
-      {run > 0 && (
-        <div style={{position: "absolute", left: SIDE, top: TOP + 40, opacity: run}}>
-          <AgentRun steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
-        </div>
-      )}
       <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={zoom.from} to={zoom.to} scale={1.6}>
         {cards.map((e, i) => {
           const k = saved.indexOf(e.id);
           const m = all.find((x) => x.id === e.mitigationId)!;
           const source = "title" in e.source ? e.source.title : "Illustrative";
-          const chip = (n: number) => ramp(t, shownAt(i) + 0.6 + 0.1 * n, 0.3);
+          const chip = (n: number) => ramp(t, shownAt(i) + 0.25 + 0.05 * n, 0.2);
+          const pulse = (n: number) => bump(t, shownAt(i) + 0.45 + 0.05 * n);
           return (
             <Card
               key={e.id}
+              accent={STAGE.enhancements}
               style={{
                 position: "absolute", left: cell(i).x, top: cell(i).y, width: WIDTH, height: HEIGHT,
                 display: "flex", gap: 18, lineHeight: 1.3, opacity: ramp(t, shownAt(i), 0.25),
-                transform: `translateY(${(1 - ramp(t, shownAt(i), 0.4)) * 24}px)`,
+                transform: `translateY(${(1 - ramp(t, shownAt(i), 0.3)) * 10}px)`,
                 borderColor: k >= 0 && t >= ticks[k] ? color.gov : color.border,
               }}
             >
@@ -71,12 +68,12 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
                   <span style={{flex: "0 0 auto"}}><KindTag kind={e.kind} /></span>
                   <span style={{fontFamily: headingFont, fontSize: 34, fontWeight: 600}}>{e.name}</span>
                 </div>
-                <Stream text={e.how} t={t} from={shownAt(i)} />
+                <span>{e.how}</span>
                 <div style={{display: "flex", flexWrap: "wrap", gap: 10}}>
-                  <SourceChip tone={color.gov} shown={chip(0)}>MIT · {m.mit}</SourceChip>
-                  <SourceChip tone={color.val} shown={chip(1)}>ISO/IEC 42001 {m.controlKey}</SourceChip>
+                  <SourceChip tone={color.gov} shown={chip(0)} pulse={pulse(0)}>MIT · {m.mit}</SourceChip>
+                  <SourceChip tone={color.val} shown={chip(1)} pulse={pulse(1)}>ISO/IEC 42001 {m.controlKey}</SourceChip>
                 </div>
-                <div style={{color: color.inkMuted, fontSize: 22, opacity: chip(2)}}>Source: {source}</div>
+                <div style={{color: mutedInk, fontSize: 22, opacity: chip(2)}}>Source: {source}</div>
               </div>
             </Card>
           );
