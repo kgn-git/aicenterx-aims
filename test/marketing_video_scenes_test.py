@@ -23,8 +23,11 @@ real captions proves every phrase is there. Checks:
         that have not landed
       - the risks and mitigations scenes light their chips as each of their two spoken sources is named, in order,
         once every card is on screen
-      - the problem scene's three cost icons land in order as the voice says "time", "effort" and "harm"; the Venn
-        diagram follows the last of them and meets on "The challenge", where the dots arrive
+      - the problem scene opens on the empty rings of its three costs, so the frame is never blank; the cost icons
+        land in order as the voice says "time", "effort" and "harm" and are all shown, red, for at least 0.9 s;
+        only then does the Venn diagram arrive and meet, and its bright target is lit for at least 1.2 s; the dots
+        arrive by then
+      - a reworded problem line or a reordered close stops with an error that names the missing or misplaced words
       - in the close, the message and the 3 / 4 / 4 tallies, once counted, can each be read for at least 2 s, the
         portfolio arrives only once the comparison has faded, and the footer can be read for at least 2 s
   - each scene uses what moments.mjs gives it: the named times for the chips, the cost icons and the circles, the
@@ -55,7 +58,7 @@ THEME = SRC / 'theme.ts'
 KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
-GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2
+GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN, COSTS_SHOWN, TARGET_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2, 0.9, 1.2
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
 # A shorter enhancements scene than the real one, where the toast's time would be lost without its floor; and a
@@ -67,9 +70,9 @@ USERS = {'Risks.tsx': ('stageMoments(', 'bump(t, mitNamed', 'bump(t, aiidNamed',
          'Mitigations.tsx': ('stageMoments(', '[mitNamed, lawNamed][n]'),
          'Enhancements.tsx': ('stageMoments(',),
          'Canvas.tsx': ('canvasMoments(', 'ramp(t, glow'),
-         'Problem.tsx': ('problemMoments(', 'm.marks', 'ramp(t, m.circles'),
+         'Problem.tsx': ('problemMoments(', 'm.marks', 'ramp(t, m.circles', 'ramp(t, m.costsOut', 'ramp(t, m.rings'),
          'End.tsx': ('closeMoments(', 'ramp(t, footer', 'from={portfolioIn}'),
-         'Acceleration.tsx': ('TALLY_COUNT',)}
+         'Acceleration.tsx': ('ramp(t, at.tallies[i], TALLY_COUNT)',)}
 # Each module is imported as a namespace, so a missing export fails its own check instead of the whole run.
 PROGRAM = """
 import {readFileSync} from "node:fs";
@@ -96,6 +99,10 @@ out.cramped = stage("mitigations", %(cramped)s);
 out.canvas = at("canvas", (scene, cues, seconds) => m.canvasMoments(cues, seconds));
 out.problem = at("problem", (scene, cues) => m.problemMoments(scene, cues));
 out.end = at("end", (scene, cues) => m.closeMoments(scene, cues));
+// The same scenes with their words changed: a cost the problem line no longer says, and a close that names the
+// capabilities before it scales up.
+out.reworded = at("problem", (scene, cues) => m.problemMoments({...scene, narration: scene.narration.replace("effort", "work")}, cues));
+out.reordered = at("end", (scene, cues) => m.closeMoments({...scene, narration: scene.narration.replace("Then scale up: ", "") + " Then scale up."}, cues));
 console.log(JSON.stringify(out));
 """
 NUMBERED = re.compile(r'\bcues(\[\d+\]|\.at\()')
@@ -150,9 +157,21 @@ def moment_problems(got):
             bad.append(f'canvas: "Simulate risks" must show {HANDOFF_SHOWN} s, glow {GLOW} s and meet the cursor, got {cv}')
     pr = got.get('problem', {})
     marks = pr.get('marks') if isinstance(pr.get('marks'), list) else []
-    if 'error' in pr or not (len(marks) == 3 and marks == sorted(marks) and marks[0] > 0
-                             and marks[-1] < pr['circles'] < pr['meet'] and abs(pr['dots'] - (pr['meet'] - 0.2)) < 1e-9):
-        bad.append(f'problem: the costs must land in order, then the Venn diagram meet on "The challenge", got {pr}')
+    if 'error' in pr or len(marks) != 3 or 'costsOut' not in pr:
+        bad.append(f'problem: want three cost times and when they leave, got {pr}')
+    else:
+        if not (pr['rings'] <= 0.3 and marks == sorted(marks) and marks[0] > pr['rings']):
+            bad.append(f'problem: the rings must open the scene and the costs land in order, got {pr}')
+        if pr['costsOut'] - (marks[-1] + 0.35) < COSTS_SHOWN:
+            bad.append(f'problem: the three costs show together for {pr["costsOut"] - marks[-1] - 0.35:.2f} s, want {COSTS_SHOWN} s')
+        if not (pr['costsOut'] <= pr['circles'] <= pr['meet'] and pr['dots'] <= pr['circles']):
+            bad.append(f'problem: the Venn diagram must follow the costs, after the dots, got {pr}')
+        if pr['seconds'] - CROSSFADE - (pr['target'] + 0.5) < TARGET_SHOWN:
+            bad.append(f'problem: the target is lit {pr["seconds"] - CROSSFADE - pr["target"] - 0.5:.2f} s, want {TARGET_SHOWN} s')
+    if 'no longer says "effort"' not in got.get('reworded', {}).get('error', ''):
+        bad.append(f'a problem line without "effort" must stop with an error naming it, got {got.get("reworded")}')
+    if 'in that order' not in got.get('reordered', {}).get('error', ''):
+        bad.append(f'a close that says its words out of order must stop with an error, got {got.get("reordered")}')
     end = got.get('end', {})
     count = got['consts'].get('TALLY_COUNT') or 0
     if 'error' in end or 'message' not in end or not isinstance(end.get('tallies'), list):
