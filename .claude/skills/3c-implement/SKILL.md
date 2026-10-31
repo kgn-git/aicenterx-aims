@@ -4,12 +4,12 @@ description: Standardised feature-implementation workflow — fetch issue, plan,
 version: 1.0.0
 compatibility: [claude-code]
 allowed-tools: [Bash, Read, Write]
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # /3c-implement — Standardised feature implementation for 3C
 
-When the user invokes `/3c-implement <issue-id>`, follow this exact workflow. The skill is **explicit-invocation only** (`disable-model-invocation: true`); never auto-run.
+When `/3c-implement <issue-id>` is invoked — by the user, by Claude, or by an orchestrating skill such as `/3c-project-manager` — follow this exact workflow. Claude may launch it only for an issue the user has asked to deliver; the confirmations below (branch, PR) still apply on every run.
 
 ## Mandatory destructive-operation interlock (AC9)
 
