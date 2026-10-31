@@ -2,8 +2,8 @@
   "scenes": [
     {
       "id": "hook",
-      "seconds": 6,
-      "audioSeconds": 5.56,
+      "seconds": 5.5,
+      "audioSeconds": 5.2,
       "narration": "Amazon's hiring AI allegedly ranked women lower. Scrapping it took three years.",
       "onScreen": [
         "Amazon's Experimental Hiring Tool Allegedly Displayed Gender Bias in Candidate Rankings",
@@ -16,13 +16,10 @@
     },
     {
       "id": "problem",
-      "seconds": 9,
-      "audioSeconds": 8.08,
+      "seconds": 8.81,
+      "audioSeconds": 8.51,
       "narration": "Today, you can't afford the time and effort of building AI that causes harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
-        "Today, you can't afford the time and effort of building AI that causes harm.",
-        "The challenge is to govern AI responsibly and create real value.",
-        "3 years",
         "Time",
         "Effort",
         "Harm",
@@ -33,8 +30,8 @@
     },
     {
       "id": "canvas",
-      "seconds": 8.5,
-      "audioSeconds": 7.365,
+      "seconds": 8.19,
+      "audioSeconds": 7.89,
       "narration": "Meet AI Center X. Map your initiative on the AI Canvas: its business problem, its data and the people it affects.",
       "onScreen": [
         "Define an initiative",
@@ -47,8 +44,8 @@
     },
     {
       "id": "risks",
-      "seconds": 10.5,
-      "audioSeconds": 9.4,
+      "seconds": 10.32,
+      "audioSeconds": 10.02,
       "narration": "Before writing a single line of code, simulate your risks. An AI agent flags them, citing the MIT AI Risk Repository and the AI Incident Database.",
       "onScreen": [
         "Simulate risks",
@@ -67,8 +64,8 @@
     },
     {
       "id": "mitigations",
-      "seconds": 10,
-      "audioSeconds": 7.63,
+      "seconds": 8.14,
+      "audioSeconds": 7.84,
       "narration": "For the risks you keep, the agent proposes mitigations, each tied to MIT's draft taxonomy and the EU AI Act.",
       "onScreen": [
         "Generate mitigations",
@@ -87,9 +84,9 @@
     },
     {
       "id": "enhancements",
-      "seconds": 11,
-      "audioSeconds": 10.535,
-      "narration": "Then, turn policy into engineering. The agent suggests model enhancements: fine-tuning on audited shortlists, two checking agents, and learning from audited recruiter feedback.",
+      "seconds": 5.8,
+      "audioSeconds": 5.5,
+      "narration": "Then, turn policy into engineering: enhancements matched to this initiative's risk profile.",
       "onScreen": [
         "Suggest model enhancements",
         "Model enhancements: fine-tuning, agent workflow and human feedback, each tied to a saved mitigation",
@@ -106,9 +103,9 @@
     },
     {
       "id": "end",
-      "seconds": 17.5,
-      "audioSeconds": 15.05,
-      "narration": "Three years, now less than an hour: your key risks, mitigations and enhancements are identified. Then scale up: models, data lineage, programmes, architecture and intelligence, on one acceleration platform. AI Center X: make AI deliver value.",
+      "seconds": 15.37,
+      "audioSeconds": 14.37,
+      "narration": "In under an hour, your risk profile is ready. Then scale up: models, data lineage, programmes, architecture and intelligence, on one acceleration platform. AI Center X: make AI deliver value.",
       "onScreen": [
         "AI Center X",
         "Coming soon",
@@ -116,8 +113,7 @@
         "The narration voice is AI-generated.",
         "This is a product concept video.",
         "Make AI Deliver Value",
-        "In less than an hour, your key risks, mitigations and enhancements are identified.",
-        "3 years",
+        "Risk profile ready",
         "< 1 hour",
         "The acceleration platform for AI initiatives",
         "Coming next",

@@ -2,9 +2,10 @@ import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
 import canvas from "../../data/canvas_hiring.json";
 import timeline from "../timeline.json";
+import {canvasMoments} from "../moments.mjs";
 import {color, headingFont, video} from "../theme";
 import {AppFrame, Button, Card, Cursor, ramp, SIDE, TOP_BAR} from "../ui/kit";
-import {cueWith, type SceneProps} from "./types";
+import type {SceneProps} from "./types";
 
 const GAP = 18;
 const ROWS = [2, 3, 2];
@@ -76,8 +77,7 @@ export const CanvasForm: React.FC<{t: number; typedBy: number; filledBy: number;
 export const Canvas: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const trigger = scene.onScreen[4];
-  const naming = cueWith(cues, "its data");
-  const appear = naming.end;
+  const {naming, appear, approach, arrive, glow} = canvasMoments(cues, seconds);
   const named = Object.fromEntries(NAMED.map((key, i) => [key, naming.start + ((naming.end - naming.start) * i) / NAMED.length]));
   return (
     <AppFrame trail={CANVAS_HEADING}>
@@ -88,15 +88,15 @@ export const Canvas: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           transform: `translateY(${(1 - ramp(t, appear, 0.4)) * -16}px)`,
         }}
       >
-        <Button label={trigger} glow={ramp(t, seconds - 1.2, 0.6)} />
+        <Button label={trigger} glow={ramp(t, glow, 0.6)} />
       </div>
       <Cursor
         t={t}
         shown={ramp(t, appear - 0.6, 0.4)}
         path={[
           {t: 0, x: 1500, y: 760},
-          {t: appear + 0.4, x: 1300, y: 640},
-          {t: seconds - 0.4, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
+          {t: approach, x: 1300, y: 640},
+          {t: arrive, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},
         ]}
       />
     </AppFrame>

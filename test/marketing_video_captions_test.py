@@ -113,7 +113,8 @@ def main():
     if captions is not None and not node:
         check('node is on PATH', ['node is not on PATH'])
     elif captions is not None:
-        built = subprocess.run([node, str(CUES), '--stdout'], capture_output=True, text=True, timeout=60, cwd=ROOT)
+        built = subprocess.run([node, str(CUES), '--stdout'], capture_output=True, text=True, encoding='utf-8', timeout=60,
+                               cwd=ROOT)
         lengths = subprocess.run([node, str(SCENE_SECONDS)], capture_output=True, text=True, timeout=60, cwd=ROOT)
         try:
             fresh, seconds = json.loads(built.stdout) == captions, json.loads(lengths.stdout)

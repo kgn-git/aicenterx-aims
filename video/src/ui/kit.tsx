@@ -1,5 +1,6 @@
 import React from "react";
 import {AbsoluteFill, Easing, interpolate, useCurrentFrame, useVideoConfig} from "remotion";
+import {CURSOR_EASE, PRESS_SCALE, pressed} from "../moments.mjs";
 import {appFrameHeight, bodyFont, color, headingFont, video, mutedInk} from "../theme";
 
 export const TOP_BAR = 88;
@@ -11,14 +12,6 @@ const clamp = {extrapolateLeft: "clamp", extrapolateRight: "clamp"} as const;
 /** 0 before `from`, 1 after `from + length`, eased in between; times in seconds. */
 export const ramp = (t: number, from: number, length = 0.5) =>
   interpolate(t, [from, from + length], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
-
-/** When the voice reaches `phrase`, in seconds: the cues share a clip by characters, so a phrase's place in the text
- *  is its place in time, to within a pause. */
-export const spokenAt = (narration: string, phrase: string, end: number) => {
-  const at = narration.indexOf(phrase);
-  if (at < 0) throw new Error(`The narration no longer says "${phrase}", so the scene cannot time its beats.`);
-  return (end * at) / narration.length;
-};
 
 /** A faint dot grid drifting slowly behind every scene, the agents' presence; it brightens while one works. */
 const AgentGrid: React.FC<{shown: number}> = ({shown}) => {
@@ -100,7 +93,7 @@ export const Button: React.FC<{label: string; pressed?: number; glow?: number; s
     style={{
       display: "inline-flex", alignItems: "center", height: 64, padding: "0 28px", borderRadius: 2,
       background: color.gov, border: `1px solid ${color.gov}`, color: "#fff", fontWeight: 600,
-      transform: `scale(${1 - 0.05 * pressed})`,
+      transform: `scale(${1 - (1 - PRESS_SCALE) * pressed})`,
       boxShadow: `0 0 ${36 * glow}px ${color.gov}`,
       ...style,
     }}
@@ -127,10 +120,10 @@ export const Cursor: React.FC<{t: number; path: {t: number; x: number; y: number
   t, path, clicks = [], shown = 1,
 }) => {
   const times = path.map((p) => p.t);
-  const ease = {...clamp, easing: Easing.inOut(Easing.cubic)};
+  const ease = {...clamp, easing: Easing.bezier(...CURSOR_EASE)};
   const x = path.length > 1 ? interpolate(t, times, path.map((p) => p.x), ease) : path[0].x;
   const y = path.length > 1 ? interpolate(t, times, path.map((p) => p.y), ease) : path[0].y;
-  const press = Math.max(0, ...clicks.map((c) => 1 - Math.abs(t - c) / 0.15));
+  const press = pressed(t, clicks);
   return (
     <svg
       width="44" height="44" viewBox="0 0 24 24"
@@ -261,29 +254,3 @@ export const KIND_COLOUR: Record<string, string> = {
 export const KindTag: React.FC<{kind: string}> = ({kind}) => (
   <SourceChip tone={KIND_COLOUR[kind]}>{kind[0].toUpperCase() + kind.slice(1)}</SourceChip>
 );
-
-/** How far a Zoom between `from` and `to` seconds is in at `t`, 0 to 1, so a scene can hide what the zoom hides.
- *  A re-voiced take can move the cue that ends the zoom; holding at least half a second avoids a half-zoom lurch. */
-export const zoomLevel = (t: number, from: number, to: number) =>
-  ramp(t, from, 0.5) * (1 - ramp(t, Math.max(to, from + 1), 0.5));
-
-/** Moves `focus` (in the layer's own pixels) to the middle and enlarges it between `from` and `to` seconds, so a
- *  phone-sized viewer can read the card being narrated. */
-export const Zoom: React.FC<{
-  t: number; focus: {x: number; y: number}; from: number; to: number; scale?: number; children?: React.ReactNode;
-}> = ({t, focus, from, to, scale = 1.7, children}) => {
-  const z = zoomLevel(t, from, to);
-  const middle = {x: video.width / 2, y: (appFrameHeight - TOP_BAR) / 2};
-  return (
-    <div style={{position: "absolute", inset: 0, overflow: "hidden"}}>
-      <div
-        style={{
-          position: "absolute", inset: 0, transformOrigin: `${focus.x}px ${focus.y}px`,
-          transform: `translate(${z * (middle.x - focus.x)}px, ${z * (middle.y - focus.y)}px) scale(${1 + (scale - 1) * z})`,
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-};

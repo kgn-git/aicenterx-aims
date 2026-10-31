@@ -3,12 +3,12 @@ import {useCurrentFrame, useVideoConfig} from "remotion";
 import steps from "../../data/agent_steps.json";
 import risks from "../../../tools/data/risk_suggestions.json";
 import {color, headingFont, STAGE, mutedInk} from "../theme";
+import {pressed, stageMoments} from "../moments.mjs";
 import {
-  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, bump, ramp, SIDE, SourceChip, Toast, TOP_BAR, Zoom,
-  zoomLevel,
+  AgentRun, AgentStatus, AppFrame, Button, Card, Checkbox, Cursor, bump, ramp, SIDE, SourceChip, Toast, TOP_BAR,
 } from "../ui/kit";
 import {CANVAS_HEADING, CanvasForm, INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import {saidAt, type SceneProps} from "./types";
+import type {SceneProps} from "./types";
 
 const COLS = 3;
 const GAP = 18;
@@ -17,8 +17,8 @@ const WIDTH = (1920 - 2 * SIDE - (COLS - 1) * GAP) / COLS;
 const HEIGHT = 315;
 const cell = (i: number) => ({x: SIDE + (i % COLS) * (WIDTH + GAP), y: TOP + Math.floor(i / COLS) * (HEIGHT + GAP)});
 
-/** The agent run, the only one shown in full: the trigger is clicked, the steps tick off, the cited risks land and the
- *  first is enlarged while the narration names its sources, then the relevant ones are saved. */
+/** The agent run, the only one shown in full: the trigger is clicked, the steps tick off, the cited risks land, each
+ *  card's chips light as the narration names their sources, and the relevant ones are ticked and saved. */
 export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, next, toast] = scene.onScreen;
@@ -27,18 +27,11 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const hiring = risks.initiatives.hiring;
   const cards = shown.map((id) => hiring.suggestions.find((s) => s.id === id)!);
 
-  const click = 0.5;
-  const runFrom = 1;
-  const runTo = 4;
-  const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
-  // The narration does not voice the choice, so it is timed back from the scene's end: the next button glows for a
-  // second. The zoom holds at least 1 s and leaves before the first tick, so the cursor is seen ticking.
-  const nextAt = seconds - 1;
-  const saveAt = nextAt - 0.8;
-  const ticks = saved.map((_, k) => saveAt - 0.8 - (saved.length - 1 - k) * 0.6);
-  const zoom = {from: Math.max(shownAt(0), Math.min(saidAt(cues, "MIT") - 0.3, ticks[0] - 1.6)), to: ticks[0] - 0.6};
+  const {click, runFrom, runTo, cards: landAt, contextAt, named: [mitNamed, aiidNamed], ticks, saveAt, nextAt} =
+    stageMoments(scene, cues, seconds);
+  const shownAt = (i: number) => landAt[i] ?? contextAt;
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
-  const label = t < runTo ? trigger : t < nextAt ? save : next;
+  const label = t < runTo ? trigger : t < nextAt! ? save : next;
   const target = (i: number) => ({x: cell(i).x + 40, y: cell(i).y + 40});
   const settled = ramp(t, ticks[ticks.length - 1] + 0.3, 0.4);
 
@@ -55,7 +48,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           <AgentRun steps={steps.risks} t={t} from={runFrom} length={runTo - runFrom - 0.2} />
         </div>
       )}
-      <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={zoom.from} to={zoom.to}>
+      <div style={{position: "absolute", inset: 0}}>
         {cards.map((risk, i) => {
           const k = saved.indexOf(risk.id);
           const incident = risk.incidents[0];
@@ -74,8 +67,8 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
               <div style={{display: "flex", flexDirection: "column", gap: 14, lineHeight: 1.3}}>
                 <span>{risk.description}</span>
                 <div style={{display: "flex", flexWrap: "wrap", gap: 10}}>
-                  <SourceChip tone={color.gov} shown={ramp(t, shownAt(i) + 0.25, 0.2)} pulse={bump(t, shownAt(i) + 0.45)}>MIT · {risk.mit.domain}</SourceChip>
-                  <SourceChip tone={color.val} shown={ramp(t, shownAt(i) + 0.3, 0.2)} pulse={bump(t, shownAt(i) + 0.5)}>AIID {incident.id}</SourceChip>
+                  <SourceChip tone={color.gov} shown={ramp(t, shownAt(i) + 0.25, 0.2)} pulse={Math.max(bump(t, shownAt(i) + 0.45), bump(t, mitNamed + 0.05 * i, 0.8))}>MIT · {risk.mit.domain}</SourceChip>
+                  <SourceChip tone={color.val} shown={ramp(t, shownAt(i) + 0.3, 0.2)} pulse={Math.max(bump(t, shownAt(i) + 0.5), bump(t, aiidNamed + 0.05 * i, 0.8))}>AIID {incident.id}</SourceChip>
                 </div>
               </div>
             </Card>
@@ -92,7 +85,7 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
           <span>{hiring.context.statement}</span>
           <div style={{color: mutedInk}}>{hiring.context.edition}</div>
         </Card>
-      </Zoom>
+      </div>
       <div
         style={{
           position: "absolute", left: SIDE, top: 32, fontFamily: headingFont, fontSize: 56, fontWeight: 600,
@@ -104,14 +97,13 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
       <div style={{position: "absolute", right: TRIGGER.right, top: TRIGGER.top}}>
         <Button
           label={label}
-          pressed={Math.max(0, 1 - Math.abs(t - click) / 0.15, 1 - Math.abs(t - saveAt) / 0.15)}
-          glow={label === next ? ramp(t, nextAt, 0.5) : 0}
+          pressed={pressed(t, [click, saveAt])}
+          glow={label === next ? ramp(t, nextAt!, 0.5) : 0}
         />
       </div>
       <Toast text={toast} shown={ramp(t, saveAt + 0.15, 0.35)} style={{top: 32, bottom: undefined, right: SIDE + 420, padding: "12px 28px"}} />
       <Cursor
         t={t}
-        shown={1 - zoomLevel(t, zoom.from, zoom.to)}
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: TRIGGER.x, y: TRIGGER.y - TOP_BAR},

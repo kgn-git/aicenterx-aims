@@ -1,6 +1,6 @@
 # Marketing video
 
-This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs 70 to 75 s, with a close of 19 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
+This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs about 60 s (58 to 61 s), with a close of about 15 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
 
 Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the project owner confirmed on 28 October 2026 that it applies here.
 
@@ -36,9 +36,9 @@ To check that the fonts loaded, look at a scene title: it is set in Fraunces, a 
 
 ## Narrate
 
-The narration is voiced with Deepgram text-to-speech (a Flux voice) and committed as `public/audio/<scene>.wav`, so a render needs neither the key nor the network. Remake it only when the narration changes.
+The narration is voiced with ElevenLabs text-to-speech (Matilda on `eleven_v3`) and committed as `public/audio/<scene>.wav`, so a render needs neither the key nor the network. Remake it only when the narration changes.
 
-1. Copy `.env.example` to `.env.local` at the repo root and add `DEEPGRAM_API_KEY`. The file is git-ignored.
+1. Copy `.env.example` to `.env.local` at the repo root and add `ELEVENLABS_API_KEY`, a key allowed to use text to speech. The file is git-ignored.
 2. Voice the scenes, then rebuild the captions:
 
 ```sh
@@ -48,9 +48,9 @@ npm run video:narrate -- problem       # only one scene
 npm run video:cues
 ```
 
-`video:narrate` writes each clip's length into `src/timeline.json` as `audioSeconds`. It replaces nothing unless every clip in the run succeeded, and it never prints the key. Listen to each clip before committing: it must say the whole line. `video:cues` rebuilds `src/captions.json`; the captions test fails until it has run.
+`video:narrate` writes each clip's length into `src/timeline.json` as `audioSeconds`. It replaces nothing unless every clip in the run succeeded, and it never prints the key. Listen to each clip before committing: it must say the whole line. Then set each scene's `seconds` to its clip plus 0.3 s, and the close's to its clip plus 1.0 s; the timeline test checks this, so no scene holds dead air. `video:cues` rebuilds `src/captions.json`; the captions test fails until it has run.
 
-The whole narration is voiced in one take, so the voice keeps one pace, then cut into scenes at the word timings of Deepgram's transcription (`nova-3`). Flux voices take no speaking instructions and no SSML: `SPEED` and `EXPRESSIVITY` in `scripts/narrate.mjs` set the pace and liveliness, and `SPELL` makes the voice read the acronyms in `SPELLED` letter by letter. To compare voices, `npm run video:narrate -- --samples` writes the hook, mitigations and close in each candidate voice, plain and with acronyms spelled out, to `video/out/samples/`. Check voice names against Deepgram's current Flux voice list before adding one.
+The whole narration is voiced in one take, so the voice keeps one pace, then cut into scenes at the per-character timings ElevenLabs returns with the audio (`/with-timestamps`). Those timings run back to back, so `scripts/take.mjs` finds the pauses in the sound itself: it shortens any silence inside a line to 0.35 s, trims each clip's edges to a short lead and trail, and fades every cut over 20 ms so none clicks. `eleven_v3` takes no speed setting, so the shortened pauses set the pace. A take varies each time it is voiced; listen for slips and voice again if one appears. To compare voices, `npm run video:narrate -- --samples` writes the hook, mitigations and close in each voice of `SAMPLE_VOICES` to `video/out/samples/`.
 
 ## Render a fragment
 
@@ -66,13 +66,14 @@ Fragments are for review. The released video is rendered in one piece from `CvSc
 npm run video:assemble
 ```
 
-This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 75 s at most (the user's target once the walkthrough lines were cut) at 1920x1080, with H.264 video and AAC audio.
+This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 61 s at most (the user's 60 s target) at 1920x1080, with H.264 video and AAC audio.
 
 ## Files
 
 - `src/timeline.json`: scenes, timing and data references (#27). `test/marketing_video_timeline_test.py` checks it.
 - `src/compositions.json`: the composition id of each fragment.
 - `src/timing.mjs`: how long each scene plays. `scripts/scene-seconds.mjs` prints it for the tests.
+- `src/moments.mjs`: when each scene's beats happen, timed from the narration: cards, ticks, saves, hand-offs, the problem's icons and the close. `test/marketing_video_scenes_test.py` runs it on the real captions.
 - `src/captions.json`: the caption cues, built by `scripts/cues.mjs`. `test/marketing_video_captions_test.py` checks them. The scenes time their animation from them; the released video carries no subtitles.
 - `public/audio/`: one narration clip per scene, made by `scripts/narrate.mjs`. `test/marketing_video_audio_test.py` checks them.
 - `scripts/take.mjs`: cuts the one narrated take into scene clips at the word timings. `test/marketing_video_take_test.py` checks it.

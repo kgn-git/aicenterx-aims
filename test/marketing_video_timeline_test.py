@@ -7,23 +7,24 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - shape: seven scenes hook, problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly
     one of the fragments f1 (hook, problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each
     scene carries only its own dataRefs group (the hook its sources), with no repeated id
-  - timing: f1 runs 10 to 30 s, f2 to f4 each 10 to 15 s, f5 19 s at most and long enough for its clip and its 0.3 s
-    tail, 70 to 75 s planned in all (the user's target once the walkthrough lines were cut; the played length is pinned
-    in test/marketing_video_audio_test.py), at most 3 words a second, since the voice sets the speaking pace and
-    seconds planned beyond it only add silence
+  - timing: f1 runs 10 to 30 s, f2 to f4 each 5 to 15 s, f5 19 s at most; every voiced scene ends 0.3 s after its
+    clip and the close 1.0 s after its own, so no scene holds dead air (the played length, the user's 60 s target,
+    is pinned in test/marketing_video_audio_test.py); at most 3 words a second, since the voice sets the pace
   - narration: 200 words at most; a hook of at most 13 words that names Amazon and says "allegedly"; no "use case";
     no click-by-click line, so no "select" or "save" in any form, since the ticks and toasts already show the choice;
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
     unaudited ratings would re-learn the recruiter bias the video names as a risk
-  - the problem scene shows its own narration as its first two items, so its graphic never changes what is voiced
-  - the close: its narration and screen say the key risks, mitigations and enhancements are identified in less than
-    an hour, on an acceleration platform; the problem and end scenes show the span of the hook's milestones as
-    "N years"
+  - the problem scene is pictures, not sentences: its items are the three costs the voice names, each spoken in its
+    narration, then the two aims of its Venn diagram, so its graphic never says what is not voiced
+  - the lines the user approved word for word: the enhancements line, and the close's opening outcome "In under an
+    hour, your risk profile is ready."; the close's narration says "acceleration platform"
+  - only the hook speaks of years or shows a span of them, since the video does not claim the three years it cites
+    shrink to an hour; the close shows the outcome card's "Risk profile ready" and "< 1 hour"
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
-    the hook's milestones written "YYYY – label", each scene's trigger, save and next buttons and toast, and the
-    problem graphic's labels, and the close's brand, heading, disclosure, footnote, tagline, core message, time
+    the hook's milestones written "YYYY – label", each scene's trigger, save and next buttons and toast, the
+    problem graphic's two aims, and the close's brand, heading, disclosure, footnote, tagline, core message, time
     contrast, platform line and the five capabilities it names
   - dataRefs: every id exists, saved is a subset of shown, the hook's aiid is an incident of a CV Screening Assistant
     risk and is cited on screen, and the chain holds: saved risks have mitigations, the mitigations shown are those of
@@ -56,12 +57,10 @@ SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs
 LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save selected mitigations',
           'Suggest model enhancements', 'Save selected enhancements')
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
-# Where the problem and end scenes show the years the hook's milestones span.
-YEARS = (('problem', 2), ('end', 7))
-CORE = 'your key risks, mitigations and enhancements are identified'
+YEARS = re.compile(r'\b(\d+|three|two|four) years\b', re.I)
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
 ROLES = {'hook': {4: '2017 – Project abandoned'},
-         'problem': {3: 'Time', 4: 'Effort', 5: 'Harm', 6: 'Govern responsibly', 7: 'Create real value'},
+         'problem': {0: 'Time', 1: 'Effort', 2: 'Harm', 3: 'Govern responsibly', 4: 'Create real value'},
          'canvas': {4: 'Simulate risks'},
          'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations', 5: 'Selected risks saved'},
          'mitigations': {0: 'Generate mitigations', 3: 'Save selected mitigations', 4: 'Suggest model enhancements',
@@ -70,17 +69,22 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                           4: 'Selected enhancements saved'},
          'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
-                 5: 'Make AI Deliver Value', 6: f'In less than an hour, {CORE}.', 8: '< 1 hour',
-                 9: 'The acceleration platform for AI initiatives', 10: 'Coming next',
-                 11: 'Find the models that fit your initiative', 12: 'Map your data lineage',
-                 13: 'Combine initiatives into programmes and delivery waves',
-                 14: 'Govern your enterprise AI architecture',
-                 15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
+                 5: 'Make AI Deliver Value', 6: 'Risk profile ready', 7: '< 1 hour',
+                 8: 'The acceleration platform for AI initiatives', 9: 'Coming next',
+                 10: 'Find the models that fit your initiative', 11: 'Map your data lineage',
+                 12: 'Combine initiatives into programmes and delivery waves',
+                 13: 'Govern your enterprise AI architecture',
+                 14: 'Stay up to date with market and security intelligence', 15: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
-MAX_WORDS, MAX_PACE, MIN_TOTAL, MAX_TOTAL, SHOWN_RISKS, HOOK_WORDS = 200, 3.0, 70.0, 75.0, 5, 13
-FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (10, 15), (10, 30), 19
-# TAIL in video/src/timing.mjs: the silence every scene plays after its clip.
-TAIL = 0.3
+MAX_WORDS, MAX_PACE, SHOWN_RISKS, HOOK_WORDS = 200, 3.0, 5, 13
+FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
+# TAIL in video/src/timing.mjs: the silence every scene plays after its clip, and the crossfade between two scenes.
+# The close holds longer, so the brand, the tagline and the footer can be read before the picture ends.
+TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
+# The lines the user approved word for word.
+APPROVED = {'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile."}
+PAYOFF = 'In under an hour, your risk profile is ready.'
+PROBLEM_ITEMS, PROBLEM_MARKS = 5, 3
 
 
 def words(s):
@@ -159,11 +163,10 @@ def validate(t, ctx):
         lo, hi = (0, END_SECONDS) if fid == 'f5' else OPENING_SECONDS if fid == 'f1' else FRAGMENT_SECONDS
         if not lo <= secs <= hi:
             bad.append(f'{fid} runs {secs} s, want {f"{hi} s at most" if fid == "f5" else f"{lo} to {hi} s"}')
-    close = by_id['end']
-    if 'audioSeconds' in close and close['seconds'] < close['audioSeconds'] + TAIL:
-        bad.append(f'end: {close["seconds"]} s planned is shorter than its clip and tail, so f5 plays past its cap')
-    if not MIN_TOTAL <= sum(s['seconds'] for s in scenes) <= MAX_TOTAL:
-        bad.append(f'the scenes run {sum(s["seconds"] for s in scenes)} s, want {MIN_TOTAL:g} to {MAX_TOTAL:g}')
+    for s in scenes:
+        tail = CLOSE_TAIL if s['id'] == 'end' else TAIL
+        if 'audioSeconds' in s and abs(s['seconds'] - (s['audioSeconds'] + tail)) > SLACK:
+            bad.append(f'{s["id"]}: {s["seconds"]} s planned, want its {s["audioSeconds"]} s clip plus {tail:g} s')
     if sum(words(s['narration']) for s in scenes) > MAX_WORDS:
         bad.append(f'the narration has {sum(words(s["narration"]) for s in scenes)} words, more than {MAX_WORDS}')
     hook = by_id['hook']['narration']
@@ -176,16 +179,18 @@ def validate(t, ctx):
     milestones = by_id['hook']['onScreen'][2:]
     if not milestones or not all(MILESTONE.fullmatch(m) for m in milestones):
         bad.append('hook: onScreen[2:] must be milestones written "YYYY – label"')
-    else:
-        span = f'{int(milestones[-1][:4]) - int(milestones[0][:4])} years'
-        bad += [f'{sid}: onScreen[{i}] must be "{span}", the span of the hook milestones'
-                for sid, i in YEARS if by_id[sid]['onScreen'][i:i + 1] != [span]]
+    bad += [f'{s["id"]}: speaks of or shows years, which only the hook does'
+            for s in scenes if s['id'] != 'hook' and YEARS.search(s['narration'] + ' ' + ' '.join(s['onScreen']))]
     problem = by_id['problem']
-    if ' '.join(problem['onScreen'][:2]) != problem['narration']:
-        bad.append('problem: onScreen[0:2] must be its narration word for word')
+    if len(problem['onScreen']) != PROBLEM_ITEMS:
+        bad.append(f'problem: onScreen must be its three costs and two aims only, got {problem["onScreen"]}')
+    bad += [f'problem: the cost "{m}" is not spoken' for m in problem['onScreen'][:PROBLEM_MARKS]
+            if not re.search(rf'\b{m.lower()}\b', problem['narration'])]
+    bad += [f'{sid}: the narration must be the approved "{line}"' for sid, line in APPROVED.items()
+            if by_id[sid]['narration'] != line]
     end = by_id['end']['narration']
-    if not all(phrase in end for phrase in ('less than an hour', CORE, 'acceleration platform')):
-        bad.append(f'end: the narration must say "less than an hour", "{CORE}" and "acceleration platform"')
+    if not end.startswith(PAYOFF) or 'acceleration platform' not in end:
+        bad.append(f'end: the narration must open "{PAYOFF}" and say "acceleration platform"')
     return bad + validate_refs(by_id, ctx)
 
 

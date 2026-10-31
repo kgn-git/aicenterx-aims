@@ -1,76 +1,58 @@
 import React from "react";
-import {interpolate, interpolateColors} from "remotion";
+import {interpolate} from "remotion";
+import {TALLY_COUNT} from "../moments.mjs";
 import {appFrameHeight, color, headingFont, video, mutedInk} from "../theme";
 import {ramp} from "../ui/kit";
 
 const clamp = {extrapolateLeft: "clamp", extrapolateRight: "clamp"} as const;
 const lerp = (k: number, from: number, to: number) => interpolate(k, [0, 1], [from, to], clamp);
 const MIDDLE = {x: video.width / 2, y: appFrameHeight / 2};
-// The hook's timeline width, so the years it spans come back as the same bar.
-const SPAN = 1400;
-
-/** The hook's years collapsing into the hour the journey took, over what that hour saved and the message it proves;
- *  the years stay, struck through, so before and after share a frame. */
-export const Contrast: React.FC<{
-  t: number; years: string; chip: string; message: string; counts: [number, string][];
-  at: {collapse: number; tallies: number; message: number};
-}> = ({t, years, chip, message, counts, at}) => {
-  const c = ramp(t, at.collapse, 0.9);
-  const width = lerp(c, SPAN, 320);
-  const height = lerp(c, 6, 92);
+/** The initiative's outcome: its risks, mitigations and enhancements count up in their stage colours and are ticked,
+ *  under the hour it took; then the card folds to the size its portfolio card has at the portfolio's opening zoom, so
+ *  the pull-back starts from this very card. */
+export const Outcome: React.FC<{
+  t: number; initiative: string; heading: string; chip: string; counts: [number, string][]; tones: string[];
+  at: {card: number; rows: number[]; clock: number; ready: number; fold: number};
+}> = ({t, initiative, heading, chip, counts, tones, at}) => {
+  const fold = ramp(t, at.fold, 0.4);
+  const open = 1 - fold;
+  const height = lerp(fold, OUTCOME.open, OUTCOME.closed);
   return (
-    <>
-      <div
-        style={{
-          position: "absolute", left: MIDDLE.x - SPAN / 2, width: SPAN, top: 170, textAlign: "center",
-          fontFamily: headingFont, fontSize: 60, fontWeight: 650, color: color.ragHigh,
-          opacity: ramp(t, 0, 0.4) * (1 - 0.55 * c),
-        }}
-      >
-        <span style={{position: "relative"}}>
-          {years}
-          <span
-            style={{
-              position: "absolute", left: 0, top: "52%", height: 5, width: `${100 * ramp(t, at.collapse + 0.5, 0.4)}%`,
-              background: color.ragHigh,
-            }}
-          />
-        </span>
+    <div
+      style={{
+        position: "absolute", left: MIDDLE.x - OUTCOME.width / 2, top: MIDDLE.y - height / 2, width: OUTCOME.width, height,
+        boxSizing: "border-box", borderRadius: 12, padding: "30px 42px", background: color.surface2,
+        border: `9px solid ${color.val}`, overflow: "hidden", opacity: ramp(t, at.card, 0.4),
+      }}
+    >
+      <div style={{fontSize: 57, fontWeight: 600, whiteSpace: "nowrap", lineHeight: 1.15}}>{initiative}</div>
+      <div style={{display: "flex", alignItems: "center", gap: 14, marginTop: 6, fontSize: 48, fontWeight: 600, color: color.val}}>
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={color.val} strokeWidth={2.2} strokeLinecap="round" style={{opacity: ramp(t, at.clock, 0.3)}}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3.5 2" />
+        </svg>
+        <span style={{opacity: ramp(t, at.clock, 0.3)}}>{chip}</span>
+        <span style={{fontSize: 34, color: color.ink, opacity: open * ramp(t, at.ready, 0.4)}}>· {heading}</span>
       </div>
-      <div
-        style={{
-          position: "absolute", left: MIDDLE.x - width / 2, width, top: 300 - height / 2, height, borderRadius: height / 2,
-          background: interpolateColors(c, [0, 1], [color.ragHigh, color.val]), display: "flex", alignItems: "center",
-          justifyContent: "center", fontFamily: headingFont, fontSize: 50, fontWeight: 650, color: color.bgBase,
-          opacity: ramp(t, 0, 0.4),
-        }}
-      >
-        <span style={{opacity: ramp(t, at.collapse + 0.6, 0.3)}}>{chip}</span>
+      <div style={{marginTop: 26, display: "flex", flexDirection: "column", gap: 12, opacity: open}}>
+        {counts.map(([n, label], i) => {
+          const shown = ramp(t, at.rows[i], 0.3);
+          const done = ramp(t, at.rows[i] + TALLY_COUNT, 0.25);
+          return (
+            <div key={label} style={{display: "flex", alignItems: "center", gap: 22, height: 68, opacity: shown}}>
+              <div style={{width: 10, alignSelf: "stretch", background: tones[i], borderRadius: 2}} />
+              <div style={{width: 70, fontFamily: headingFont, fontSize: 64, fontWeight: 650, color: tones[i], lineHeight: 1}}>
+                {Math.round(n * ramp(t, at.rows[i], TALLY_COUNT))}
+              </div>
+              <div style={{flex: 1, fontSize: 38, color: color.ink}}>{label}</div>
+              <svg width="40" height="40" viewBox="0 0 24 24" style={{opacity: done, transform: `scale(${0.6 + 0.4 * done})`}}>
+                <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke={tones[i]} strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </div>
+          );
+        })}
       </div>
-      {counts.map(([n, label], i) => {
-        const shown = ramp(t, at.tallies + i * 0.35, 0.5);
-        return (
-          <div
-            key={label}
-            style={{
-              position: "absolute", left: MIDDLE.x + (i - 1) * 400 - 180, width: 360, top: 420, textAlign: "center",
-              opacity: shown, transform: `translateY(${(1 - shown) * 20}px)`,
-            }}
-          >
-            <div style={{fontFamily: headingFont, fontSize: 110, fontWeight: 650, color: color.gov, lineHeight: 1}}>{Math.round(n * ramp(t, at.tallies + i * 0.35, 0.8))}</div>
-            <div style={{fontSize: 34, color: mutedInk, marginTop: 10}}>{label}</div>
-          </div>
-        );
-      })}
-      <div
-        style={{
-          position: "absolute", left: 210, right: 210, top: 660, textAlign: "center", fontFamily: headingFont,
-          fontSize: 48, fontWeight: 600, lineHeight: 1.25, opacity: ramp(t, at.message, 0.6),
-        }}
-      >
-        {message}
-      </div>
-    </>
+    </div>
   );
 };
 
@@ -78,6 +60,8 @@ const GRID = {left: 560, top: 330, column: 240, gap: 40, card: 64, cardGap: 14};
 const WAVES = [3, 2, 3];
 const GRID_RIGHT = GRID.left + WAVES.length * GRID.column + (WAVES.length - 1) * GRID.gap;
 const CV = {x: GRID.left + GRID.column / 2, y: GRID.top + GRID.card / 2};
+// The outcome card open, and folded to the initiative card at the portfolio's opening 3x zoom.
+const OUTCOME = {width: GRID.column * 3, open: 500, closed: GRID.card * 3};
 const PILL = {width: 420, gap: 80, top: 360, line: 435};
 
 /** A capability still to come: a dashed outline with nothing moving inside it, tagged as coming, so it never reads

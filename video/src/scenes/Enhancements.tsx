@@ -3,12 +3,12 @@ import {useCurrentFrame, useVideoConfig} from "remotion";
 import enhancements from "../../data/model_enhancements.json";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import {color, headingFont, STAGE, video, mutedInk} from "../theme";
+import {pressed, stageMoments} from "../moments.mjs";
 import {
-  AgentStatus, AppFrame, bump, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Toast,
-  TOP_BAR, Zoom, zoomLevel,
+  AgentStatus, AppFrame, bump, Button, Card, Checkbox, Cursor, KindTag, ramp, SIDE, SourceChip, Toast, TOP_BAR,
 } from "../ui/kit";
 import {INITIATIVE_NAME, TRIGGER} from "./Canvas";
-import {saidAt, type SceneProps} from "./types";
+import type {SceneProps} from "./types";
 
 const TOP = 130;
 const GAP = 18;
@@ -19,24 +19,17 @@ const STEPS = ["Read the saved mitigations", "Search mitigation sources", "Draft
 const all = Object.values(mitigations.risks).flat();
 const cell = (i: number) => ({x: SIDE + (i % 2) * (WIDTH + GAP), y: TOP + Math.floor(i / 2) * (HEIGHT + GAP)});
 
-/** The third agent run, shown by its status line alone: enhancements that put the saved mitigations into effect land,
- *  each tied to its mitigation and source, the first enlarged while the narration names it. */
+/** The third agent run, shown by its status line alone: enhancements that put the saved mitigations into effect land
+ *  just after the click, each tied to its mitigation and source, and are ticked and saved under the voice. */
 export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [trigger, , , save, toast] = scene.onScreen;
   const {shown, saved} = scene.dataRefs.enhancements!;
   const cards = shown.map((id) => enhancements.enhancements.find((e) => e.id === id)!);
 
-  const click = 0.35;
-  const runFrom = 0.7;
-  const runTo = 1.1;
-  const shownAt = (i: number) => runTo + 0.15 + i * 0.1;
-  const zoom = {from: shownAt(0) + 0.5, to: Math.max(shownAt(0) + 1.5, saidAt(cues, "fine-tuning") + 1)};
+  const {click, runFrom, runTo, cards: landAt, ticks, saveAt} = stageMoments(scene, cues, seconds);
+  const shownAt = (i: number) => landAt[i];
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
-  // The toast must stay up for about 1.5 s before the cut, so a late last cue pulls the ticks earlier.
-  const firstTick = Math.min(cues[cues.length - 1].start + 0.2, seconds - 2.1 - 0.45 * (saved.length - 1) - 0.6);
-  const ticks = saved.map((_, k) => firstTick + k * 0.45);
-  const saveAt = ticks[ticks.length - 1] + 0.6;
   const button = {x: TRIGGER.x, y: TRIGGER.y - TOP_BAR};
 
   return (
@@ -44,7 +37,7 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
       {t >= runFrom && (
         <AgentStatus steps={STEPS} t={t} from={runFrom} length={runTo - runFrom - 0.2} until={shownAt(cards.length - 1) + 0.6} />
       )}
-      <Zoom t={t} focus={{x: cell(0).x + WIDTH / 2, y: cell(0).y + HEIGHT / 2}} from={zoom.from} to={zoom.to} scale={1.6}>
+      <div style={{position: "absolute", inset: 0}}>
         {cards.map((e, i) => {
           const k = saved.indexOf(e.id);
           const m = all.find((x) => x.id === e.mitigationId)!;
@@ -78,25 +71,24 @@ export const Enhancements: React.FC<SceneProps> = ({scene, cues, seconds}) => {
             </Card>
           );
         })}
-      </Zoom>
+      </div>
       <div style={{position: "absolute", left: SIDE, top: 32, fontFamily: headingFont, fontSize: 56, fontWeight: 600}}>
         {INITIATIVE_NAME}
       </div>
       <div style={{position: "absolute", right: TRIGGER.right, top: TRIGGER.top}}>
         <Button
           label={t < shownAt(0) ? trigger : save}
-          pressed={Math.max(0, 1 - Math.abs(t - click) / 0.15, 1 - Math.abs(t - saveAt) / 0.15)}
+          pressed={pressed(t, [click, saveAt])}
           glow={t < click ? 1 - ramp(t, 0, click) : 0}
         />
       </div>
       <Toast text={toast} shown={ramp(t, saveAt + 0.15, 0.35)} style={{top: 32, bottom: undefined, right: SIDE + 470, padding: "12px 28px"}} />
       <Cursor
         t={t}
-        shown={1 - zoomLevel(t, zoom.from, zoom.to)}
         clicks={[click, ...ticks, saveAt]}
         path={[
           {t: 0, x: button.x, y: button.y},
-          {t: firstTick - 0.4, x: 1000, y: 500},
+          {t: ticks[0] - 0.4, x: 1000, y: 500},
           ...saved.map((id, k) => ({t: ticks[k], x: cell(shown.indexOf(id)).x + 40, y: cell(shown.indexOf(id)).y + 40})),
           {t: saveAt, ...button},
           {t: seconds, x: 1450, y: 100},

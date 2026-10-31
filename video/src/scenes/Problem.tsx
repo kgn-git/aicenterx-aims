@@ -1,101 +1,136 @@
 import React from "react";
-import {useCurrentFrame, useVideoConfig} from "remotion";
-import {color, headingFont, mutedInk} from "../theme";
-import {Background, ramp, spokenAt} from "../ui/kit";
+import {interpolateColors, useCurrentFrame, useVideoConfig} from "remotion";
+import {problemMoments} from "../moments.mjs";
+import {color, headingFont} from "../theme";
+import {Background, ramp} from "../ui/kit";
 import type {SceneProps} from "./types";
 
-const LEFT = 260;
-const RIGHT = 1660;
-const BAR_Y = 520;
 const RADIUS = 220;
-const CIRCLES_Y = 400;
+const CIRCLES_Y = 430;
+const TILE = 190;
+const TILE_GAP = 400;
+const TILES_Y = CIRCLES_Y;
 
-/** The statement over the hook's years, marked with the time, effort and harm it names as the voice says each; then
- *  the challenge as two aims, governing responsibly and creating real value, that overlap into one target. */
+// Line icons on a 24-unit grid, drawn in the stroke colour of their tile or circle.
+const ICONS: Record<string, React.ReactNode> = {
+  time: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </>
+  ),
+  effort: (
+    <>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17" cy="9" r="2.5" />
+      <path d="M15.5 14.2c3 .2 5.5 2.7 5.5 5.8" />
+    </>
+  ),
+  harm: (
+    <>
+      <path d="M12 3l10 18H2z" />
+      <path d="M12 10v5" />
+      <path d="M12 18v.5" />
+    </>
+  ),
+  govern: (
+    <>
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+      <path d="M8.5 12l2.5 2.5 4.5-5" />
+    </>
+  ),
+  value: (
+    <>
+      <path d="M4 4v16h16" />
+      <path d="M7 15l4-4 3 3 5-6" />
+      <path d="M15 8h4v4" />
+    </>
+  ),
+};
+
+const Icon: React.FC<{name: string; tone: string; size: number}> = ({name, tone, size}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={tone} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    {ICONS[name]}
+  </svg>
+);
+
+/** The problem in pictures: three empty rings fill with the time, effort and harm the voice names, and turn red as
+ *  one cost on harm; then they give way to the two aims, governing responsibly and creating real value, which overlap
+ *  into one target. */
 export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
-  const [statement, challenge, years, ...labels] = scene.onScreen;
-  const marks = labels.slice(0, 3);
-  const [govern, value] = labels.slice(3);
-  const end = cues[cues.length - 1].end;
-  const split = (end * statement.length) / (statement.length + challenge.length);
-  const first = 1 - ramp(t, split - 0.3, 0.5);
-  const meet = ramp(t, split + 0.2, 1.2);
-  const target = ramp(t, spokenAt(scene.narration, "create real value", end) + 0.2, 0.5);
+  const [time, effort, harm, govern, value] = scene.onScreen;
+  const m = problemMoments(scene, cues);
+  const red = ramp(t, m.marks[2], 0.4);
+  const rings = ramp(t, m.rings, 0.4);
+  const costs = 1 - ramp(t, m.costsOut, 0.4);
+  const venn = ramp(t, m.circles, 0.5);
+  const meet = ramp(t, m.meet, 1.0);
+  const target = ramp(t, m.target, 0.5);
   // The dotted grid, the product's backdrop, arrives with the challenge the product answers.
-  const dots = ramp(t, spokenAt(scene.narration, "The challenge", end), 0.8);
-  const reveal = (text: string, from: number, to: number, style: React.CSSProperties) => {
-    const words = text.split(" ");
+  const dots = ramp(t, m.dots, 0.8);
+  const tile = (label: string, icon: string, i: number) => {
+    const shown = ramp(t, m.marks[i], 0.35);
+    // Time and effort warm to the harm red once harm lands, so the three read as one cost.
+    const tone = i === 2 ? color.ragHigh : interpolateColors(red, [0, 1], [color.ink, color.ragHigh]);
     return (
-      <div style={{fontFamily: headingFont, lineHeight: 1.2, ...style}}>
-        {words.map((w, i) => (
-          <span key={i} style={{opacity: 0.15 + 0.85 * ramp(t, from + ((to - from) * i) / words.length, 0.3)}}>
-            {w}{" "}
-          </span>
-        ))}
+      <div
+        key={label}
+        style={{
+          position: "absolute", left: 960 + (i - 1) * TILE_GAP - TILE / 2, top: TILES_Y - TILE / 2, width: TILE,
+          textAlign: "center", opacity: rings * (0.3 + 0.7 * shown), transform: `scale(${0.9 + 0.1 * shown})`,
+        }}
+      >
+        <div
+          style={{
+            position: "relative", width: TILE, height: TILE, borderRadius: TILE / 2, border: `4px solid ${tone}`,
+            background: color.bgBase, display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{position: "absolute", inset: 0, background: tone, opacity: 0.12 * shown}} />
+          <div style={{opacity: shown, transform: `translateY(${(1 - shown) * -30}px)`}}>
+            <Icon name={icon} tone={tone} size={96} />
+          </div>
+        </div>
+        <div style={{marginTop: 22, fontFamily: headingFont, fontSize: 48, fontWeight: 650, color: tone, opacity: shown}}>
+          {label}
+        </div>
       </div>
     );
   };
-  const circle = (label: string, tone: string, side: -1 | 1) => {
+  const circle = (label: string, icon: string, tone: string, side: -1 | 1) => {
     const x = 960 + side * (RADIUS * 0.62 + 320 * (1 - meet));
     return (
       <div
         style={{
           position: "absolute", left: x - RADIUS, top: CIRCLES_Y - RADIUS, width: RADIUS * 2, height: RADIUS * 2,
-          borderRadius: RADIUS, border: `4px solid ${tone}`, background: `${tone}1f`, opacity: ramp(t, split, 0.5),
+          borderRadius: RADIUS, border: `4px solid ${tone}`, background: `${tone}1f`, opacity: venn,
           display: "flex", alignItems: "center", justifyContent: side < 0 ? "flex-start" : "flex-end",
-          padding: "0 44px", boxSizing: "border-box",
+          padding: "0 30px", boxSizing: "border-box",
         }}
       >
-        <div style={{width: 200, textAlign: "center", fontSize: 34, fontWeight: 600, lineHeight: 1.25, color: tone}}>
-          {label}
+        <div style={{width: 260, display: "flex", flexDirection: "column", alignItems: "center", gap: 14}}>
+          <Icon name={icon} tone={tone} size={84} />
+          <div style={{textAlign: "center", fontSize: 46, fontWeight: 600, lineHeight: 1.15, color: tone}}>{label}</div>
         </div>
       </div>
     );
   };
   return (
     <Background dots={dots}>
-      <div style={{position: "absolute", inset: 0, opacity: first}}>
-        {reveal(statement, 0, split, {position: "absolute", left: 200, right: 200, top: 150, fontSize: 58, fontWeight: 500})}
+      <div style={{position: "absolute", inset: 0, opacity: costs}}>
         <div
           style={{
-            position: "absolute", left: LEFT, top: BAR_Y - 3, height: 6, background: color.ragHigh,
-            width: (RIGHT - LEFT) * ramp(t, 0.2, 0.8),
+            position: "absolute", left: 960 - TILE_GAP, top: TILES_Y - 3, height: 6, background: color.ragHigh,
+            width: 2 * TILE_GAP * ramp(t, m.marks[0], m.marks[2] - m.marks[0] + 0.3), opacity: 0.35 + 0.65 * red,
           }}
         />
-        {marks.map((m, i) => {
-          const shown = ramp(t, spokenAt(statement, m.toLowerCase(), split) - 0.1, 0.4);
-          const harm = i === marks.length - 1;
-          return (
-            <div
-              key={m}
-              style={{
-                position: "absolute", left: LEFT + ((RIGHT - LEFT) * (2 * i + 1)) / (2 * marks.length) - 150, width: 300, top: BAR_Y - 96,
-                textAlign: "center", opacity: shown, transform: `translateY(${(1 - shown) * 16}px)`,
-              }}
-            >
-              <div style={{fontSize: 40, fontWeight: 600, color: harm ? color.ragHigh : color.ink}}>{m}</div>
-              <div
-                style={{
-                  position: "absolute", left: 135, top: 81, width: 30, height: 30, borderRadius: 15,
-                  border: `4px solid ${color.bgBase}`, boxSizing: "border-box",
-                  background: harm ? color.ragHigh : mutedInk, transform: `scale(${0.4 + 0.6 * shown})`,
-                }}
-              />
-            </div>
-          );
-        })}
-        <div
-          style={{
-            position: "absolute", left: LEFT, width: RIGHT - LEFT, top: BAR_Y + 40, textAlign: "center",
-            fontFamily: headingFont, fontSize: 60, fontWeight: 650, color: color.ragHigh, opacity: ramp(t, 0.6, 0.5),
-          }}
-        >
-          {years}
-        </div>
+        {[time, effort, harm].map((label, i) => tile(label, ["time", "effort", "harm"][i], i))}
       </div>
-      {circle(govern, color.gov, -1)}
-      {circle(value, color.val, 1)}
+      {circle(govern, "govern", color.gov, -1)}
+      {circle(value, "value", color.val, 1)}
       <div
         style={{
           position: "absolute", left: 960 - 34, top: CIRCLES_Y - 34, width: 68, height: 68, borderRadius: 34,
@@ -103,11 +138,6 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
           transform: `scale(${0.5 + 0.5 * target})`,
         }}
       />
-      {reveal(challenge, split, end, {
-        position: "absolute", left: 200, right: 200, top: CIRCLES_Y + RADIUS + 60, textAlign: "center", fontSize: 54,
-        textWrap: "balance",
-        fontWeight: 650, color: color.gov, opacity: ramp(t, split - 0.2, 0.4),
-      })}
     </Background>
   );
 };

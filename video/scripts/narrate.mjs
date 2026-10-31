@@ -1,4 +1,4 @@
-// Voices the narration with Deepgram text-to-speech, one WAV per scene in public/audio/, and records each clip's
+// Voices the narration with ElevenLabs text-to-speech, one WAV per scene in public/audio/, and records each clip's
 // length in src/timeline.json as audioSeconds:
 //   npm run video:narrate                    every scene, in one continuous take cut at the scene pauses
 //   npm run video:narrate -- f2-risks        one fragment, so a bad clip can be remade alone
@@ -10,23 +10,20 @@ import {randomBytes} from "node:crypto";
 import {mkdirSync, readFileSync, renameSync, rmSync, writeFileSync} from "node:fs";
 import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
-import {splitTake} from "./take.mjs";
+import {splitTake, wordsFromAlignment} from "./take.mjs";
 
-const VOICE = "flux-sienna-en";
-const SAMPLE_VOICES = ["flux-colin-en", "flux-kit-en", "flux-jack-en", "flux-sienna-en"];
-// Deepgram's Flux voices take no speaking instructions and no SSML; pace and liveliness are these two settings.
-const SPEED = 1;
-const EXPRESSIVITY = 1;
-// Read letter by letter when SPELL is set, for a voice that stumbles over acronyms; the captions keep the names.
-const SPELLED = [["EU AI Act", "E-U A-I Act"], ["MIT", "M-I-T"]];
-const SPELL = false;
-const TRANSCRIBE_MODEL = "nova-3";
+// Matilda, the voice the user picked from the samples.
+const VOICE = "XrExE9yKIg1WjnnlVkGX";
+const SAMPLE_VOICES = {matilda: VOICE, alice: "Xb7hH8MSUJpSbSDYk0k2", george: "JBFqnCBsd6RMkjVDRZzb", brian: "nPczCjzI2devNBz1zQrb"};
+// The most expressive model; it takes no speed setting, so pace comes from the shortened pauses in take.mjs.
+const MODEL = "eleven_v3";
+const STABILITY = 0.5;
 const RATE = 24000;
 // Two minutes of audio, above the whole take, so a runaway reply cannot exhaust memory.
 const MAX_BYTES = RATE * 2 * 120;
-const TIMEOUT_MS = 120000;
-// The transcript of a 75 s take is about 30 KB; anything far larger is not a transcript.
-const MAX_JSON = 2_000_000;
+// The audio arrives as base64 inside JSON beside the per-character timings: a third larger, plus the timings.
+const MAX_JSON = Math.ceil((MAX_BYTES * 4) / 3) + 2_000_000;
+const TIMEOUT_MS = 180000;
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const timelinePath = join(root, "src", "timeline.json");
@@ -57,16 +54,16 @@ function wav(pcm) {
 
 const refusal = (status) =>
   status === 401
-    ? "Deepgram did not accept the key. Check DEEPGRAM_API_KEY in .env.local."
-    : status === 403
-      ? "Deepgram says the key may not use this model. Give the key access to it in the Deepgram console."
+    ? "ElevenLabs did not accept the key. Check ELEVENLABS_API_KEY in .env.local, and that it may use text to speech."
     : status === 402
-      ? "The Deepgram account has no credit left. Add credit in the Deepgram console, then run again."
+      ? "The ElevenLabs account has no credit left. Add credit in the ElevenLabs console, then run again."
+    : status === 422
+      ? "ElevenLabs refused the text or the settings (HTTP 422). Check the voice and the settings in narrate.mjs."
     : status === 429
-      ? "Deepgram is limiting requests or the account's credit is used up. Wait a minute or check the console, then run again."
+      ? "ElevenLabs is limiting requests or the account's credit is used up. Wait a minute or check the console, then run again."
       : status >= 500
-        ? `Deepgram had a server error (HTTP ${status}). Run again in a minute.`
-        : `Deepgram refused the request (HTTP ${status}). Check the voice name and the settings in narrate.mjs.`;
+        ? `ElevenLabs had a server error (HTTP ${status}). Run again in a minute.`
+        : `ElevenLabs refused the request (HTTP ${status}). Check the voice and the settings in narrate.mjs.`;
 
 /** The reply's body, refused as soon as it passes `limit` bytes, so a runaway reply cannot exhaust memory whether or
  *  not it announces its length. */
@@ -75,67 +72,63 @@ async function readCapped(res, limit, what) {
   let size = 0;
   for await (const chunk of res.body) {
     size += chunk.length;
-    if (size > limit) throw new Refusal(`Deepgram's ${what} was too long, so nothing was changed.`);
+    if (size > limit) throw new Refusal(`ElevenLabs' ${what} was too long, so nothing was changed.`);
     chunks.push(chunk);
   }
   return Buffer.concat(chunks);
 }
 
-/** The take's words with their start and end in seconds, from Deepgram's transcription of the take; refused unless
- *  each word has text and a start and end inside the take, since a bad time would cut a wrong clip silently. */
-async function hear(pcm, key, scriptWords) {
+/** The voiced `text` as 16-bit PCM and its words timed from the reply's per-character timings; refused unless the
+ *  audio is whole and every word lies inside it, since a bad time would cut a wrong clip silently. */
+async function speak(text, voice, key) {
+  let reply;
+  try {
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voice}/with-timestamps?output_format=pcm_${RATE}`,
+      {
+        method: "POST",
+        headers: {"xi-api-key": key, "Content-Type": "application/json"},
+        body: JSON.stringify({text, model_id: MODEL, language_code: "en", voice_settings: {stability: STABILITY}}),
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      },
+    );
+    if (!res.ok) throw new Refusal(refusal(res.status));
+    reply = await readCapped(res, MAX_JSON, "reply");
+  } catch (err) {
+    if (err instanceof Refusal) throw err;
+    throw new Refusal("ElevenLabs could not be reached or did not answer in time, so nothing was changed. Run again.");
+  }
   let body;
   try {
-    const res = await fetch(`https://api.deepgram.com/v1/listen?model=${TRANSCRIBE_MODEL}&language=en`, {
-      method: "POST",
-      headers: {Authorization: `Token ${key}`, "Content-Type": "audio/wav"},
-      body: wav(pcm),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!res.ok) throw new Refusal(refusal(res.status));
-    body = JSON.parse((await readCapped(res, MAX_JSON, "transcription")).toString("utf8"));
-  } catch (err) {
-    if (err instanceof Refusal) throw err;
-    throw new Refusal("Deepgram's transcription could not be reached or read, so nothing was changed. Run again.");
+    body = JSON.parse(reply.toString("utf8"));
+  } catch {
+    throw new Refusal("ElevenLabs' reply could not be read, so nothing was changed. Run again.");
   }
-  const words = body?.results?.channels?.[0]?.alternatives?.[0]?.words;
+  const pcm = typeof body?.audio_base64 === "string" ? Buffer.from(body.audio_base64, "base64") : Buffer.alloc(0);
+  if (pcm.length === 0 || pcm.length % 2 || pcm.length > MAX_BYTES) {
+    throw new Refusal("ElevenLabs returned audio that is not a 16-bit PCM clip, so nothing was changed. Run again.");
+  }
+  let words;
+  try {
+    words = wordsFromAlignment(body.alignment ?? {});
+  } catch {
+    throw new Refusal("ElevenLabs' reply has no usable timings, so nothing was changed. Run again.");
+  }
   const length = pcm.length / (RATE * 2);
-  const sound = (w) =>
-    typeof w?.word === "string" && Number.isFinite(w.start) && Number.isFinite(w.end) && 0 <= w.start &&
-    w.start <= w.end && w.end <= length + 0.5;
-  if (!Array.isArray(words) || words.length > 2 * scriptWords || !words.every(sound)) {
-    throw new Refusal("Deepgram's transcription has no usable word timings, so nothing was changed. Run again.");
+  if (!words.length || words.length > 2 * text.split(/\s+/).length || words.some((w) => w.end > length + 0.5)) {
+    throw new Refusal("ElevenLabs' timings do not fit its audio, so nothing was changed. Run again.");
   }
-  return words.map((w) => ({word: w.word, start: w.start, end: w.end}));
+  return {pcm, words};
 }
 
-/** The text as the voice should read it: acronyms spelled out when `spelled` is set. */
-const spoken = (text, spelled) =>
-  spelled ? SPELLED.reduce((out, [name, letters]) => out.split(name).join(letters), text) : text;
-
-async function speak(text, voice, key, spelled = false) {
-  const query = new URLSearchParams({
-    model: voice, encoding: "linear16", sample_rate: String(RATE), container: "none",
-    speed: String(SPEED), expressivity: String(EXPRESSIVITY),
-  });
-  let pcm;
+/** One clip per narration in `lines`, cut from a single take of all of them, so the voice keeps one pace. */
+async function voice(lines, voiceId, key) {
+  const {pcm, words} = await speak(lines.join("\n\n"), voiceId, key);
   try {
-    const res = await fetch(`https://api.deepgram.com/v2/speak?${query}`, {
-      method: "POST",
-      headers: {Authorization: `Token ${key}`, "Content-Type": "application/json"},
-      body: JSON.stringify({text: spoken(text, spelled)}),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!res.ok) throw new Refusal(refusal(res.status));
-    pcm = await readCapped(res, MAX_BYTES, "audio");
+    return splitTake(pcm, lines, words);
   } catch (err) {
-    if (err instanceof Refusal) throw err;
-    throw new Refusal("Deepgram could not be reached or did not answer in time, so nothing was changed. Run again.");
+    throw new Refusal(`${err.message} Nothing was changed. Run again, or remake one fragment at a time.`);
   }
-  if (pcm.length === 0 || pcm.length % 2 || pcm.length > MAX_BYTES) {
-    throw new Refusal("Deepgram returned audio that is not a 16-bit PCM clip, so nothing was changed. Run again.");
-  }
-  return pcm;
 }
 
 /** Writes every file under a temporary name, then renames them with the timeline last. A failed write replaces
@@ -200,22 +193,21 @@ async function main() {
     const cause = args.length > 1 ? "Give at most one fragment or scene." : `"${args[0]}" is not a fragment or scene.`;
     fail(`${cause} Name one of ${ids.join(", ")}, or a scene (${sceneIds.join(", ")}), or none for all, or --samples to compare voices.`);
   }
-  const key = process.env.DEEPGRAM_API_KEY;
-  if (!key) fail("DEEPGRAM_API_KEY is not set. Copy .env.example to .env.local at the repo root and add your key.");
+  const key = process.env.ELEVENLABS_API_KEY;
+  if (!key) fail("ELEVENLABS_API_KEY is not set. Copy .env.example to .env.local at the repo root and add your key.");
 
   const bad = timeline.scenes.find((s) => !/^[a-z0-9-]+$/.test(s.id));
   if (bad) fail(`Scene id "${bad.id}" must use only lower-case letters, digits and hyphens, as it names a file.`);
   if (samples) {
     // The hook and the close carry the tone; the mitigations line carries the acronyms.
-    const text = ["hook", "mitigations", "end"].map((id) => timeline.scenes.find((s) => s.id === id).narration).join("\n\n");
+    const lines = ["hook", "mitigations", "end"].map((id) => timeline.scenes.find((s) => s.id === id).narration);
     const files = [];
-    for (const voice of SAMPLE_VOICES) {
-      files.push([join(root, "out", "samples", `${voice}.wav`), wav(await speak(text, voice, key))]);
-      files.push([join(root, "out", "samples", `${voice}-spelled.wav`), wav(await speak(text, voice, key, true))]);
+    for (const [name, id] of Object.entries(SAMPLE_VOICES)) {
+      files.push([join(root, "out", "samples", `${name}.wav`), wav(Buffer.concat(await voice(lines, id, key)))]);
     }
     commit(files);
     console.log(`Wrote ${files.length} samples of the hook, mitigations and close to video/out/samples/.`);
-    console.log("Listen, then set VOICE in video/scripts/narrate.mjs to the chosen name.");
+    console.log("Listen, then set VOICE in video/scripts/narrate.mjs to the chosen voice.");
     return;
   }
 
@@ -223,33 +215,22 @@ async function main() {
   const chosen = sceneIds.includes(args[0])
     ? [args[0]]
     : timeline.fragments.filter((f) => !args.length || f.id === fragmentId).flatMap((f) => f.scenes);
+  const scenes = chosen.map((id) => timeline.scenes.find((s) => s.id === id));
+  const clips = await voice(scenes.map((s) => s.narration), VOICE, key);
   const files = [];
   const seconds = {};
-  const scenes = chosen.map((id) => timeline.scenes.find((s) => s.id === id));
-  let takes = null;
-  if (!args.length) {
-    const script = scenes.map((s) => s.narration).join("\n\n");
-    const take = await speak(script, VOICE, key, SPELL);
-    const words = await hear(take, key, script.split(/\s+/).length);
-    try {
-      takes = splitTake(take, scenes.map((s) => s.narration), words);
-    } catch (err) {
-      throw new Refusal(`${err.message} Nothing was changed. Run again, or remake one fragment at a time.`);
-    }
-  }
   for (const [i, scene] of scenes.entries()) {
     const id = scene.id;
-    const pcm = takes ? takes[i] : await speak(scene.narration, VOICE, key, SPELL);
-    seconds[id] = Math.round((pcm.length / (RATE * 2)) * 1000) / 1000;
-    files.push([join(root, "public", "audio", `${id}.wav`), wav(pcm)]);
+    seconds[id] = Math.round((clips[i].length / (RATE * 2)) * 1000) / 1000;
+    files.push([join(root, "public", "audio", `${id}.wav`), wav(clips[i])]);
     const pace = scene.narration.split(/\s+/).length / seconds[id];
     console.log(`${id}: ${seconds[id]} s, ${pace.toFixed(2)} words a second, planned ${scene.seconds} s`);
   }
   files.push([timelinePath, withAudioSeconds(text, seconds)]);
   commit(files);
-  const clips = chosen.length === 1 ? "1 clip" : `${chosen.length} clips`;
-  console.log(`Wrote ${clips} to video/public/audio/ and the lengths to timeline.json.`);
-  console.log("Listen to each clip, then run npm run video:cues to rebuild the captions.");
+  const count = chosen.length === 1 ? "1 clip" : `${chosen.length} clips`;
+  console.log(`Wrote ${count} to video/public/audio/ and the lengths to timeline.json.`);
+  console.log("Listen to each clip, set each scene's seconds to its clip plus its tail, then run npm run video:cues.");
 }
 
 // Only messages written for the producer are shown; anything else could carry request details. The exit code is
