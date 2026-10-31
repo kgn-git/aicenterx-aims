@@ -17,7 +17,7 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - the problem scene is pictures, not sentences: its items are the three costs the voice names, each spoken in its
     narration, then the two aims of its Venn diagram, so its graphic never says what is not voiced
   - the lines the user approved word for word: the enhancements line, and the close's opening outcome "In under an
-    hour, your initiative's risk profile is ready."; the close's narration says "acceleration platform"
+    hour, your risk profile is ready."; the close's narration says "acceleration platform"
   - only the hook speaks of years or shows a span of them, since the video does not claim the three years it cites
     shrink to an hour; the close shows the outcome card's "Risk profile ready" and "< 1 hour"
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
@@ -83,7 +83,7 @@ FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
 TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
 # The lines the user approved word for word.
 APPROVED = {'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile."}
-PAYOFF = "In under an hour, your initiative's risk profile is ready."
+PAYOFF = 'In under an hour, your risk profile is ready.'
 PROBLEM_ITEMS, PROBLEM_MARKS = 5, 3
 
 
