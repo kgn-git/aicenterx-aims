@@ -5,10 +5,10 @@ import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import risks from "../../../tools/data/risk_suggestions.json";
 import timeline from "../timeline.json";
 import {aiActArticles} from "../sources.mjs";
-import {appFrameHeight, color, headingFont, video, mutedInk} from "../theme";
+import {appFrameHeight, color, headingFont, STAGE, video, mutedInk} from "../theme";
 import {closeMoments, KEYWORDS} from "../moments.mjs";
 import {Background, ramp} from "../ui/kit";
-import {Contrast, Portfolio} from "./Acceleration";
+import {Outcome, Portfolio} from "./Acceleration";
 import type {SceneProps} from "./types";
 
 const FOOTER = 150;
@@ -44,17 +44,17 @@ const counts = KINDS.map((k): [number, string] => {
 });
 const initiative = timeline.scenes.find((s) => s.id === "canvas")!.onScreen[1];
 
-/** The close in three beats: the hook's years against the hour the journey took, the pull-back to the portfolio and
+/** The close in three beats: the initiative's outcome, its card folding into the portfolio as the camera pulls back to
  *  the capabilities still to come, then the "Coming soon" card with every source and disclosure in the footer. */
 export const End: React.FC<SceneProps> = ({scene, cues}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
-  const [brand, soon, heading, disclosure, footnote, tagline, message, years, chip, platform, next, ...rest] =
-    scene.onScreen;
+  const [brand, soon, heading, disclosure, footnote, tagline, outcome, chip, platform, next, ...rest] = scene.onScreen;
   const capabilities = rest.slice(0, KEYWORDS.length);
   const wave = rest[KEYWORDS.length];
-  const {message: messageAt, collapse, tallies, scaleAt, portfolioIn, keywords, brandAt, footer} = closeMoments(scene, cues);
-  const contrast = 1 - ramp(t, scaleAt, 0.6);
-  const portfolio = ramp(t, portfolioIn, 0.4) * (1 - ramp(t, brandAt - 0.5, 0.4));
+  const {card, rows, clock, ready, fold, portfolioIn, keywords, brandAt, footer} = closeMoments(scene, cues);
+  // The folded card hands over to the portfolio's identical card, so the two never show at once.
+  const outcomeShown = 1 - ramp(t, portfolioIn + 0.1, 0.2);
+  const portfolio = ramp(t, portfolioIn, 0.2) * (1 - ramp(t, brandAt - 0.5, 0.4));
   const shown = ramp(t, brandAt - 0.2, 0.7);
   const centred: React.CSSProperties = {
     position: "absolute", left: 160, right: 160, top: 0, height: appFrameHeight - FOOTER, display: "flex",
@@ -62,10 +62,10 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
   };
   return (
     <Background>
-      <div style={{position: "absolute", inset: 0, height: appFrameHeight, opacity: contrast}}>
-        <Contrast
-          t={t} years={years} chip={chip} message={message} counts={counts}
-          at={{collapse, tallies, message: messageAt}}
+      <div style={{position: "absolute", inset: 0, height: appFrameHeight, opacity: outcomeShown}}>
+        <Outcome
+          t={t} initiative={initiative} heading={outcome} chip={chip} counts={counts} tones={KINDS.map((k) => STAGE[k])}
+          at={{card, rows, clock, ready, fold}}
         />
       </div>
       <div style={{position: "absolute", inset: 0, height: appFrameHeight, opacity: portfolio}}>

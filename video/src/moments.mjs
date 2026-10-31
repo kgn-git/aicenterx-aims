@@ -124,31 +124,31 @@ export function problemMoments(scene, cues) {
   return {rings: 0, marks, costsOut, circles, dots: at("The challenge"), meet: circles, target: circles + 0.7};
 }
 
-// The tallies count up one after another, quickly enough to be read whole before the portfolio arrives.
+// The outcome card's rows count up one after another, quickly enough to be read whole before the card folds away.
 export const TALLY_COUNT = 0.6;
-const TALLY_STEP = 0.15;
+const ROW_START = 0.4;
+const ROW_STEP = 0.25;
 
 // The capabilities the voice names as each lands, in the order the close lists them on screen.
 export const KEYWORDS = ["models", "data lineage", "programmes", "architecture", "intelligence"];
 const BRAND = "AI Center X";
 
-/** The close: the years collapse into the hour as the voice says it and the tallies count up beside the message;
- *  the comparison stays until just before "models", then fades, and only then does the portfolio arrive; the brand
- *  card and its footer close the video. */
+/** The close: the initiative's outcome card is up from the start and fills its rows while the voice says the risk
+ *  profile is ready; just before "models" it folds to its place in the portfolio, which then arrives around it and
+ *  pulls back; the brand card and its footer close the video. */
 export function closeMoments(scene, cues) {
   const end = cues[cues.length - 1].end;
   const at = (phrase) => spokenAt(scene.narration, phrase, end);
-  const beats = ["Three years", "reduced", "less than an hour", "Then scale up", ...KEYWORDS, BRAND];
+  const beats = ["In under an hour", "risk profile", "Then scale up", ...KEYWORDS, BRAND];
   const times = beats.map(at);
   if (times.some((x, i) => i && x <= times[i - 1])) {
     throw new Error(`The close's narration must say ${beats.join(", ")} in that order.`);
   }
   const brandAt = at(BRAND);
   const keywords = KEYWORDS.map(at);
-  const collapse = at("reduced") - 0.2;
   const scaleAt = keywords[0] - 0.55;
   return {
-    message: at("Three years") + 0.2, collapse, tallies: [0, 1, 2].map((i) => collapse - 0.2 + i * TALLY_STEP),
-    scaleAt, portfolioIn: scaleAt + 0.4, keywords, brandAt, footer: brandAt + 0.3,
+    card: 0, rows: [0, 1, 2].map((i) => ROW_START + i * ROW_STEP), clock: at("under an hour"), ready: at("risk profile"),
+    scaleAt, fold: scaleAt, portfolioIn: scaleAt + 0.45, keywords, brandAt, footer: brandAt + 0.3,
   };
 }
