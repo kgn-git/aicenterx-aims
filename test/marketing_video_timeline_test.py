@@ -14,8 +14,8 @@ only at curated data. storyline.md is its human copy and must not drift from it.
     no click-by-click line, so no "select" or "save" in any form, since the ticks and toasts already show the choice;
     never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
     unaudited ratings would re-learn the recruiter bias the video names as a risk
-  - the problem scene shows its own narration as its first two items and then only the two aims of its Venn diagram,
-    with no time, effort or harm line, so its graphic never changes what is voiced
+  - the problem scene is pictures, not sentences: its items are the three costs the voice names, each spoken in its
+    narration, then the two aims of its Venn diagram, so its graphic never says what is not voiced
   - the lines the user approved word for word: the enhancements line, and the close's opening "Three years – reduced
     to less than an hour."; the close's narration says "acceleration platform" and does not say "are identified",
     since the screen already shows that the key risks, mitigations and enhancements are identified in less than an
@@ -62,7 +62,7 @@ YEARS = (('end', 7),)
 CORE = 'your key risks, mitigations and enhancements are identified'
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
 ROLES = {'hook': {4: '2017 – Project abandoned'},
-         'problem': {2: 'Govern responsibly', 3: 'Create real value'},
+         'problem': {0: 'Time', 1: 'Effort', 2: 'Harm', 3: 'Govern responsibly', 4: 'Create real value'},
          'canvas': {4: 'Simulate risks'},
          'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations', 5: 'Selected risks saved'},
          'mitigations': {0: 'Generate mitigations', 3: 'Save selected mitigations', 4: 'Suggest model enhancements',
@@ -86,7 +86,7 @@ TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
 # The lines the user approved word for word.
 APPROVED = {'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile."}
 PAYOFF = 'Three years – reduced to less than an hour.'
-PROBLEM_ITEMS = 4
+PROBLEM_ITEMS, PROBLEM_MARKS = 5, 3
 
 
 def words(s):
@@ -186,10 +186,10 @@ def validate(t, ctx):
         bad += [f'{sid}: onScreen[{i}] must be "{span}", the span of the hook milestones'
                 for sid, i in YEARS if by_id[sid]['onScreen'][i:i + 1] != [span]]
     problem = by_id['problem']
-    if ' '.join(problem['onScreen'][:2]) != problem['narration']:
-        bad.append('problem: onScreen[0:2] must be its narration word for word')
     if len(problem['onScreen']) != PROBLEM_ITEMS:
-        bad.append(f'problem: onScreen must be its two sentences and the two aims only, got {problem["onScreen"]}')
+        bad.append(f'problem: onScreen must be its three costs and two aims only, got {problem["onScreen"]}')
+    bad += [f'problem: the cost "{m}" is not spoken' for m in problem['onScreen'][:PROBLEM_MARKS]
+            if not re.search(rf'\b{m.lower()}\b', problem['narration'])]
     bad += [f'{sid}: the narration must be the approved "{line}"' for sid, line in APPROVED.items()
             if by_id[sid]['narration'] != line]
     end = by_id['end']['narration']

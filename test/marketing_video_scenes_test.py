@@ -23,12 +23,12 @@ real captions proves every phrase is there. Checks:
         that have not landed
       - the risks and mitigations scenes light their chips as each of their two spoken sources is named, in order,
         once every card is on screen
-      - the problem's Venn diagram is on screen from the start, the dots arriving on "The challenge", and the
-        statement sits above the circles
+      - the problem scene's three cost icons land in order as the voice says "time", "effort" and "harm"; the Venn
+        diagram follows the last of them and meets on "The challenge", where the dots arrive
       - in the close, the message and the 3 / 4 / 4 tallies, once counted, can each be read for at least 2 s, the
         portfolio arrives only once the comparison has faded, and the footer can be read for at least 2 s
-  - each scene uses what moments.mjs gives it: the named times for the chips, the circles' start, the footer and the
-    canvas glow, and the tallies' count
+  - each scene uses what moments.mjs gives it: the named times for the chips, the cost icons and the circles, the
+    footer and the canvas glow, and the tallies' count
   - the user's motion choices: the cursor eases with cubic-bezier(0.22, 1, 0.36, 1) and a button presses to 0.96 and
     back within 120 ms, from the one definition in moments.mjs that kit.tsx and every scene use
   - only the risks scene shows the agent's full working checklist (AgentRun); mitigations and enhancements show the
@@ -55,7 +55,7 @@ THEME = SRC / 'theme.ts'
 KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
-GLOW, CARD_DELAY, TOAST, READ, VENN_FROM, HANDOFF_SHOWN = 0.8, 0.25, 1.5, 2.0, 0.3, 1.2
+GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
 # A shorter enhancements scene than the real one, where the toast's time would be lost without its floor; and a
@@ -67,10 +67,9 @@ USERS = {'Risks.tsx': ('stageMoments(', 'bump(t, mitNamed', 'bump(t, aiidNamed',
          'Mitigations.tsx': ('stageMoments(', '[mitNamed, lawNamed][n]'),
          'Enhancements.tsx': ('stageMoments(',),
          'Canvas.tsx': ('canvasMoments(', 'ramp(t, glow'),
-         'Problem.tsx': ('problemMoments(', 'ramp(t, m.circles'),
+         'Problem.tsx': ('problemMoments(', 'm.marks', 'ramp(t, m.circles'),
          'End.tsx': ('closeMoments(', 'ramp(t, footer', 'from={portfolioIn}'),
          'Acceleration.tsx': ('TALLY_COUNT',)}
-LAYOUT = re.compile(r'const (STATEMENT_BOTTOM|CIRCLES_Y|RADIUS) = (\d+);')
 # Each module is imported as a namespace, so a missing export fails its own check instead of the whole run.
 PROGRAM = """
 import {readFileSync} from "node:fs";
@@ -150,9 +149,10 @@ def moment_problems(got):
         if not (cv['appear'] < cv['arrive'] <= secs and secs - cv['appear'] >= HANDOFF_SHOWN and secs - cv['glow'] >= GLOW):
             bad.append(f'canvas: "Simulate risks" must show {HANDOFF_SHOWN} s, glow {GLOW} s and meet the cursor, got {cv}')
     pr = got.get('problem', {})
-    if 'error' in pr or not (pr.get('circles', 9) <= VENN_FROM < pr.get('meet', 0)
-                             and abs(pr.get('dots', 0) - (pr['meet'] - 0.2)) < 1e-9):
-        bad.append(f'problem: the Venn diagram must be on screen from the start and meet on "The challenge", got {pr}')
+    marks = pr.get('marks') if isinstance(pr.get('marks'), list) else []
+    if 'error' in pr or not (len(marks) == 3 and marks == sorted(marks) and marks[0] > 0
+                             and marks[-1] < pr['circles'] < pr['meet'] and abs(pr['dots'] - (pr['meet'] - 0.2)) < 1e-9):
+        bad.append(f'problem: the costs must land in order, then the Venn diagram meet on "The challenge", got {pr}')
     end = got.get('end', {})
     count = got['consts'].get('TALLY_COUNT') or 0
     if 'error' in end or 'message' not in end or not isinstance(end.get('tallies'), list):
@@ -192,15 +192,12 @@ def main():
     node = shutil.which('node')
     kit = KIT.read_text(encoding='utf-8')
     root = (SRC / 'Root.tsx').read_text(encoding='utf-8')
-    layout = dict((k, int(v)) for k, v in LAYOUT.findall(sources['Problem.tsx']))
-    check('every scene uses its moments from moments.mjs, nothing zooms, and the statement clears the circles',
+    check('every scene uses its moments from moments.mjs, and nothing zooms',
           [f'{name} does not use {token}' for name, tokens in USERS.items() for token in tokens
            if token not in sources[name]]
           + [f'{name} still zooms' for name, src in sources.items() if '<Zoom' in src or 'zoomLevel' in src]
           + (['kit.tsx still exports Zoom'] if 'export const Zoom' in kit else [])
-          + ([] if 'sceneCues(captions, timeline' in root else ['Root.tsx does not take its cues from sceneCues'])
-          + ([] if len(layout) == 3 and layout['STATEMENT_BOTTOM'] < layout['CIRCLES_Y'] - layout['RADIUS']
-             else [f'Problem.tsx: the statement must end above the circles, got {layout}']))
+          + ([] if 'sceneCues(captions, timeline' in root else ['Root.tsx does not take its cues from sceneCues']))
     if not node:
         check('node is on PATH', ['node is not on PATH'])
     elif not MOMENTS.is_file():
