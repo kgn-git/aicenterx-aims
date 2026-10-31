@@ -73,6 +73,7 @@ This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 61
 - `src/timeline.json`: scenes, timing and data references (#27). `test/marketing_video_timeline_test.py` checks it.
 - `src/compositions.json`: the composition id of each fragment.
 - `src/timing.mjs`: how long each scene plays. `scripts/scene-seconds.mjs` prints it for the tests.
+- `src/moments.mjs`: when each scene's beats happen, timed from the narration: cards, ticks, saves, hand-offs, the problem's icons and the close. `test/marketing_video_scenes_test.py` runs it on the real captions.
 - `src/captions.json`: the caption cues, built by `scripts/cues.mjs`. `test/marketing_video_captions_test.py` checks them. The scenes time their animation from them; the released video carries no subtitles.
 - `public/audio/`: one narration clip per scene, made by `scripts/narrate.mjs`. `test/marketing_video_audio_test.py` checks them.
 - `scripts/take.mjs`: cuts the one narrated take into scene clips at the word timings. `test/marketing_video_take_test.py` checks it.

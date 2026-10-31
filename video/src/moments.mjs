@@ -112,16 +112,16 @@ export function canvasMoments(cues, seconds) {
   };
 }
 
-/** The problem scene in pictures: a cost lands as the voice names it (onScreen[0..2], lower-cased as spoken), then the
- *  two aims replace them and meet on "The challenge", lit on "create real value". */
+/** The problem scene in pictures: the three costs' empty rings open it, and each fills as the voice names it
+ *  (onScreen[0..2], lower-cased as spoken); the red cost holds until "govern", when the two aims replace it, meet,
+ *  and light their shared target once they overlap. */
 export function problemMoments(scene, cues) {
   const end = cues[cues.length - 1].end;
   const at = (phrase) => spokenAt(scene.narration, phrase, end);
   const marks = scene.onScreen.slice(0, 3).map((m) => at(m.toLowerCase()) - 0.1);
-  return {
-    marks, circles: marks[marks.length - 1] + 0.25, dots: at("The challenge"), meet: at("The challenge") + 0.2,
-    target: at("create real value") + 0.2,
-  };
+  const costsOut = at("govern") - 0.2;
+  const circles = costsOut + 0.1;
+  return {rings: 0, marks, costsOut, circles, dots: at("The challenge"), meet: circles, target: circles + 0.7};
 }
 
 // The tallies count up one after another, quickly enough to be read whole before the portfolio arrives.

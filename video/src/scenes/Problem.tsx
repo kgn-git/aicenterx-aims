@@ -1,5 +1,5 @@
 import React from "react";
-import {useCurrentFrame, useVideoConfig} from "remotion";
+import {interpolateColors, useCurrentFrame, useVideoConfig} from "remotion";
 import {problemMoments} from "../moments.mjs";
 import {color, headingFont} from "../theme";
 import {Background, ramp} from "../ui/kit";
@@ -9,7 +9,7 @@ const RADIUS = 220;
 const CIRCLES_Y = 430;
 const TILE = 190;
 const TILE_GAP = 400;
-const TILES_Y = 360;
+const TILES_Y = CIRCLES_Y;
 
 // Line icons on a 24-unit grid, drawn in the stroke colour of their tile or circle.
 const ICONS: Record<string, React.ReactNode> = {
@@ -55,40 +55,48 @@ const Icon: React.FC<{name: string; tone: string; size: number}> = ({name, tone,
   </svg>
 );
 
-/** The problem in pictures: the time, effort and harm the voice names land as one cost that turns red on harm, then
- *  give way to the two aims, governing responsibly and creating real value, which overlap into one target. */
+/** The problem in pictures: three empty rings fill with the time, effort and harm the voice names, and turn red as
+ *  one cost on harm; then they give way to the two aims, governing responsibly and creating real value, which overlap
+ *  into one target. */
 export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const [time, effort, harm, govern, value] = scene.onScreen;
   const m = problemMoments(scene, cues);
   const red = ramp(t, m.marks[2], 0.4);
-  const costs = 1 - ramp(t, m.circles - 0.1, 0.5);
+  const rings = ramp(t, m.rings, 0.4);
+  const costs = 1 - ramp(t, m.costsOut, 0.4);
   const venn = ramp(t, m.circles, 0.5);
-  const meet = ramp(t, m.meet, 1.2);
+  const meet = ramp(t, m.meet, 1.0);
   const target = ramp(t, m.target, 0.5);
   // The dotted grid, the product's backdrop, arrives with the challenge the product answers.
   const dots = ramp(t, m.dots, 0.8);
   const tile = (label: string, icon: string, i: number) => {
     const shown = ramp(t, m.marks[i], 0.35);
-    // Time and effort turn the harm red once harm lands, so the three read as one cost.
-    const tone = i === 2 || red >= 0.5 ? color.ragHigh : color.ink;
+    // Time and effort warm to the harm red once harm lands, so the three read as one cost.
+    const tone = i === 2 ? color.ragHigh : interpolateColors(red, [0, 1], [color.ink, color.ragHigh]);
     return (
       <div
         key={label}
         style={{
           position: "absolute", left: 960 + (i - 1) * TILE_GAP - TILE / 2, top: TILES_Y - TILE / 2, width: TILE,
-          textAlign: "center", opacity: shown, transform: `translateY(${(1 - shown) * -40}px) scale(${0.8 + 0.2 * shown})`,
+          textAlign: "center", opacity: rings * (0.3 + 0.7 * shown), transform: `scale(${0.9 + 0.1 * shown})`,
         }}
       >
         <div
           style={{
-            width: TILE, height: TILE, borderRadius: TILE / 2, border: `4px solid ${tone}`, background: `${tone}1f`,
-            display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box",
+            position: "relative", width: TILE, height: TILE, borderRadius: TILE / 2, border: `4px solid ${tone}`,
+            background: color.bgBase, display: "flex", alignItems: "center", justifyContent: "center", boxSizing: "border-box",
+            overflow: "hidden",
           }}
         >
-          <Icon name={icon} tone={tone} size={96} />
+          <div style={{position: "absolute", inset: 0, background: tone, opacity: 0.12 * shown}} />
+          <div style={{opacity: shown, transform: `translateY(${(1 - shown) * -30}px)`}}>
+            <Icon name={icon} tone={tone} size={96} />
+          </div>
         </div>
-        <div style={{marginTop: 22, fontFamily: headingFont, fontSize: 48, fontWeight: 650, color: tone}}>{label}</div>
+        <div style={{marginTop: 22, fontFamily: headingFont, fontSize: 48, fontWeight: 650, color: tone, opacity: shown}}>
+          {label}
+        </div>
       </div>
     );
   };
@@ -100,12 +108,12 @@ export const Problem: React.FC<SceneProps> = ({scene, cues}) => {
           position: "absolute", left: x - RADIUS, top: CIRCLES_Y - RADIUS, width: RADIUS * 2, height: RADIUS * 2,
           borderRadius: RADIUS, border: `4px solid ${tone}`, background: `${tone}1f`, opacity: venn,
           display: "flex", alignItems: "center", justifyContent: side < 0 ? "flex-start" : "flex-end",
-          padding: "0 44px", boxSizing: "border-box",
+          padding: "0 30px", boxSizing: "border-box",
         }}
       >
-        <div style={{width: 200, display: "flex", flexDirection: "column", alignItems: "center", gap: 14}}>
+        <div style={{width: 260, display: "flex", flexDirection: "column", alignItems: "center", gap: 14}}>
           <Icon name={icon} tone={tone} size={84} />
-          <div style={{textAlign: "center", fontSize: 34, fontWeight: 600, lineHeight: 1.25, color: tone}}>{label}</div>
+          <div style={{textAlign: "center", fontSize: 46, fontWeight: 600, lineHeight: 1.15, color: tone}}>{label}</div>
         </div>
       </div>
     );
