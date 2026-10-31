@@ -4,14 +4,16 @@ Usage:  python test/marketing_video_audio_test.py
 
 Each clip is committed, so the video renders without the text-to-speech model, and each scene plays for its planned
 seconds or for its clip plus a short tail, whichever is longer. Checks:
-  - the guard: video/scripts/narrate.mjs, run without its env file, fails closed when DEEPGRAM_API_KEY is missing or
-    the fragment is unknown: it exits non-zero with no stack trace, never prints the key, and changes no clip and not
-    timeline.json
+  - the guard: video/scripts/narrate.mjs, run without its env file, fails closed when ELEVENLABS_API_KEY is missing
+    or the fragment is unknown: it exits non-zero with no stack trace, never prints the key, and changes no clip and
+    not timeline.json
+  - the voice the user picked (2026-10-31, issue #57): ElevenLabs' Matilda on the eleven_v3 model, timed by the
+    with-timestamps reply, and no other supplier
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file
   - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
-    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 70 to 75 s in all once each
-    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's target for the video)
+    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 58 to 61 s in all once each
+    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's 60 s target)
   - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -29,10 +31,11 @@ VIDEO = ROOT / 'video'
 AUDIO = VIDEO / 'public' / 'audio'
 TIMELINE = VIDEO / 'src' / 'timeline.json'
 NARRATE = VIDEO / 'scripts' / 'narrate.mjs'
-RATE, MIN_TOTAL, MAX_TOTAL = 24000, 70.0, 75.0
+RATE, MIN_TOTAL, MAX_TOTAL = 24000, 58.0, 61.0
 # TAIL in video/src/timing.mjs, which video/src/Root.tsx also uses as the crossfade between scenes.
 CROSSFADE = 0.3
-FAKE_KEY = 'dg-test-0000-not-a-real-key'
+FAKE_KEY = 'el-test-0000-not-a-real-key'
+VOICE = ('const VOICE = "XrExE9yKIg1WjnnlVkGX";', 'const MODEL = "eleven_v3";', '/with-timestamps')
 
 
 def snapshot():
@@ -43,9 +46,9 @@ def snapshot():
 
 def guard_problems(node, ids):
     """Each refused narrate run that exits 0, prints a stack trace or the key, or touches a clip or the timeline."""
-    env = {k: v for k, v in os.environ.items() if not k.startswith('DEEPGRAM_')}
-    cases = {'no key': ([], env, 'DEEPGRAM_API_KEY'),
-             'an unknown fragment': (['../x'], {**env, 'DEEPGRAM_API_KEY': FAKE_KEY}, ', '.join(ids))}
+    env = {k: v for k, v in os.environ.items() if not k.startswith('ELEVENLABS_')}
+    cases = {'no key': ([], env, 'ELEVENLABS_API_KEY'),
+             'an unknown fragment': (['../x'], {**env, 'ELEVENLABS_API_KEY': FAKE_KEY}, ', '.join(ids))}
     bad = []
     for name, (args, child_env, named) in cases.items():
         before = snapshot()
@@ -88,6 +91,10 @@ def main():
     node = shutil.which('node')
     check('narrate fails closed without its settings or with an unknown fragment',
           guard_problems(node, ids) if node else ['node is not on PATH'])
+    script = NARRATE.read_text(encoding='utf-8')
+    check("narrate voices Matilda on eleven_v3 with ElevenLabs' timings, and no other supplier",
+          [f'missing {x}' for x in VOICE if x not in script]
+          + [f'still calls {x}' for x in ('deepgram', 'openai') if x in script.lower()])
 
     scenes = {s['id']: s for s in timeline['scenes']}
     clips = {p.stem: p for p in AUDIO.glob('*.wav')} if AUDIO.is_dir() else {}
