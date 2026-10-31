@@ -52,9 +52,9 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
     scene.onScreen;
   const capabilities = rest.slice(0, KEYWORDS.length);
   const wave = rest[KEYWORDS.length];
-  const {message: messageAt, collapse, tallies, scaleAt, keywords, brandAt, footer} = closeMoments(scene, cues);
+  const {message: messageAt, collapse, tallies, scaleAt, portfolioIn, keywords, brandAt, footer} = closeMoments(scene, cues);
   const contrast = 1 - ramp(t, scaleAt, 0.6);
-  const portfolio = ramp(t, scaleAt, 0.4) * (1 - ramp(t, brandAt - 0.5, 0.4));
+  const portfolio = ramp(t, portfolioIn, 0.4) * (1 - ramp(t, brandAt - 0.5, 0.4));
   const shown = ramp(t, brandAt - 0.2, 0.7);
   const centred: React.CSSProperties = {
     position: "absolute", left: 160, right: 160, top: 0, height: appFrameHeight - FOOTER, display: "flex",
@@ -70,7 +70,7 @@ export const End: React.FC<SceneProps> = ({scene, cues}) => {
       </div>
       <div style={{position: "absolute", inset: 0, height: appFrameHeight, opacity: portfolio}}>
         <Portfolio
-          t={t} from={scaleAt} tag={next} heading={platform} initiative={initiative} chip={chip} wave={wave}
+          t={t} from={portfolioIn} tag={next} heading={platform} initiative={initiative} chip={chip} wave={wave}
           capabilities={capabilities} times={keywords}
         />
       </div>

@@ -1,6 +1,6 @@
 # Marketing video
 
-This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs 70 to 75 s, with a close of 19 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
+This folder holds the narrated marketing video of the CV Screening Assistant journey, which runs about 60 s (58 to 61 s), with a close of about 15 s. It is built with [Remotion](https://www.remotion.dev/) as a standalone Node project. The prototype, its films and `tools/` never import from it, and `npm run check` at the repo root runs without it being installed.
 
 Remotion is source-available, not open source. Its free licence covers individuals and companies of up to three people; the project owner confirmed on 28 October 2026 that it applies here.
 
@@ -66,7 +66,7 @@ Fragments are for review. The released video is rendered in one piece from `CvSc
 npm run video:assemble
 ```
 
-This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 75 s at most (the user's target once the walkthrough lines were cut) at 1920x1080, with H.264 video and AAC audio.
+This writes `video/out/cv-screening-journey.mp4` and keeps it only if it runs 61 s at most (the user's 60 s target) at 1920x1080, with H.264 video and AAC audio.
 
 ## Files
 

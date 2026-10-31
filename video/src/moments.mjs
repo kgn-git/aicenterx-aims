@@ -54,43 +54,52 @@ const LANDED = 0.3;
 const TICK = 0.35;
 const SAVE = 0.6;
 const NEXT = 0.6;
-const HAND_OFF = 1.0;
-// The save's toast fades in over half a second and stays up for TOAST before the cut.
+// The next button glows, and the save's toast stays fully shown, until the 0.3 s crossfade out of the scene begins.
+const HAND_OFF = 1.2;
 const TOAST_IN = 0.5;
-const TOAST = 1.6;
+const TOAST = 1.9;
 
 // Only the risks run is shown in full; the later runs land their first card a quarter second after the click.
 const STAGES = {
-  risks: {click: 0.5, runFrom: 1, runTo: 4, sources: ["MIT AI Risk Repository", "AI Incident Database"], next: true},
-  mitigations: {click: 0.35, runFrom: 0.4, runTo: 0.8, sources: ["draft taxonomy", "EU AI Act"], next: true},
-  enhancements: {click: 0.35, runFrom: 0.4, runTo: 0.8, sources: [], ticksFrom: "engineering", next: false},
+  risks: {
+    click: 0.5, runFrom: 1, runTo: 4, firstCard: 4.15, sources: ["MIT AI Risk Repository", "AI Incident Database"],
+    next: true,
+  },
+  mitigations: {click: 0.35, runFrom: 0.4, runTo: 0.8, firstCard: 0.6, sources: ["draft taxonomy", "EU AI Act"], next: true},
+  enhancements: {click: 0.35, runFrom: 0.4, runTo: 0.8, firstCard: 0.6, sources: [], ticksFrom: "engineering", next: false},
 };
 
 /** The moments of a risks, mitigations or enhancements scene: the click, each card landing, the sources named, the
  *  ticks laid under the voice, the save and the hand-off. The ticks start as the voice names the sources, or later
- *  once the cards have landed, and earlier when the hand-off or the toast would otherwise lose its time. */
+ *  once the cards have landed, and earlier when the hand-off or the toast would otherwise lose its time; a scene too
+ *  short for all of that stops the render rather than tick cards that are not there yet. */
 export function stageMoments(scene, cues, seconds) {
   const stage = STAGES[scene.id];
   const {shown, saved} = scene.dataRefs[scene.id];
-  const firstCard = scene.id === "risks" ? stage.runTo + 0.15 : stage.click + 0.25;
-  const cards = shown.map((_, i) => firstCard + i * STAGGER);
+  const cards = shown.map((_, i) => stage.firstCard + i * STAGGER);
   const named = stage.sources.map((phrase) => saidAt(cues, phrase));
   const order = saved.map((id) => shown.indexOf(id));
   const landed = Math.max(...order.map((i, k) => cards[i] + LANDED - k * TICK));
   const hold = stage.next ? NEXT + HAND_OFF : TOAST_IN + TOAST;
   const latest = seconds - hold - SAVE - TICK * (saved.length - 1);
+  if (latest < landed) {
+    throw new Error(
+      `The ${scene.id} scene needs ${(landed - latest).toFixed(2)} s more to tick, save and hand off. Lengthen its line.`,
+    );
+  }
   const cue = named.length ? named[0] : saidAt(cues, stage.ticksFrom);
   const first = Math.min(Math.max(landed, cue), latest);
   const ticks = saved.map((_, k) => first + k * TICK);
   const saveAt = ticks[ticks.length - 1] + SAVE;
   return {
-    click: stage.click, runFrom: stage.runFrom, runTo: stage.runTo, cards, named, ticks, saveAt,
-    nextAt: stage.next ? saveAt + NEXT : null,
+    click: stage.click, runFrom: stage.runFrom, runTo: stage.runTo, cards, contextAt: stage.firstCard + shown.length * STAGGER,
+    named, ticks, saveAt, nextAt: stage.next ? saveAt + NEXT : null,
   };
 }
 
-// How long "Simulate risks" is on screen before the cut, so the hand-off reads even though the line ends late.
-const TRIGGER_SHOWN = 1.4;
+// How long "Simulate risks" is on screen before the cut, so the hand-off reads before the crossfade even though the
+// line ends late.
+const TRIGGER_SHOWN = 1.6;
 
 /** The canvas scene: the blocks are lit as the voice names them, and "Simulate risks" appears once they are, or
  *  earlier when the line runs close to the cut; the cursor drifts in, then reaches it as it glows. */
@@ -103,24 +112,29 @@ export function canvasMoments(cues, seconds) {
   };
 }
 
-/** The problem scene: the two aims on screen from the start, meeting on "The challenge", lit on "create real value";
- *  the statement gives way to the challenge at its share of the clip. */
+/** The problem scene in pictures: a cost lands as the voice names it (onScreen[0..2], lower-cased as spoken), then the
+ *  two aims replace them and meet on "The challenge", lit on "create real value". */
 export function problemMoments(scene, cues) {
-  const [statement, challenge] = scene.onScreen;
   const end = cues[cues.length - 1].end;
   const at = (phrase) => spokenAt(scene.narration, phrase, end);
+  const marks = scene.onScreen.slice(0, 3).map((m) => at(m.toLowerCase()) - 0.1);
   return {
-    end, split: (end * statement.length) / (statement.length + challenge.length), circles: 0,
-    dots: at("The challenge"), meet: at("The challenge") + 0.2, target: at("create real value") + 0.2,
+    marks, circles: marks[marks.length - 1] + 0.25, dots: at("The challenge"), meet: at("The challenge") + 0.2,
+    target: at("create real value") + 0.2,
   };
 }
+
+// The tallies count up one after another, quickly enough to be read whole before the portfolio arrives.
+export const TALLY_COUNT = 0.6;
+const TALLY_STEP = 0.15;
 
 // The capabilities the voice names as each lands, in the order the close lists them on screen.
 export const KEYWORDS = ["models", "data lineage", "programmes", "architecture", "intelligence"];
 const BRAND = "AI Center X";
 
-/** The close: the years collapse into the hour as the voice says it, the message stays up while the payoff is
- *  heard, the portfolio follows "Then scale up", and the brand card and its footer close the video. */
+/** The close: the years collapse into the hour as the voice says it and the tallies count up beside the message;
+ *  the comparison stays until just before "models", then fades, and only then does the portfolio arrive; the brand
+ *  card and its footer close the video. */
 export function closeMoments(scene, cues) {
   const end = cues[cues.length - 1].end;
   const at = (phrase) => spokenAt(scene.narration, phrase, end);
@@ -130,8 +144,11 @@ export function closeMoments(scene, cues) {
     throw new Error(`The close's narration must say ${beats.join(", ")} in that order.`);
   }
   const brandAt = at(BRAND);
+  const keywords = KEYWORDS.map(at);
+  const collapse = at("reduced") - 0.2;
+  const scaleAt = keywords[0] - 0.55;
   return {
-    message: at("Three years") + 0.2, collapse: at("reduced"), tallies: at("less than an hour"),
-    scaleAt: at("Then scale up") - 0.1, keywords: KEYWORDS.map(at), brandAt, footer: brandAt + 0.3,
+    message: at("Three years") + 0.2, collapse, tallies: [0, 1, 2].map((i) => collapse - 0.2 + i * TALLY_STEP),
+    scaleAt, portfolioIn: scaleAt + 0.4, keywords, brandAt, footer: brandAt + 0.3,
   };
 }

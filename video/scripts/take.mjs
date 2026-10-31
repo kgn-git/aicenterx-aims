@@ -1,8 +1,8 @@
-// Cuts one continuous narration take (24 kHz 16-bit mono PCM) into one clip per scene, using a transcript's word
+// Cuts one continuous narration take (24 kHz 16-bit mono PCM) into one clip per scene, using the voice's word
 // timings. Voicing the script in one take keeps one pace and energy across scenes; the pauses between scenes are
 // hardly longer than those between sentences, so only the words show where a scene ends.
 const RATE = 24000;
-// Long enough that a word's first consonant, which a transcript times late, is never clipped.
+// Long enough to keep a word's first consonant, which can start before the timings say.
 const LEAD = 0.15;
 const TRAIL = 0.08;
 // A breath before the first word, so it lands as the crossfade into the scene finishes.
@@ -12,13 +12,13 @@ const MIN_MATCH = 0.85;
 const KEEP = 0.35;
 // Long enough that a cut through breath or a mouth click does not pop, short enough not to soften a word.
 const FADE = 0.02;
-// Silence is any 10 ms frame below 3% of the take's loudest: breaths and room tone, never a soft consonant.
+// Silence is any 10 ms frame below 3% of the take's loudest, which catches breaths and room tone between words.
 const FRAME = 240;
 const QUIET = 0.03;
 
 const token = (w) => w.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-/** For each script word, the index of the transcript word it lines up with (or -1), by a word-level edit distance,
+/** For each script word, the index of the timed word it lines up with (or -1), by a word-level edit distance,
  *  so a misheard or missing word shifts nothing else; and how many script words matched exactly. */
 function align(script, heard) {
   const n = script.length;
@@ -49,7 +49,7 @@ function align(script, heard) {
  *  Throws unless every character has a finite start and end in order, since a bad time would cut a wrong clip. */
 export function wordsFromAlignment({characters, character_start_times_seconds: starts, character_end_times_seconds: ends}) {
   const sound = Array.isArray(characters) && Array.isArray(starts) && Array.isArray(ends) &&
-    characters.length === starts.length && starts.length === ends.length &&
+    characters.every((c) => typeof c === "string") && characters.length === starts.length && starts.length === ends.length &&
     starts.every((s, i) => Number.isFinite(s) && Number.isFinite(ends[i]) && 0 <= s && s <= ends[i] && (!i || starts[i - 1] <= s));
   if (!sound) throw new Error("The voice's timings do not line up with its text.");
   const words = [];
@@ -117,7 +117,8 @@ function spans(from, to, quiet) {
 
 /** One PCM buffer per scene narration in `scenes`, PAD seconds of silence then the take cut from just before its
  *  first spoken word to just after its last, with its long pauses shortened and every cut faded;
- *  `words` are the transcript's {word, start, end} in seconds. Throws when the transcript matches too little. */
+ *  `words` are the voice's {word, start, end} in seconds. Throws when they match the script too little, or when a
+ *  scene's words are timed where the take has no sound, so a drifted take is never written as an empty clip. */
 export function splitTake(pcm, scenes, words) {
   const counts = scenes.map((s) => s.split(/\s+/).length);
   const script = scenes.flatMap((s) => s.split(/\s+/)).map(token);
@@ -139,7 +140,11 @@ export function splitTake(pcm, scenes, words) {
     const [start, end] = [own[0].start, own.at(-1).end];
     const from = Math.max(start - LEAD, i ? (heard[i - 1].at(-1).end + start) / 2 : 0);
     const to = Math.min(end + TRAIL, i < heard.length - 1 ? (end + heard[i + 1][0].start) / 2 : samples / RATE);
-    const parts = spans(from, to, quiet).map(([a, b]) => slice(pcm, a, b));
+    const kept = spans(from, to, quiet);
+    if (kept.reduce((sum, [a, b]) => sum + b - a, 0) <= LEAD + TRAIL) {
+      throw new Error(`Scene ${i + 1} has no sound where its words are timed.`);
+    }
+    const parts = kept.map(([a, b]) => slice(pcm, a, b));
     return Buffer.concat([Buffer.alloc(Math.round(PAD * RATE) * 2), ...parts]);
   });
 }

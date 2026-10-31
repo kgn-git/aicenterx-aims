@@ -27,9 +27,9 @@ export const Risks: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const hiring = risks.initiatives.hiring;
   const cards = shown.map((id) => hiring.suggestions.find((s) => s.id === id)!);
 
-  const {click, runFrom, runTo, cards: landAt, named: [mitNamed, aiidNamed], ticks, saveAt, nextAt} =
+  const {click, runFrom, runTo, cards: landAt, contextAt, named: [mitNamed, aiidNamed], ticks, saveAt, nextAt} =
     stageMoments(scene, cues, seconds);
-  const shownAt = (i: number) => landAt[i] ?? landAt[landAt.length - 1] + 0.1;
+  const shownAt = (i: number) => landAt[i] ?? contextAt;
   const run = ramp(t, runFrom, 0.3) * (1 - ramp(t, runTo, 0.3));
   const label = t < runTo ? trigger : t < nextAt! ? save : next;
   const target = (i: number) => ({x: cell(i).x + 40, y: cell(i).y + 40});

@@ -81,7 +81,7 @@ async function readCapped(res, limit, what) {
 /** The voiced `text` as 16-bit PCM and its words timed from the reply's per-character timings; refused unless the
  *  audio is whole and every word lies inside it, since a bad time would cut a wrong clip silently. */
 async function speak(text, voice, key) {
-  let body;
+  let reply;
   try {
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voice}/with-timestamps?output_format=pcm_${RATE}`,
@@ -93,10 +93,16 @@ async function speak(text, voice, key) {
       },
     );
     if (!res.ok) throw new Refusal(refusal(res.status));
-    body = JSON.parse((await readCapped(res, MAX_JSON, "reply")).toString("utf8"));
+    reply = await readCapped(res, MAX_JSON, "reply");
   } catch (err) {
     if (err instanceof Refusal) throw err;
     throw new Refusal("ElevenLabs could not be reached or did not answer in time, so nothing was changed. Run again.");
+  }
+  let body;
+  try {
+    body = JSON.parse(reply.toString("utf8"));
+  } catch {
+    throw new Refusal("ElevenLabs' reply could not be read, so nothing was changed. Run again.");
   }
   const pcm = typeof body?.audio_base64 === "string" ? Buffer.from(body.audio_base64, "base64") : Buffer.alloc(0);
   if (pcm.length === 0 || pcm.length % 2 || pcm.length > MAX_BYTES) {
@@ -109,7 +115,7 @@ async function speak(text, voice, key) {
     throw new Refusal("ElevenLabs' reply has no usable timings, so nothing was changed. Run again.");
   }
   const length = pcm.length / (RATE * 2);
-  if (!words.length || words.length > 2 * text.split(/\s+/).length || words.at(-1).end > length + 0.5) {
+  if (!words.length || words.length > 2 * text.split(/\s+/).length || words.some((w) => w.end > length + 0.5)) {
     throw new Refusal("ElevenLabs' timings do not fit its audio, so nothing was changed. Run again.");
   }
   return {pcm, words};

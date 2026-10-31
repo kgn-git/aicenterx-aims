@@ -20,8 +20,9 @@
       "audioSeconds": 8.73,
       "narration": "Today, you can't afford the time and effort of building AI that causes harm. The challenge is to govern AI responsibly and create real value.",
       "onScreen": [
-        "Today, you can't afford the time and effort of building AI that causes harm.",
-        "The challenge is to govern AI responsibly and create real value.",
+        "Time",
+        "Effort",
+        "Harm",
         "Govern responsibly",
         "Create real value"
       ],

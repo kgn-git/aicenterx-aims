@@ -1,5 +1,6 @@
 import React from "react";
 import {interpolate, interpolateColors} from "remotion";
+import {TALLY_COUNT} from "../moments.mjs";
 import {appFrameHeight, color, headingFont, video, mutedInk} from "../theme";
 import {ramp} from "../ui/kit";
 
@@ -13,7 +14,7 @@ const SPAN = 1400;
  *  the years stay, struck through, so before and after share a frame. */
 export const Contrast: React.FC<{
   t: number; years: string; chip: string; message: string; counts: [number, string][];
-  at: {collapse: number; tallies: number; message: number};
+  at: {collapse: number; tallies: number[]; message: number};
 }> = ({t, years, chip, message, counts, at}) => {
   const c = ramp(t, at.collapse, 0.9);
   const width = lerp(c, SPAN, 320);
@@ -24,7 +25,7 @@ export const Contrast: React.FC<{
         style={{
           position: "absolute", left: MIDDLE.x - SPAN / 2, width: SPAN, top: 170, textAlign: "center",
           fontFamily: headingFont, fontSize: 60, fontWeight: 650, color: color.ragHigh,
-          opacity: ramp(t, 0, 0.4) * (1 - 0.55 * c),
+          opacity: ramp(t, 0, 0.4) * (1 - 0.2 * c),
         }}
       >
         <span style={{position: "relative"}}>
@@ -48,7 +49,7 @@ export const Contrast: React.FC<{
         <span style={{opacity: ramp(t, at.collapse + 0.6, 0.3)}}>{chip}</span>
       </div>
       {counts.map(([n, label], i) => {
-        const shown = ramp(t, at.tallies + i * 0.35, 0.5);
+        const shown = ramp(t, at.tallies[i], 0.5);
         return (
           <div
             key={label}
@@ -57,7 +58,7 @@ export const Contrast: React.FC<{
               opacity: shown, transform: `translateY(${(1 - shown) * 20}px)`,
             }}
           >
-            <div style={{fontFamily: headingFont, fontSize: 110, fontWeight: 650, color: color.gov, lineHeight: 1}}>{Math.round(n * ramp(t, at.tallies + i * 0.35, 0.8))}</div>
+            <div style={{fontFamily: headingFont, fontSize: 110, fontWeight: 650, color: color.gov, lineHeight: 1}}>{Math.round(n * ramp(t, at.tallies[i], TALLY_COUNT))}</div>
             <div style={{fontSize: 34, color: mutedInk, marginTop: 10}}>{label}</div>
           </div>
         );
