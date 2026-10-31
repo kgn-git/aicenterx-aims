@@ -28,10 +28,11 @@ real captions proves every phrase is there. Checks:
         only then does the Venn diagram arrive and meet, and its bright target is lit for at least 1.2 s; the dots
         arrive by then
       - a reworded problem line or a reordered close stops with an error that names the missing or misplaced words
-      - in the close, the message and the 3 / 4 / 4 tallies, once counted, can each be read for at least 2 s, the
-        portfolio arrives only once the comparison has faded, and the footer can be read for at least 2 s
+      - the close opens on the initiative's outcome card, whose risks, mitigations and enhancements rows count up
+        one after another and can be read, filled, for at least 1.5 s; the card then folds into its own place in
+        the portfolio before the portfolio arrives, ahead of "models"; the footer can be read for at least 2 s
   - each scene uses what moments.mjs gives it: the named times for the chips, the cost icons and the circles, the
-    footer and the canvas glow, and the tallies' count
+    footer and the canvas glow, and the outcome card's rows and their count
   - the user's motion choices: the cursor eases with cubic-bezier(0.22, 1, 0.36, 1) and a button presses to 0.96 and
     back within 120 ms, from the one definition in moments.mjs that kit.tsx and every scene use
   - only the risks scene shows the agent's full working checklist (AgentRun); mitigations and enhancements show the
@@ -59,6 +60,7 @@ KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
 GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN, COSTS_SHOWN, TARGET_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2, 0.9, 1.2
+OUTCOME_SHOWN = 1.5
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
 # A shorter enhancements scene than the real one, where the toast's time would be lost without its floor; and a
@@ -71,8 +73,8 @@ USERS = {'Risks.tsx': ('stageMoments(', 'bump(t, mitNamed', 'bump(t, aiidNamed',
          'Enhancements.tsx': ('stageMoments(',),
          'Canvas.tsx': ('canvasMoments(', 'ramp(t, glow'),
          'Problem.tsx': ('problemMoments(', 'm.marks', 'ramp(t, m.circles', 'ramp(t, m.costsOut', 'ramp(t, m.rings'),
-         'End.tsx': ('closeMoments(', 'ramp(t, footer', 'from={portfolioIn}'),
-         'Acceleration.tsx': ('ramp(t, at.tallies[i], TALLY_COUNT)',)}
+         'End.tsx': ('closeMoments(', 'ramp(t, footer', 'from={portfolioIn}', '<Outcome'),
+         'Acceleration.tsx': ('ramp(t, at.rows[i], TALLY_COUNT)', 'ramp(t, at.fold'),}
 # Each module is imported as a namespace, so a missing export fails its own check instead of the whole run.
 PROGRAM = """
 import {readFileSync} from "node:fs";
@@ -174,20 +176,18 @@ def moment_problems(got):
         bad.append(f'a close that says its words out of order must stop with an error, got {got.get("reordered")}')
     end = got.get('end', {})
     count = got['consts'].get('TALLY_COUNT') or 0
-    if 'error' in end or 'message' not in end or not isinstance(end.get('tallies'), list):
-        bad.append(f'end: want the message and one time per tally, got {end}')
+    if 'error' in end or not isinstance(end.get('rows'), list) or len(end['rows']) != 3:
+        bad.append(f'end: want the outcome card and one time per row, got {end}')
     else:
-        if end['scaleAt'] - (end['message'] + 0.6) < READ:
-            bad.append(f'end: the message reads {end["scaleAt"] - end["message"] - 0.6:.2f} s, want {READ} s')
-        settled = max(end['tallies']) + count
-        if count < 0.5 or end['scaleAt'] - settled < READ:
-            bad.append(f'end: the tallies read {end["scaleAt"] - settled:.2f} s once counted, want {READ} s')
+        filled = max(end['rows']) + count
+        if count < 0.5 or end['card'] > 0.3 or end['scaleAt'] - filled < OUTCOME_SHOWN:
+            bad.append(f'end: the outcome card reads {end["scaleAt"] - filled:.2f} s once filled, want {OUTCOME_SHOWN} s')
         if end['portfolioIn'] - end['scaleAt'] < 0.4 or end['portfolioIn'] >= end['keywords'][0]:
-            bad.append(f'end: the portfolio must arrive after the comparison fades and before "models", got {end}')
+            bad.append(f'end: the card must fold into the portfolio before it arrives, ahead of "models", got {end}')
         # The close is the last scene, so nothing fades in over its footer.
         if end['seconds'] - end['footer'] < READ:
             bad.append(f'end: the footer reads {end["seconds"] - end["footer"]:.2f} s, want {READ} s')
-        if not end['collapse'] < max(end['tallies']) < end['scaleAt'] < end['brandAt']:
+        if not end['card'] < min(end['rows']) and end['rows'] == sorted(end['rows']) and end['scaleAt'] < end['brandAt']:
             bad.append(f'end: the beats are out of order: {end}')
     return bad
 

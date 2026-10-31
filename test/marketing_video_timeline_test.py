@@ -16,10 +16,10 @@ only at curated data. storyline.md is its human copy and must not drift from it.
     unaudited ratings would re-learn the recruiter bias the video names as a risk
   - the problem scene is pictures, not sentences: its items are the three costs the voice names, each spoken in its
     narration, then the two aims of its Venn diagram, so its graphic never says what is not voiced
-  - the lines the user approved word for word: the enhancements line, and the close's opening "Three years – reduced
-    to less than an hour."; the close's narration says "acceleration platform" and does not say "are identified",
-    since the screen already shows that the key risks, mitigations and enhancements are identified in less than an
-    hour; the end scene shows the span of the hook's milestones as "N years"
+  - the lines the user approved word for word: the enhancements line, and the close's opening outcome "In under an
+    hour, your initiative's risk profile is ready."; the close's narration says "acceleration platform"
+  - only the hook speaks of years or shows a span of them, since the video does not claim the three years it cites
+    shrink to an hour; the close shows the outcome card's "Risk profile ready" and "< 1 hour"
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
@@ -57,9 +57,7 @@ SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs
 LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save selected mitigations',
           'Suggest model enhancements', 'Save selected enhancements')
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
-# Where the end scene shows the years the hook's milestones span.
-YEARS = (('end', 7),)
-CORE = 'your key risks, mitigations and enhancements are identified'
+YEARS = re.compile(r'\b(\d+|three|two|four) years\b', re.I)
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
 ROLES = {'hook': {4: '2017 – Project abandoned'},
          'problem': {0: 'Time', 1: 'Effort', 2: 'Harm', 3: 'Govern responsibly', 4: 'Create real value'},
@@ -71,12 +69,12 @@ ROLES = {'hook': {4: '2017 – Project abandoned'},
                           4: 'Selected enhancements saved'},
          'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
                  3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
-                 5: 'Make AI Deliver Value', 6: f'In less than an hour, {CORE}.', 8: '< 1 hour',
-                 9: 'The acceleration platform for AI initiatives', 10: 'Coming next',
-                 11: 'Find the models that fit your initiative', 12: 'Map your data lineage',
-                 13: 'Combine initiatives into programmes and delivery waves',
-                 14: 'Govern your enterprise AI architecture',
-                 15: 'Stay up to date with market and security intelligence', 16: 'Wave'}}
+                 5: 'Make AI Deliver Value', 6: 'Risk profile ready', 7: '< 1 hour',
+                 8: 'The acceleration platform for AI initiatives', 9: 'Coming next',
+                 10: 'Find the models that fit your initiative', 11: 'Map your data lineage',
+                 12: 'Combine initiatives into programmes and delivery waves',
+                 13: 'Govern your enterprise AI architecture',
+                 14: 'Stay up to date with market and security intelligence', 15: 'Wave'}}
 MILESTONE = re.compile(r'\d{4} – \S.*')
 MAX_WORDS, MAX_PACE, SHOWN_RISKS, HOOK_WORDS = 200, 3.0, 5, 13
 FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
@@ -85,7 +83,7 @@ FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
 TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
 # The lines the user approved word for word.
 APPROVED = {'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile."}
-PAYOFF = 'Three years – reduced to less than an hour.'
+PAYOFF = "In under an hour, your initiative's risk profile is ready."
 PROBLEM_ITEMS, PROBLEM_MARKS = 5, 3
 
 
@@ -181,10 +179,8 @@ def validate(t, ctx):
     milestones = by_id['hook']['onScreen'][2:]
     if not milestones or not all(MILESTONE.fullmatch(m) for m in milestones):
         bad.append('hook: onScreen[2:] must be milestones written "YYYY – label"')
-    else:
-        span = f'{int(milestones[-1][:4]) - int(milestones[0][:4])} years'
-        bad += [f'{sid}: onScreen[{i}] must be "{span}", the span of the hook milestones'
-                for sid, i in YEARS if by_id[sid]['onScreen'][i:i + 1] != [span]]
+    bad += [f'{s["id"]}: speaks of or shows years, which only the hook does'
+            for s in scenes if s['id'] != 'hook' and YEARS.search(s['narration'] + ' ' + ' '.join(s['onScreen']))]
     problem = by_id['problem']
     if len(problem['onScreen']) != PROBLEM_ITEMS:
         bad.append(f'problem: onScreen must be its three costs and two aims only, got {problem["onScreen"]}')
@@ -193,8 +189,8 @@ def validate(t, ctx):
     bad += [f'{sid}: the narration must be the approved "{line}"' for sid, line in APPROVED.items()
             if by_id[sid]['narration'] != line]
     end = by_id['end']['narration']
-    if not end.startswith(PAYOFF) or 'acceleration platform' not in end or 'are identified' in end:
-        bad.append(f'end: the narration must open "{PAYOFF}", say "acceleration platform" and not "are identified"')
+    if not end.startswith(PAYOFF) or 'acceleration platform' not in end:
+        bad.append(f'end: the narration must open "{PAYOFF}" and say "acceleration platform"')
     return bad + validate_refs(by_id, ctx)
 
 
