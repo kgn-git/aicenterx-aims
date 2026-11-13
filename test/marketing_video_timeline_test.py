@@ -2,35 +2,25 @@
 
 Usage:  python test/marketing_video_timeline_test.py
 
-Every later step (audio, fragments, join) builds on the timeline, so it must hold the story the user approved and point
-only at curated data. storyline.md is its human copy and must not drift from it. Checks:
-  - shape: six scenes problem, canvas, risks, mitigations, enhancements, end, in that order, each in exactly one of
-    the fragments f1 (problem, canvas), f2 (risks), f3 (mitigations), f4 (enhancements), f5 (end); each scene carries
-    only its own dataRefs group (the problem its cited sources), with no repeated id
-  - timing: f1 runs 10 to 30 s, f2 to f4 each 5 to 15 s, f5 19 s at most; every voiced scene ends 0.3 s after its
-    clip and the close 1.0 s after its own, so no scene holds dead air (the played length, the user's 60 s target,
-    is pinned in test/marketing_video_audio_test.py); at most 3 words a second, since the voice sets the pace
-  - narration: 200 words at most; no "use case";
-    no click-by-click line, so no "select" or "save" in any form, since the ticks and toasts already show the choice;
-    never says the model is trained or retrained; recruiter feedback is always "audited recruiter feedback", since
-    unaudited ratings would re-learn the recruiter bias the video names as a risk
-  - the problem scene states the pitch deck's three figures, 56%, ~5% and 40%+, with the deck's labels, each spoken
-    in that order with the qualifiers that keep it as narrow as its source (PwC, MIT NANDA, Gartner, cited in that
-    order), then one spoken line on the rules changing; nothing else is on screen there
-  - the story is "make AI deliver value": no scene names Amazon, the roadmap ("Coming next", the capabilities, the
-    acceleration platform) or a span of years; the close opens on the approved "In under an hour, your risk profile
-    is ready.", says "Govern your AI risks" then "accelerate your projects", and ends on the tagline
-  - the lines the user approved word for word: the problem, enhancements and end narration (#64, 2026-11-13)
-  - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
-    each as an on-screen item in the end scene only
-  - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
-    the problem's figures, labels and rules line, each scene's trigger, save and next buttons and toast, and the
-    close's brand, heading, footer, disclosure, footnote, tagline, outcome, time and its two promises
-  - dataRefs: every id exists, saved is a subset of shown, and the chain holds: saved risks have mitigations, the mitigations shown are those of
-    the saved risks, the enhancements shown are all of video/data/model_enhancements.json, and each one's mitigation
-    is saved
-  - the guard: a broken copy that saves a risk with no mitigations, and one that shows an enhancement whose mitigation
-    is not saved, are each rejected for their own rule and no other
+The video is a 30-second pitch in four beats: the world, the break, the fix and the proof. Every later step (voice,
+footage, scenes, music) builds on the timeline, so it must hold the script the user approved and point only at
+curated data. storyline.md is its human copy and must not drift from it. Checks:
+  - shape: four scenes world, break, fix, proof, in that order, in the fragments f1 (world, break), f2 (fix) and
+    f3 (proof); each scene carries only its own dataRefs: the stock footage it plays, the sources of its figures, and
+    for the fix the risks and mitigations it shows
+  - timing: at most 3 words a second, since the voice sets the pace; every voiced scene ends 0.3 s after its clip and
+    the proof 1.0 s after its own, so no scene holds dead air (the played length is pinned in
+    test/marketing_video_audio_test.py)
+  - narration: 85 words at most; no "use case"; never says the model is trained; each scene's line is the one the
+    user approved word for word
+  - the figures: 56% in the world, then 40%+ and ~5% in the break, each on screen with its label, spoken with the
+    qualifiers that keep it as narrow as its source (PwC, Gartner, MIT NANDA, cited in the order spoken)
+  - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure, each
+    as an on-screen item in the proof only, beside the "< 10 min" outcome, the brand, the tagline and its promise
+  - the on-screen items each scene component reads by position, in their places
+  - dataRefs: every footage list names distinct clips; every risk and mitigation id exists, saved is a subset of
+    shown, and the chain holds: saved risks have mitigations, and the mitigations shown are those of the saved risks
+  - the guard: a broken copy that saves a risk with no mitigations is rejected for that rule and no other
   - storyline.md: its table lists the scenes in order with the timeline's seconds and narration word for word
 Prints a JSON report; exit code 1 on any failure.
 """
@@ -47,59 +37,41 @@ TIMELINE = ROOT / 'video' / 'src' / 'timeline.json'
 STORYLINE = ROOT / 'video' / 'script' / 'storyline.md'
 RISK_DATA = ROOT / 'tools' / 'data' / 'risk_suggestions.json'
 MITIGATION_DATA = ROOT / 'tools' / 'data' / 'mitigation_suggestions.json'
-ENHANCEMENTS = ROOT / 'video' / 'data' / 'model_enhancements.json'
-FRAGMENTS = {'f1': ['problem', 'canvas'], 'f2': ['risks'], 'f3': ['mitigations'], 'f4': ['enhancements'], 'f5': ['end']}
+FRAGMENTS = {'f1': ['world', 'break'], 'f2': ['fix'], 'f3': ['proof']}
 SCENES = [s for scenes in FRAGMENTS.values() for s in scenes]
-KINDS = ('risks', 'mitigations', 'enhancements')
-REFS = {'problem': {'sources'}, **{k: {k} for k in KINDS}}
+REFS = {'world': {'sources', 'footage'}, 'break': {'sources', 'footage'}, 'fix': {'risks', 'mitigations', 'footage'},
+        'proof': {'footage'}}
+KINDS = ('risks', 'mitigations')
 SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs'}, {'audioSeconds'}
-LABELS = ('Simulate risks', 'Save selected risks', 'Generate mitigations', 'Save selected mitigations',
-          'Suggest model enhancements', 'Save selected enhancements')
-END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
-YEARS = re.compile(r'\b(\d+|three|two|four) years\b', re.I)
-# {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
-# The pitch deck's problem slide, word for word: (on screen, its label, how the voice says it, the qualifiers that keep
-# the spoken claim as narrow as its source's, and the source its citation opens with).
-FIGURES = (
-    ('56%', 'of CEOs report no significant financial benefit from AI to date', 'fifty-six per cent',
-     ('CEOs', 'no significant financial benefit', 'to date'), 'PwC'),
-    ('~5%', 'of integrated gen AI pilots reach measurable P&L impact', 'about five per cent',
-     ('integrated gen AI pilots', 'measurable P&L impact'), 'MIT NANDA'),
-    ('40%+', 'of agentic AI projects expected to be cancelled by end of 2027', 'over forty per cent',
-     ('agentic AI projects', 'expected to be cancelled', 'end of 2027'), 'Gartner'),
-)
-RULES_LINE = 'The rules keep changing in every region'
-PROMISES = ('Govern your AI risks.', 'Accelerate your projects.')
-# The incident and the roadmap the video no longer tells.
-DROPPED = re.compile(r'\bAmazon\b|allegedly|Coming next|acceleration platform|data lineage|delivery waves'
-                     r'|models that fit|enterprise AI architecture|security intelligence', re.I)
-ROLES = {'problem': {**{i: f[0] for i, f in enumerate(FIGURES)}, **{3 + i: f[1] for i, f in enumerate(FIGURES)},
-                     6: RULES_LINE},
-         'canvas': {4: 'Simulate risks'},
-         'risks': {0: 'Simulate risks', 3: 'Save selected risks', 4: 'Generate mitigations', 5: 'Selected risks saved'},
-         'mitigations': {0: 'Generate mitigations', 3: 'Save selected mitigations', 4: 'Suggest model enhancements',
-                         5: 'Selected mitigations saved'},
-         'enhancements': {0: 'Suggest model enhancements', 3: 'Save selected enhancements',
-                          4: 'Selected enhancements saved'},
-         'end': {0: 'AI Center X', 1: 'Coming soon', 2: 'Sources and licences of every cited dataset',
-                 3: 'The narration voice is AI-generated.', 4: 'This is a product concept video.',
-                 5: 'Make AI Deliver Value', 6: 'Risk profile ready', 7: '< 1 hour', 8: PROMISES[0], 9: PROMISES[1]}}
-MAX_WORDS, MAX_PACE, SHOWN_RISKS = 200, 3.0, 5
-FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
-# TAIL in video/src/timing.mjs: the silence every scene plays after its clip, and the crossfade between two scenes.
-# The close holds longer, so the brand, the tagline and the footer can be read before the picture ends.
+MAX_WORDS, MAX_PACE, SHOWN_RISKS = 85, 3.0, 5
 TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
-# The lines the user approved word for word.
+# The script the user approved on #63, word for word.
 APPROVED = {
-    'problem': 'Fifty-six per cent of CEOs report no significant financial benefit from AI to date. Only about five per '
-               'cent of integrated gen AI pilots reach measurable P&L impact. Over forty per cent of agentic AI projects '
-               'are expected to be cancelled by the end of 2027, while the rules keep changing in every region.',
-    'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile.",
-    'end': 'In under an hour, your risk profile is ready. Govern your AI risks, accelerate your projects. '
-           'AI Center X: make AI deliver value.',
+    'world': 'Fifty-six per cent of CEOs see no financial gain from AI yet.',
+    'break': 'Over forty per cent of agentic AI projects may be scrapped by 2027. Only about five per cent of AI pilots '
+             'deliver measurable value. The risks show up too late.',
+    'fix': "AI Center X lets managers and compliance officers simulate a project's risks, from documented incidents "
+           'and industry standards, and select the mitigations that apply.',
+    'proof': 'In under ten minutes. AI Center X: make AI deliver value.',
 }
-PAYOFF = 'In under an hour, your risk profile is ready.'
-TAGLINE = 'AI Center X: make AI deliver value.'
+# (scene, on screen, its label, how the voice says it, the qualifiers that keep the claim as narrow as its source's,
+# the source its citation opens with), in the order spoken.
+FIGURES = (
+    ('world', '56%', 'of CEOs see no financial gain from AI yet', 'fifty-six per cent',
+     ('CEOs', 'no financial gain', 'yet'), 'PwC'),
+    ('break', '40%+', 'of agentic AI projects may be scrapped by 2027', 'over forty per cent',
+     ('agentic AI projects', 'may be scrapped', '2027'), 'Gartner'),
+    ('break', '~5%', 'of AI pilots deliver measurable value', 'about five per cent',
+     ('AI pilots', 'measurable value'), 'MIT NANDA'),
+)
+END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
+# {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
+ROLES = {'world': {0: '56%', 1: FIGURES[0][2]},
+         'break': {0: '40%+', 1: FIGURES[1][2], 2: '~5%', 3: FIGURES[2][2], 4: 'The risks show up too late'},
+         'fix': {0: 'CV Screening Assistant', 1: 'Simulate risks', 2: 'Generate mitigations'},
+         'proof': {0: '< 10 min', 1: 'Risk profile ready', 2: 'AI Center X', 3: 'Make AI Deliver Value',
+                   4: 'Govern your AI risks. Accelerate your projects.', 5: END_CARD[0],
+                   6: 'Sources and licences of every cited dataset', 7: END_CARD[2], 8: END_CARD[1]}}
 
 
 def words(s):
@@ -110,16 +82,14 @@ def positive(x):
     return isinstance(x, (int, float)) and not isinstance(x, bool) and x > 0
 
 
-def context(risk_data, mitigation_data, enhancement_data):
+def id_list(x):
+    return isinstance(x, list) and x and all(isinstance(i, str) for i in x) and len(set(x)) == len(x)
+
+
+def context(risk_data, mitigation_data):
     """The curated facts a timeline may point at."""
     hiring = risk_data['initiatives']['hiring']['suggestions']
-    return {'risks': {s['id'] for s in hiring},
-            'mitigations': hiring_mitigations(risk_data, mitigation_data),
-            'enhancements': {e['id']: e['mitigationId'] for e in enhancement_data['enhancements']}}
-
-
-def id_list(x):
-    return isinstance(x, list) and all(isinstance(i, str) for i in x) and len(set(x)) == len(x)
+    return {'risks': {s['id'] for s in hiring}, 'mitigations': hiring_mitigations(risk_data, mitigation_data)}
 
 
 def shape_problems(t):
@@ -141,14 +111,16 @@ def shape_problems(t):
                   and all(isinstance(x, str) and x.strip() for x in s['onScreen'])
                   and ('audioSeconds' not in s or positive(s['audioSeconds']))):
             bad.append(f'{sid}: seconds and audioSeconds must be positive numbers, narration and onScreen non-empty text')
-        elif not isinstance(refs, dict) or set(refs) != REFS.get(sid, set()):
-            bad.append(f'{sid}: dataRefs must hold exactly {sorted(REFS.get(sid, set()))}')
-        elif sid == 'problem' and not (isinstance(refs['sources'], list) and refs['sources'] and all(
+        elif not isinstance(refs, dict) or set(refs) != REFS[sid]:
+            bad.append(f'{sid}: dataRefs must hold exactly {sorted(REFS[sid])}')
+        elif not id_list(refs['footage']):
+            bad.append(f'{sid}: dataRefs.footage must be a non-empty list of distinct clip ids')
+        elif 'sources' in refs and not (isinstance(refs['sources'], list) and refs['sources'] and all(
                 isinstance(x, dict) and set(x) == {'cite'} and isinstance(x['cite'], str) for x in refs['sources'])):
-            bad.append('problem: dataRefs.sources must be a non-empty list of {cite}')
-        elif sid in KINDS and not (isinstance(refs[sid], dict) and set(refs[sid]) == {'shown', 'saved'}
-                                   and all(id_list(refs[sid][k]) for k in refs[sid])):
-            bad.append(f'{sid}: dataRefs.{sid} must be exactly {{shown: [...], saved: [...]}} of distinct ids')
+            bad.append(f'{sid}: dataRefs.sources must be a non-empty list of {{cite}}')
+        elif any(not (isinstance(refs[k], dict) and set(refs[k]) == {'shown', 'saved'}
+                      and all(id_list(refs[k][g]) for g in refs[k])) for k in KINDS if k in refs):
+            bad.append(f'{sid}: dataRefs.risks and .mitigations must be exactly {{shown: [...], saved: [...]}}')
     return bad
 
 
@@ -166,71 +138,44 @@ def validate(t, ctx):
             bad.append(f'{sid}: says "use case"; the glossary word is "initiative"')
         if re.search(r'\b(re)?trained\b', s['narration'], re.I):
             bad.append(f'{sid}: the narration must never say the model is trained')
-        if re.search(r'\b(select\w*|sav(e|es|ed|ing))\b', s['narration'], re.I):
-            bad.append(f'{sid}: narrates a click; the ticks and toasts show the selecting and saving')
-        if re.search(r'(?<!\baudited )recruiter feedback', s['narration'], re.I):
-            bad.append(f'{sid}: recruiter feedback must be "audited recruiter feedback"')
-        bad += [f'{sid}: "{item}" belongs on screen in the end scene only'
-                for item in END_CARD if (item in s['onScreen']) != (sid == 'end')]
-    for fid, members in FRAGMENTS.items():
-        secs = sum(by_id[m]['seconds'] for m in members)
-        lo, hi = (0, END_SECONDS) if fid == 'f5' else OPENING_SECONDS if fid == 'f1' else FRAGMENT_SECONDS
-        if not lo <= secs <= hi:
-            bad.append(f'{fid} runs {secs} s, want {f"{hi} s at most" if fid == "f5" else f"{lo} to {hi} s"}')
-    for s in scenes:
-        tail = CLOSE_TAIL if s['id'] == 'end' else TAIL
+        bad += [f'{sid}: "{item}" belongs on screen in the proof only'
+                for item in END_CARD if (item in s['onScreen']) != (sid == 'proof')]
+        tail = CLOSE_TAIL if sid == 'proof' else TAIL
         if 'audioSeconds' in s and abs(s['seconds'] - (s['audioSeconds'] + tail)) > SLACK:
-            bad.append(f'{s["id"]}: {s["seconds"]} s planned, want its {s["audioSeconds"]} s clip plus {tail:g} s')
+            bad.append(f'{sid}: {s["seconds"]} s planned, want its {s["audioSeconds"]} s clip plus {tail:g} s')
     if sum(words(s['narration']) for s in scenes) > MAX_WORDS:
         bad.append(f'the narration has {sum(words(s["narration"]) for s in scenes)} words, more than {MAX_WORDS}')
-    on_screen = {x for s in scenes for x in s['onScreen']}
-    bad += [f'button label "{label}" is not on screen' for label in LABELS if label not in on_screen]
-    bad += [f'{sid}: onScreen[{i}] must be "{want}"' for sid, roles in ROLES.items() for i, want in roles.items()
-            if by_id[sid]['onScreen'][i:i + 1] != [want]]
-    for s in scenes:
-        text = s['narration'] + ' ' + ' '.join(s['onScreen'])
-        if YEARS.search(text):
-            bad.append(f'{s["id"]}: speaks of or shows a span of years')
-        bad += [f'{s["id"]}: still tells "{m}", which the video no longer does' for m in DROPPED.findall(text)]
-    bad += validate_problem(by_id['problem'])
     bad += [f'{sid}: the narration must be the approved "{line}"' for sid, line in APPROVED.items()
             if by_id[sid]['narration'] != line]
-    end = by_id['end']
-    if len(end['onScreen']) != len(ROLES['end']):
-        bad.append(f'end: onScreen must be its {len(ROLES["end"])} items only, got {len(end["onScreen"])}')
-    said = end['narration'].lower()
-    govern, accelerate = (said.find(p.lower().rstrip('.')) for p in PROMISES)
-    if not (end['narration'].startswith(PAYOFF) and end['narration'].endswith(TAGLINE) and 0 < govern < accelerate):
-        bad.append(f'end: the narration must open "{PAYOFF}", then say "{PROMISES[0]}" and "{PROMISES[1]}" in that '
-                   f'order, and end "{TAGLINE}"')
-    return bad + validate_refs(by_id, ctx)
+    bad += [f'{sid}: onScreen[{i}] must be "{want}"' for sid, roles in ROLES.items() for i, want in roles.items()
+            if by_id[sid]['onScreen'][i:i + 1] != [want]]
+    return bad + figure_problems(by_id) + validate_refs(by_id, ctx)
 
 
-def validate_problem(problem):
-    """The opening's figures: on screen as the deck shows them, spoken in order with their qualifiers, then the rules."""
+def figure_problems(by_id):
+    """The figures: spoken in order with their qualifiers, each scene citing its sources in the order it speaks them."""
     bad = []
-    if len(problem['onScreen']) != len(ROLES['problem']):
-        bad.append(f'problem: onScreen must be the three figures, their labels and the rules line only, '
-                   f'got {problem["onScreen"]}')
-    said, rules = problem['narration'].lower(), RULES_LINE.lower().removeprefix('the ')
-    at = [said.find(f[2]) for f in FIGURES] + [said.find(rules)]
-    if -1 in at or at != sorted(at):
-        bad.append(f'problem: the narration must say {[f[2] for f in FIGURES]}, then "{rules}", in that order')
-    bad += [f'problem: the {f[0]} figure is not spoken with "{q}"' for f in FIGURES for q in f[3]
-            if q.lower() not in said]
-    cites = [x['cite'] for x in problem['dataRefs']['sources']]
-    if len(cites) != len(FIGURES) or not all(c.startswith(f[4]) for c, f in zip(cites, FIGURES)):
-        bad.append(f'problem: dataRefs.sources must cite {[f[4] for f in FIGURES]}, in that order')
+    for sid in ('world', 'break'):
+        own = [f for f in FIGURES if f[0] == sid]
+        said = by_id[sid]['narration'].lower()
+        at = [said.find(f[3]) for f in own]
+        if -1 in at or at != sorted(at):
+            bad.append(f'{sid}: the narration must say {[f[3] for f in own]} in that order')
+        bad += [f'{sid}: the {f[1]} figure is not spoken with "{q}"' for f in own for q in f[4] if q.lower() not in said]
+        cites = [x['cite'] for x in by_id[sid]['dataRefs']['sources']]
+        if len(cites) != len(own) or not all(c.startswith(f[5]) for c, f in zip(cites, own)):
+            bad.append(f'{sid}: dataRefs.sources must cite {[f[5] for f in own]}, in that order')
     return bad
 
 
 def validate_refs(by_id, ctx):
-    """The dataRefs rules: ids exist, saved within shown, and the scenes chain risk to mitigation to enhancement."""
+    """The fix's dataRefs: ids exist, saved within shown, and the saved risks' mitigations are the ones shown."""
     bad = []
-    risks, mits, enhs = groups = [by_id[k]['dataRefs'][k] for k in KINDS]
-    for kind, g in zip(KINDS, groups):
-        bad += [f'{kind}: unknown {kind[:-1]} id {x!r}' for x in g['shown'] if x not in ctx[kind]]
-        if not set(g['saved']) <= set(g['shown']):
+    refs = by_id['fix']['dataRefs']
+    risks, mits = refs['risks'], refs['mitigations']
+    for kind in KINDS:
+        bad += [f'{kind}: unknown {kind[:-1]} id {x!r}' for x in refs[kind]['shown'] if x not in ctx[kind]]
+        if not set(refs[kind]['saved']) <= set(refs[kind]['shown']):
             bad.append(f'{kind}: saved {kind} must be a subset of the {kind} shown')
     if len(risks['shown']) != SHOWN_RISKS:
         bad.append(f'{len(risks["shown"])} risks shown, want {SHOWN_RISKS}')
@@ -240,38 +185,20 @@ def validate_refs(by_id, ctx):
     bad += [f'saved risk {r} has no mitigations' for r in risks['saved'] if not answers.get(r)]
     if set(mits['shown']) != {m for r in risks['saved'] for m in answers.get(r, [])}:
         bad.append('the mitigations shown must be exactly those of the saved risks')
-    if set(enhs['shown']) != set(ctx['enhancements']):
-        bad.append('the enhancements shown must be all of model_enhancements.json')
-    bad += [f'enhancement {e} puts unsaved mitigation {ctx["enhancements"][e]} into effect'
-            for e in enhs['shown'] if e in ctx['enhancements'] and ctx['enhancements'][e] not in mits['saved']]
     return bad
 
 
-def refs_group(t, kind):
-    """The {shown, saved} group that the scene named kind carries."""
-    return next(s for s in t['scenes'] if s['id'] == kind)['dataRefs'][kind]
-
-
-def broken_copies(t, risk_data, mitigation_data, enhancement_data):
+def broken_copies(t, risk_data, mitigation_data):
     """{rule: (timeline, context) breaking only that rule, and a fragment its rejection must contain}."""
-    risk = refs_group(t, 'risks')['saved'][-1]
-    no_answers, fewer, orphan = copy.deepcopy(mitigation_data), copy.deepcopy(enhancement_data), copy.deepcopy(t)
+    fix = next(s for s in t['scenes'] if s['id'] == 'fix')['dataRefs']
+    risk = fix['risks']['saved'][-1]
+    no_answers, orphan = copy.deepcopy(mitigation_data), copy.deepcopy(t)
     dropped = {m['id'] for m in no_answers['risks'].pop(mitigation_key(next(
         s for s in risk_data['initiatives']['hiring']['suggestions'] if s['id'] == risk)))}
-    fewer['enhancements'] = [e for e in fewer['enhancements'] if e['mitigationId'] not in dropped]
-    for kind, gone in (('mitigations', dropped), ('enhancements', {e['id'] for e in enhancement_data['enhancements']
-                                                                   if e['mitigationId'] in dropped})):
-        group = refs_group(orphan, kind)
-        for k in group:
-            group[k] = [x for x in group[k] if x not in gone]
-    unsaved = copy.deepcopy(t)
-    group = refs_group(unsaved, 'mitigations')
-    group['saved'] = [m for m in group['saved'] if m != enhancement_data['enhancements'][0]['mitigationId']]
-    return {
-        'a saved risk with no mitigations': (orphan, context(risk_data, no_answers, fewer), 'has no mitigations'),
-        'an enhancement whose mitigation is not saved': (
-            unsaved, context(risk_data, mitigation_data, enhancement_data), 'puts unsaved mitigation'),
-    }
+    group = next(s for s in orphan['scenes'] if s['id'] == 'fix')['dataRefs']['mitigations']
+    for k in group:
+        group[k] = [x for x in group[k] if x not in dropped]
+    return {'a saved risk with no mitigations': (orphan, context(risk_data, no_answers), 'has no mitigations')}
 
 
 def storyline_rows(text):
@@ -299,8 +226,8 @@ def main():
     def load(p):
         return json.loads(p.read_text(encoding='utf-8'))
 
-    risk_data, mitigation_data, enhancement_data = load(RISK_DATA), load(MITIGATION_DATA), load(ENHANCEMENTS)
-    ctx = context(risk_data, mitigation_data, enhancement_data)
+    risk_data, mitigation_data = load(RISK_DATA), load(MITIGATION_DATA)
+    ctx = context(risk_data, mitigation_data)
     try:
         t, why = load(TIMELINE), str(TIMELINE)
     except (OSError, ValueError) as e:
@@ -313,8 +240,7 @@ def main():
             problems = [f'validator crashed: {e!r}']
         check('timeline passes every rule', not problems, problems or 'sound')
         if not problems:
-            missed = [rule for rule, (bt, bctx, why) in broken_copies(t, risk_data, mitigation_data,
-                                                                       enhancement_data).items()
+            missed = [rule for rule, (bt, bctx, why) in broken_copies(t, risk_data, mitigation_data).items()
                       if [why in x for x in validate(bt, bctx)] != [True]]
             check('validator rejects each broken copy for its own rule and no other', not missed,
                   missed or 'all rejected')
