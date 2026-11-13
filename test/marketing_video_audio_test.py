@@ -12,9 +12,8 @@ seconds or for its clip plus a short tail, whichever is longer. Checks:
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file
   - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
-    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 58 to 62 s in all once each
-    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's 60 s target, widened to 62 s
-    for the value storyline's opening figures)
+    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 28 to 31 s in all once each
+    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's 30-second pitch)
   - the voice samples compare scenes the timeline still has, so --samples never looks for a scene that is gone
   - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
@@ -34,7 +33,7 @@ VIDEO = ROOT / 'video'
 AUDIO = VIDEO / 'public' / 'audio'
 TIMELINE = VIDEO / 'src' / 'timeline.json'
 NARRATE = VIDEO / 'scripts' / 'narrate.mjs'
-RATE, MIN_TOTAL, MAX_TOTAL = 24000, 58.0, 62.0
+RATE, MIN_TOTAL, MAX_TOTAL = 24000, 28.0, 31.0
 # TAIL in video/src/timing.mjs, which video/src/Root.tsx also uses as the crossfade between scenes.
 CROSSFADE = 0.3
 FAKE_KEY = 'el-test-0000-not-a-real-key'
