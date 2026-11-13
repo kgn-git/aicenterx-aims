@@ -8,8 +8,8 @@ import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {FPS} from "../src/timing.mjs";
 
-// The pitch runs about 30 s; the user accepted a take of about 31 s.
-const MAX_SECONDS = 32;
+// The pitch runs about 40 s, with the pain beat the user added after the figures.
+const MAX_SECONDS = 42;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 

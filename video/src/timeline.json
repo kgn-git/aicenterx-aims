@@ -2,8 +2,8 @@
   "scenes": [
     {
       "id": "world",
-      "seconds": 4.69,
-      "audioSeconds": 4.39,
+      "seconds": 4.48,
+      "audioSeconds": 4.18,
       "narration": "Fifty-six per cent of CEOs see no financial gain from AI yet.",
       "onScreen": [
         "56%",
@@ -16,15 +16,14 @@
     },
     {
       "id": "break",
-      "seconds": 11,
-      "audioSeconds": 10.7,
-      "narration": "Over forty per cent of agentic AI projects may be scrapped by 2027. Only about five per cent of AI pilots deliver measurable value. The risks show up too late.",
+      "seconds": 9.35,
+      "audioSeconds": 9.05,
+      "narration": "Over forty per cent of agentic AI projects may be scrapped by 2027. Only about five per cent of AI pilots deliver measurable value.",
       "onScreen": [
         "40%+",
         "of agentic AI projects may be scrapped by 2027",
         "~5%",
-        "of AI pilots deliver measurable value",
-        "The risks show up too late"
+        "of AI pilots deliver measurable value"
       ],
       "dataRefs": {
         "sources": [
@@ -32,6 +31,20 @@
           {"cite": "MIT NANDA, \"The GenAI Divide: State of AI in Business 2025\", July 2025"}
         ],
         "footage": ["board", "desk"]
+      }
+    },
+    {
+      "id": "pain",
+      "seconds": 11.48,
+      "audioSeconds": 11.18,
+      "narration": "Delivering AI is hard, risky and complex. Organisations want to do it responsibly and safely. But most SMEs can't spend thousands on consultants to assess the risks.",
+      "onScreen": [
+        "Hard, risky and complex",
+        "Responsible and safe, by design",
+        "No budget for risk consultants"
+      ],
+      "dataRefs": {
+        "footage": ["complex", "compliance", "owner"]
       }
     },
     {
@@ -80,7 +93,7 @@
     }
   ],
   "fragments": [
-    {"id": "f1", "scenes": ["world", "break"]},
+    {"id": "f1", "scenes": ["world", "break", "pain"]},
     {"id": "f2", "scenes": ["fix"]},
     {"id": "f3", "scenes": ["proof"]}
   ]
