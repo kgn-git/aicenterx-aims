@@ -9,6 +9,7 @@
     "video:render:fragment": "npm --prefix video run render:fragment --",
     "video:narrate": "node --env-file-if-exists=.env.local video/scripts/narrate.mjs",
     "video:cues": "node video/scripts/cues.mjs",
+    "video:footage": "node video/scripts/footage.mjs",
     "video:assemble": "npm --prefix video run assemble"
   },
   "dependencies": {

@@ -8,3 +8,4 @@ node_modules/
 .env.*
 !.env.example
 video/out/
+video/public/footage/

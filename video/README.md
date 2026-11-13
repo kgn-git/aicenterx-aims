@@ -24,15 +24,21 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 
 | Composition | Scenes | Length |
 |---|---|---|
-| `f1-create` | problem, canvas | 27.9 s with the clips |
-| `f2-risks` | risks | 12 s planned, 12.6 s with the clip |
-| `f3-mitigations` | mitigations | 12.5 s planned, 13.3 s with the clip |
-| `f4-enhancements` | enhancements | 12 s |
-| `f5-closing` | end | 19 s |
+| `f1-problem` | world, break | 16 s planned |
+| `f2-fix` | fix | 8.8 s planned |
+| `f3-proof` | proof | 5.6 s planned |
 
 The planned lengths are the `seconds` in `src/timeline.json`. A scene plays for its planned length or for its clip plus 0.3 s, whichever is longer, rounded up to a whole frame; `src/timing.mjs` holds that rule. Every scene is built and plays its clip. The bottom 18% of the frame stays free, so a player's subtitles never cover the interface.
 
 To check that the fonts loaded, look at a scene title: it is set in Fraunces, a serif with sharp, high-contrast strokes. A render stops with an error if a font file fails to load.
+
+## Footage
+
+The people in the pitch are free stock clips from Pexels (the Pexels licence: free to use and modify, no attribution required; people may not be shown in a bad light or as endorsing the product). The clips are not committed, because this repo is public. `src/footage.json` records each clip's Pexels id, URL and sha256, and this downloads them into the git-ignored `public/footage/`, refusing any that no longer match:
+
+```sh
+npm run video:footage
+```
 
 ## Narrate
 
