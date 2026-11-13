@@ -17,7 +17,7 @@ export const Pain: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   return (
     <Background dots={0}>
       {shots(scene, cues, seconds).map((shot) => <Footage key={shot.clip} {...shot} shade={0.6} />)}
-      <div style={{position: "absolute", left: 140, top: 300, width: 1100, display: "flex", flexDirection: "column", gap: 44}}>
+      <div style={{position: "absolute", left: 140, top: 300, width: 1240, display: "flex", flexDirection: "column", gap: 40}}>
         {scene.onScreen.map((point, i) => {
           const shown = ramp(t, m.points[i], 0.45);
           const next = m.points[i + 1] ?? Infinity;
@@ -30,8 +30,8 @@ export const Pain: React.FC<SceneProps> = ({scene, cues, seconds}) => {
                 transform: `translateY(${(1 - shown) * 30}px)`,
               }}
             >
-              <div style={{width: 10, height: 84, background: color.ragHigh, flex: "0 0 auto"}} />
-              <div style={{fontFamily: headingFont, fontSize: 84, fontWeight: 650, lineHeight: 1.05, color: color.ink}}>{point}</div>
+              <div style={{width: 10, height: 76, background: color.ragHigh, flex: "0 0 auto"}} />
+              <div style={{fontFamily: headingFont, fontSize: 76, fontWeight: 650, lineHeight: 1.05, whiteSpace: "nowrap", color: color.ink}}>{point}</div>
             </div>
           );
         })}
