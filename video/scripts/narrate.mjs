@@ -3,7 +3,7 @@
 //   npm run video:narrate                    every scene, in one continuous take cut at the scene pauses
 //   npm run video:narrate -- f2-risks        one fragment, so a bad clip can be remade alone
 //   npm run video:narrate -- problem         one scene, leaving the approved clips around it untouched
-//   npm run video:narrate -- --samples       the hook, mitigations and close in each candidate voice, to out/samples/
+//   npm run video:narrate -- --samples       the opening, mitigations and close in each candidate voice, to out/samples/
 // It fails closed: a missing setting or a refused request changes nothing, every file is staged before any is
 // replaced, and no message carries the key, a header or a stack trace.
 import {randomBytes} from "node:crypto";
@@ -15,6 +15,8 @@ import {splitTake, wordsFromAlignment} from "./take.mjs";
 // Matilda, the voice the user picked from the samples.
 const VOICE = "XrExE9yKIg1WjnnlVkGX";
 const SAMPLE_VOICES = {matilda: VOICE, alice: "Xb7hH8MSUJpSbSDYk0k2", george: "JBFqnCBsd6RMkjVDRZzb", brian: "nPczCjzI2devNBz1zQrb"};
+// The opening and the close carry the tone; the mitigations line carries the acronyms.
+const SAMPLE_SCENES = ["problem", "mitigations", "end"];
 // The most expressive model; it takes no speed setting, so pace comes from the shortened pauses in take.mjs.
 const MODEL = "eleven_v3";
 const STABILITY = 0.5;
@@ -199,14 +201,13 @@ async function main() {
   const bad = timeline.scenes.find((s) => !/^[a-z0-9-]+$/.test(s.id));
   if (bad) fail(`Scene id "${bad.id}" must use only lower-case letters, digits and hyphens, as it names a file.`);
   if (samples) {
-    // The hook and the close carry the tone; the mitigations line carries the acronyms.
-    const lines = ["hook", "mitigations", "end"].map((id) => timeline.scenes.find((s) => s.id === id).narration);
+    const lines = SAMPLE_SCENES.map((id) => timeline.scenes.find((s) => s.id === id).narration);
     const files = [];
     for (const [name, id] of Object.entries(SAMPLE_VOICES)) {
       files.push([join(root, "out", "samples", `${name}.wav`), wav(Buffer.concat(await voice(lines, id, key)))]);
     }
     commit(files);
-    console.log(`Wrote ${files.length} samples of the hook, mitigations and close to video/out/samples/.`);
+    console.log(`Wrote ${files.length} samples of the opening, mitigations and close to video/out/samples/.`);
     console.log("Listen, then set VOICE in video/scripts/narrate.mjs to the chosen voice.");
     return;
   }

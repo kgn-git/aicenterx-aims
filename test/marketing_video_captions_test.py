@@ -89,7 +89,7 @@ def broken_copies(captions, timeline):
 
     return {
         'a line over 42 characters': (edit(lambda cs: cs[0]['lines'].__setitem__(0, 'x' * 43)), 'characters'),
-        'three lines': (edit(lambda cs: cs[0]['lines'].append('more')), 'lines'),
+        'three lines': (edit(lambda cs: cs[0]['lines'].extend(['more'] * (LINES + 1 - len(cs[0]['lines'])))), 'lines'),
         'a dropped word': (edit(lambda cs: cs[0]['lines'].__setitem__(-1, cs[0]['lines'][-1].rsplit(' ', 1)[0])),
                            'word for word'),
         'a cue past its clip': (edit(lambda cs: cs[0].update(end=cs[0]['end'] + 1)), 'must run from'),

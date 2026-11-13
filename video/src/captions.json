@@ -2,48 +2,58 @@
   "cues": [
     {
       "fragment": "f1",
-      "scene": "hook",
+      "scene": "problem",
       "start": 0,
-      "end": 3.2,
+      "end": 2.328,
       "lines": [
-        "Amazon's hiring AI allegedly",
-        "ranked women lower."
-      ]
-    },
-    {
-      "fragment": "f1",
-      "scene": "hook",
-      "start": 3.2,
-      "end": 5.2,
-      "lines": [
-        "Scrapping it took three years."
+        "Fifty-six per cent of CEOs report no"
       ]
     },
     {
       "fragment": "f1",
       "scene": "problem",
-      "start": 5.5,
-      "end": 10.12,
+      "start": 2.328,
+      "end": 5.303,
       "lines": [
-        "Today, you can't afford the time and",
-        "effort of building AI that causes harm."
+        "significant financial",
+        "benefit from AI to date."
       ]
     },
     {
       "fragment": "f1",
       "scene": "problem",
-      "start": 10.12,
-      "end": 14.01,
+      "start": 5.303,
+      "end": 10.541,
       "lines": [
-        "The challenge is to govern AI",
-        "responsibly and create real value."
+        "Only about five per cent of integrated",
+        "gen AI pilots reach measurable P&L impact."
+      ]
+    },
+    {
+      "fragment": "f1",
+      "scene": "problem",
+      "start": 10.541,
+      "end": 15.132,
+      "lines": [
+        "Over forty per cent of agentic AI",
+        "projects are expected to be cancelled"
+      ]
+    },
+    {
+      "fragment": "f1",
+      "scene": "problem",
+      "start": 15.132,
+      "end": 19.4,
+      "lines": [
+        "by the end of 2027, while the rules",
+        "keep changing in every region."
       ]
     },
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 14.333,
-      "end": 15.542,
+      "start": 19.7,
+      "end": 20.913,
       "lines": [
         "Meet AI Center X."
       ]
@@ -51,8 +61,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 15.542,
-      "end": 19.096,
+      "start": 20.913,
+      "end": 24.481,
       "lines": [
         "Map your initiative",
         "on the AI Canvas: its business"
@@ -61,8 +71,8 @@
     {
       "fragment": "f1",
       "scene": "canvas",
-      "start": 19.096,
-      "end": 22.223,
+      "start": 24.481,
+      "end": 27.62,
       "lines": [
         "problem, its data",
         "and the people it affects."
@@ -72,7 +82,7 @@
       "fragment": "f2",
       "scene": "risks",
       "start": 0,
-      "end": 4.036,
+      "end": 4.06,
       "lines": [
         "Before writing a single line",
         "of code, simulate your risks."
@@ -81,8 +91,8 @@
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 4.036,
-      "end": 6.123,
+      "start": 4.06,
+      "end": 6.16,
       "lines": [
         "An AI agent flags them, citing"
       ]
@@ -90,8 +100,8 @@
     {
       "fragment": "f2",
       "scene": "risks",
-      "start": 6.123,
-      "end": 10.02,
+      "start": 6.16,
+      "end": 10.08,
       "lines": [
         "the MIT AI Risk Repository",
         "and the AI Incident Database."
@@ -101,7 +111,7 @@
       "fragment": "f3",
       "scene": "mitigations",
       "start": 0,
-      "end": 4.03,
+      "end": 3.994,
       "lines": [
         "For the risks you keep,",
         "the agent proposes mitigations,"
@@ -110,8 +120,8 @@
     {
       "fragment": "f3",
       "scene": "mitigations",
-      "start": 4.03,
-      "end": 7.84,
+      "start": 3.994,
+      "end": 7.77,
       "lines": [
         "each tied to MIT's draft",
         "taxonomy and the EU AI Act."
@@ -121,7 +131,7 @@
       "fragment": "f4",
       "scene": "enhancements",
       "start": 0,
-      "end": 2.933,
+      "end": 2.971,
       "lines": [
         "Then, turn policy into",
         "engineering: enhancements"
@@ -130,8 +140,8 @@
     {
       "fragment": "f4",
       "scene": "enhancements",
-      "start": 2.933,
-      "end": 5.5,
+      "start": 2.971,
+      "end": 5.57,
       "lines": [
         "matched to this initiative's risk profile."
       ]
@@ -140,7 +150,7 @@
       "fragment": "f5",
       "scene": "end",
       "start": 0,
-      "end": 3.44,
+      "end": 3.274,
       "lines": [
         "In under an hour,",
         "your risk profile is ready."
@@ -149,28 +159,18 @@
     {
       "fragment": "f5",
       "scene": "end",
-      "start": 3.44,
-      "end": 7.109,
+      "start": 3.274,
+      "end": 6.694,
       "lines": [
-        "Then scale up: models,",
-        "data lineage, programmes,"
+        "Govern your AI risks,",
+        "accelerate your projects."
       ]
     },
     {
       "fragment": "f5",
       "scene": "end",
-      "start": 7.109,
-      "end": 11.695,
-      "lines": [
-        "architecture and intelligence,",
-        "on one acceleration platform."
-      ]
-    },
-    {
-      "fragment": "f5",
-      "scene": "end",
-      "start": 11.695,
-      "end": 14.37,
+      "start": 6.694,
+      "end": 9.24,
       "lines": [
         "AI Center X: make AI deliver value."
       ]

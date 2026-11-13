@@ -2,7 +2,8 @@
   "scenes": [
     {
       "id": "problem",
-      "seconds": 18.4,
+      "seconds": 19.7,
+      "audioSeconds": 19.4,
       "narration": "Fifty-six per cent of CEOs report no significant financial benefit from AI to date. Only about five per cent of integrated gen AI pilots reach measurable P&L impact. Over forty per cent of agentic AI projects are expected to be cancelled by the end of 2027, while the rules keep changing in every region.",
       "onScreen": [
         "56%",
@@ -21,8 +22,8 @@
     },
     {
       "id": "canvas",
-      "seconds": 8.19,
-      "audioSeconds": 7.89,
+      "seconds": 8.22,
+      "audioSeconds": 7.92,
       "narration": "Meet AI Center X. Map your initiative on the AI Canvas: its business problem, its data and the people it affects.",
       "onScreen": [
         "Define an initiative",
@@ -35,8 +36,8 @@
     },
     {
       "id": "risks",
-      "seconds": 10.32,
-      "audioSeconds": 10.02,
+      "seconds": 10.38,
+      "audioSeconds": 10.08,
       "narration": "Before writing a single line of code, simulate your risks. An AI agent flags them, citing the MIT AI Risk Repository and the AI Incident Database.",
       "onScreen": [
         "Simulate risks",
@@ -55,8 +56,8 @@
     },
     {
       "id": "mitigations",
-      "seconds": 8.14,
-      "audioSeconds": 7.84,
+      "seconds": 8.07,
+      "audioSeconds": 7.77,
       "narration": "For the risks you keep, the agent proposes mitigations, each tied to MIT's draft taxonomy and the EU AI Act.",
       "onScreen": [
         "Generate mitigations",
@@ -75,8 +76,8 @@
     },
     {
       "id": "enhancements",
-      "seconds": 5.8,
-      "audioSeconds": 5.5,
+      "seconds": 5.87,
+      "audioSeconds": 5.57,
       "narration": "Then, turn policy into engineering: enhancements matched to this initiative's risk profile.",
       "onScreen": [
         "Suggest model enhancements",
@@ -94,7 +95,8 @@
     },
     {
       "id": "end",
-      "seconds": 11.5,
+      "seconds": 10.24,
+      "audioSeconds": 9.24,
       "narration": "In under an hour, your risk profile is ready. Govern your AI risks, accelerate your projects. AI Center X: make AI deliver value.",
       "onScreen": [
         "AI Center X",

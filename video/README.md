@@ -24,7 +24,7 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 
 | Composition | Scenes | Length |
 |---|---|---|
-| `f1-create` | problem, canvas | 26.6 s planned |
+| `f1-create` | problem, canvas | 27.9 s with the clips |
 | `f2-risks` | risks | 12 s planned, 12.6 s with the clip |
 | `f3-mitigations` | mitigations | 12.5 s planned, 13.3 s with the clip |
 | `f4-enhancements` | enhancements | 12 s |
@@ -50,7 +50,7 @@ npm run video:cues
 
 `video:narrate` writes each clip's length into `src/timeline.json` as `audioSeconds`. It replaces nothing unless every clip in the run succeeded, and it never prints the key. Listen to each clip before committing: it must say the whole line. Then set each scene's `seconds` to its clip plus 0.3 s, and the close's to its clip plus 1.0 s; the timeline test checks this, so no scene holds dead air. `video:cues` rebuilds `src/captions.json`; the captions test fails until it has run.
 
-The whole narration is voiced in one take, so the voice keeps one pace, then cut into scenes at the per-character timings ElevenLabs returns with the audio (`/with-timestamps`). Those timings run back to back, so `scripts/take.mjs` finds the pauses in the sound itself: it shortens any silence inside a line to 0.35 s, trims each clip's edges to a short lead and trail, and fades every cut over 20 ms so none clicks. `eleven_v3` takes no speed setting, so the shortened pauses set the pace. A take varies each time it is voiced; listen for slips and voice again if one appears. To compare voices, `npm run video:narrate -- --samples` writes the hook, mitigations and close in each voice of `SAMPLE_VOICES` to `video/out/samples/`.
+The whole narration is voiced in one take, so the voice keeps one pace, then cut into scenes at the per-character timings ElevenLabs returns with the audio (`/with-timestamps`). Those timings run back to back, so `scripts/take.mjs` finds the pauses in the sound itself: it shortens any silence inside a line to 0.35 s, trims each clip's edges to a short lead and trail, and fades every cut over 20 ms so none clicks. `eleven_v3` takes no speed setting, so the shortened pauses set the pace. A take varies each time it is voiced; listen for slips and voice again if one appears. To compare voices, `npm run video:narrate -- --samples` writes the opening, mitigations and close in each voice of `SAMPLE_VOICES` to `video/out/samples/`.
 
 ## Render a fragment
 
