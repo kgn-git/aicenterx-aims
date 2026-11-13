@@ -112,16 +112,24 @@ export function canvasMoments(cues, seconds) {
   };
 }
 
-/** The problem scene in pictures: the three costs' empty rings open it, and each fills as the voice names it
- *  (onScreen[0..2], lower-cased as spoken); the red cost holds until "govern", when the two aims replace it, meet,
- *  and light their shared target once they overlap. */
+// The numbers the opening says, in the order the deck gives them; each figure lands as its number is spoken.
+const FIGURES = ["Fifty-six per cent", "five per cent", "forty per cent"];
+// The light plays alone at least this long, even though the voice starts on the first figure.
+const LIGHT_ALONE = 0.3;
+// How long after the rules line lands the problem counts as fully stated, where the music's first act ends.
+const STATED = 0.6;
+
+/** The opening: its light plays alone, each figure lands as the voice says its number, then the rules line lands; the
+ *  problem is fully stated (`target`) once that line is up. */
 export function problemMoments(scene, cues) {
   const end = cues[cues.length - 1].end;
   const at = (phrase) => spokenAt(scene.narration, phrase, end);
-  const marks = scene.onScreen.slice(0, 3).map((m) => at(m.toLowerCase()) - 0.1);
-  const costsOut = at("govern") - 0.2;
-  const circles = costsOut + 0.1;
-  return {rings: 0, marks, costsOut, circles, dots: at("The challenge"), meet: circles, target: circles + 0.7};
+  const figures = FIGURES.map((phrase) => Math.max(LIGHT_ALONE, at(phrase) - 0.1));
+  if (figures.some((x, i) => i && x <= figures[i - 1])) {
+    throw new Error(`The opening must say ${FIGURES.join(", ")} in that order.`);
+  }
+  const rules = at("the rules") - 0.1;
+  return {figures, rules, target: rules + STATED};
 }
 
 // The outcome card's rows count up one after another, quickly enough to be read whole before the card folds away.

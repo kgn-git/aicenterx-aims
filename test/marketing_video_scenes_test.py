@@ -24,7 +24,7 @@ real captions proves every phrase is there. Checks:
         that have not landed
       - the risks and mitigations scenes light their chips as each of their two spoken sources is named, in order,
         once every card is on screen
-      - the problem scene opens on its light alone for at least 0.5 s; its figures land in the order 56%, ~5%,
+      - the problem scene opens on its light alone for at least 0.3 s; its figures land in the order 56%, ~5%,
         40%+, each within 0.3 s of the voice saying its number; the rules line lands at least 0.5 s after the third
         figure; the problem is fully stated (the target the music's first act ends on) once the rules line is up,
         and stays lit for at least 1.2 s before the crossfade
@@ -63,9 +63,9 @@ MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
 GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN, TARGET_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2, 1.2
 OUTCOME_SHOWN = 1.5
-# The opening's light plays alone this long; a figure lands this close to its spoken number; the rules line follows
-# the third figure by at least this much.
-OPENING_LIGHT, FIGURE_SLACK, RULES_AFTER = 0.5, 0.3, 0.5
+# The opening's light plays alone this long (the voice starts on the first figure, so longer would pull it off its
+# number); a figure lands this close to its spoken number; the rules line follows the third figure by this much.
+OPENING_LIGHT, FIGURE_SLACK, RULES_AFTER = 0.3, 0.3, 0.5
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
 # A shorter enhancements scene than the real one, where the toast's time would be lost without its floor; and a
