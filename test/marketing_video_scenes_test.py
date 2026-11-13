@@ -1,48 +1,30 @@
-"""Test for how the marketing video's scenes follow the narration: video/src/scenes/*.tsx and the timings they take
-from video/src/moments.mjs, against video/src/captions.json.
+"""Test for how the marketing video's four beats follow the narration: video/src/scenes/*.tsx and the timings they
+take from video/src/moments.mjs, against video/src/captions.json.
 
 Usage:  python test/marketing_video_scenes_test.py
 
-A scene times its cards, ticks and buttons to the narration. Indexing the caption cues by number ties those moments
-to how the captions happen to be split, so a reworded line silently moves them or crashes the render; moments.mjs
-names the words it waits for instead, and stops with an error when a phrase is no longer said, so running it on the
-real captions proves every phrase is there. Checks:
-  - no scene and not moments.mjs indexes its cues by number (cues[2], cues.at(2)); the first and last cue may still
-    be reached by length
-  - the opening plays over moving light columns with the dotted background off, so the product's grid arrives with
-    the canvas; no scene is the old hook, and nothing imports it
-  - the moments of each scene, computed by moments.mjs through node from the real timeline and captions, measured to
+A scene times its figures, cards and ticks to the narration. moments.mjs names the words it waits for, and stops with
+an error when a phrase is no longer said, so running it on the real captions proves every phrase is there. Checks:
+  - no scene and not moments.mjs indexes its cues by number (cues[2], cues.at(2))
+  - each scene is exactly one of world, break, fix and proof, and plays its stock footage through <Footage>
+  - the moments of each beat, computed by moments.mjs through node from the real timeline and captions, measured to
     the start of the 0.3 s crossfade out of the scene:
-      - no zoom anywhere, so the cursor stays in view
-      - the canvas shows "Simulate risks" for at least 1.2 s, and the cursor reaches it on the way
-      - the hand-off button after the canvas, risks and mitigations glows for at least 0.8 s
-      - every tick lands after its card and before the save
-      - the first mitigation and enhancement card lands within 0.25 s of the click
-      - the enhancements toast is fully shown for at least 1.5 s, also in a scene cut to 5.1 s, where the ticks must
-        start earlier to keep it
-      - a scene too short for its ticks, save and hand-off stops with an error naming it, rather than ticking cards
-        that have not landed
-      - the risks and mitigations scenes light their chips as each of their two spoken sources is named, in order,
-        once every card is on screen
-      - the problem scene opens on its light alone for at least 0.3 s; its figures land in the order 56%, ~5%,
-        40%+, each within 0.3 s of the voice saying its number; the rules line lands at least 0.5 s after the third
-        figure; the problem is fully stated (the target the music's first act ends on) once the rules line is up,
-        and stays lit for at least 1.2 s before the crossfade
-      - a problem line that no longer says a figure, one that says the figures out of order, and a reordered close
-        each stop with an error that names the missing or misplaced words
-      - the close opens on the initiative's outcome card, whose risks, mitigations and enhancements rows count up
-        one after another and can be read, filled, for at least 1.5 s; the card then folds into its own place in
-        the portfolio before the portfolio arrives, ahead of "models"; the footer can be read for at least 2 s
-  - each scene uses what moments.mjs gives it: the named times for the chips, the cost icons and the circles, the
-    footer and the canvas glow, and the outcome card's rows and their count
-  - the user's motion choices: the cursor eases with cubic-bezier(0.22, 1, 0.36, 1) and a button presses to 0.96 and
-    back within 120 ms, from the one definition in moments.mjs that kit.tsx and every scene use
-  - only the risks scene shows the agent's full working checklist (AgentRun); mitigations and enhancements show the
-    status line (AgentStatus) alone, so the video shows the agent at work once and then cuts to results
-  - the user's visual choices for a scannable cut: the risk, mitigation and enhancement cards land as whole blocks
-    (no letter-by-letter Stream), each stage marks its cards with its own accent (accent={STAGE.risks} and so on,
-    three different colours in theme.ts), and secondary text uses the brighter mutedInk rather than the prototype's
-    inkMuted anywhere in video/src outside theme.ts
+      - world: the footage plays alone for at least 0.3 s, then 56% lands within 0.3 s of its number being said
+      - break: 40%+ then ~5% land within 0.3 s of their numbers, the footage cuts from the whiteboard to the desk
+        between them, and "The risks show up too late" lands at least 0.5 s after ~5% and holds 1 s
+      - fix: the team footage gives way to the product as "simulate" is said; the risk cards land after the click,
+        their AIID and MIT chips light as "documented incidents" and "industry standards" are said, once every card is
+        up; each tick lands after its card; the mitigations open as "select" is said, and their ticks land after their
+        rows and end at least 0.5 s before the crossfade; a fix too short for its ticks stops with an error naming it
+      - proof: "< 10 min" lands on the first words, the brand card as "AI Center X" is said, and the footer reads
+        for at least 2 s
+      - a world line that no longer says its figure, and a break that says its figures out of order, each stop with
+        an error naming the words
+  - each scene uses what moments.mjs gives it
+  - the user's motion choices: a button presses to 0.96 and back within 120 ms, from the one definition in
+    moments.mjs that kit.tsx uses
+  - the fix marks its risk cards and mitigation rows with their own accents (STAGE.risks, STAGE.mitigations), and
+    secondary text uses the brighter mutedInk rather than the prototype's inkMuted anywhere in video/src
 Prints a JSON report; exit code 1 on any failure.
 """
 import json
@@ -61,26 +43,20 @@ THEME = SRC / 'theme.ts'
 KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
-GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN, TARGET_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2, 1.2
-OUTCOME_SHOWN = 1.5
-# The opening's light plays alone this long (the voice starts on the first figure, so longer would pull it off its
-# number); a figure lands this close to its spoken number; the rules line follows the third figure by this much.
-OPENING_LIGHT, FIGURE_SLACK, RULES_AFTER = 0.3, 0.3, 0.5
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
-# A shorter enhancements scene than the real one, where the toast's time would be lost without its floor; and a
-# mitigations scene too short for its ticks, save and hand-off at all.
-TIGHT, CRAMPED = 5.1, 3.0
-PRESS, PRESS_SCALE, CURSOR_EASE = 0.12, 0.96, [0.22, 1, 0.36, 1]
+FIGURE_SLACK, LIGHT_ALONE, LATE_AFTER, HOLD, READ, TICKS_DONE = 0.3, 0.3, 0.5, 1.0, 2.0, 0.5
+# A fix scene too short for its montage.
+CRAMPED = 6.0
+PRESS, PRESS_SCALE = 0.12, 0.96
+BEATS = {'World.tsx', 'Break.tsx', 'Fix.tsx', 'Proof.tsx'}
 # {scene file: what it must call and use from moments.mjs}.
-USERS = {'Risks.tsx': ('stageMoments(', 'bump(t, mitNamed', 'bump(t, aiidNamed', 'contextAt'),
-         'Mitigations.tsx': ('stageMoments(', '[mitNamed, lawNamed][n]'),
-         'Enhancements.tsx': ('stageMoments(',),
-         'Canvas.tsx': ('canvasMoments(', 'ramp(t, glow'),
-         'Problem.tsx': ('problemMoments(', 'm.figures[i]', 'ramp(t, m.rules', '<LightColumns'),
-         'End.tsx': ('closeMoments(', 'ramp(t, footer', 'from={portfolioIn}', '<Outcome'),
-         'Acceleration.tsx': ('ramp(t, at.rows[i], TALLY_COUNT)', 'ramp(t, at.fold'),}
-# Each module is imported as a namespace, so a missing export fails its own check instead of the whole run.
+USERS = {'World.tsx': ('worldMoments(', 'm.figure', '<Footage'),
+         'Break.tsx': ('breakMoments(', 'm.figures[i]', 'm.cut', 'm.late', '<Footage'),
+         'Fix.tsx': ('fixMoments(', 'm.productAt', 'm.cards', 'm.named', 'm.ticks', 'm.rows', 'm.rowTicks', '<Footage',
+                     'accent={STAGE.risks}', 'accent={STAGE.mitigations}'),
+         'Proof.tsx': ('proofMoments(', 'm.badge', 'm.brandAt', 'm.footer', '<Footage')}
+SPOKEN = {'world': ['Fifty-six per cent'], 'break': ['forty per cent', 'five per cent']}
 PROGRAM = """
 import {readFileSync} from "node:fs";
 import * as m from %(moments)s;
@@ -88,125 +64,75 @@ import {sceneSeconds} from %(timing)s;
 const timeline = JSON.parse(readFileSync(%(timeline)s, "utf8"));
 const captions = JSON.parse(readFileSync(%(captions)s, "utf8"));
 const scenes = Object.fromEntries(timeline.scenes.map((s) => [s.id, s]));
+const spoken = %(spoken)s;
 const attempt = (f) => { try { return f(); } catch (e) { return {error: String(e.message)}; } };
-const at = (id, f) => attempt(() => {
-  const seconds = sceneSeconds(scenes[id]);
-  return {seconds, ...f(scenes[id], m.sceneCues(captions, timeline, id), seconds)};
+const at = (id, f, seconds) => attempt(() => {
+  const scene = scenes[id], cues = m.sceneCues(captions, timeline, id), length = seconds ?? sceneSeconds(scene);
+  const end = cues[cues.length - 1].end;
+  const said = (p) => m.spokenAt(scene.narration, p, end);
+  return {seconds: length, said: Object.fromEntries((spoken[id] ?? []).map((p) => [p, said(p)])),
+    words: Object.fromEntries(["simulate", "documented incidents", "industry standards", "select", "AI Center X"]
+      .filter((p) => scene.narration.includes(p)).map((p) => [p, said(p)])), ...f(scene, cues, length)};
 });
-const stage = (id, seconds) => at(id, (scene, cues, real) => {
-  const {shown, saved} = scene.dataRefs[id];
-  return {...m.stageMoments(scene, cues, seconds ?? real), seconds: seconds ?? real,
-    savedAt: saved.map((x) => shown.indexOf(x))};
+const out = {consts: {PRESS: m.PRESS, PRESS_SCALE: m.PRESS_SCALE}};
+out.world = at("world", (s, c) => m.worldMoments(s, c));
+out.break = at("break", (s, c) => m.breakMoments(s, c));
+out.fix = at("fix", (s, c, n) => m.fixMoments(s, c, n));
+out.proof = at("proof", (s, c, n) => m.proofMoments(s, c, n));
+out.cramped = at("fix", (s, c, n) => m.fixMoments(s, c, n), %(cramped)s);
+out.reworded = at("world", (s, c) => m.worldMoments({...s, narration: s.narration.replace("Fifty-six per cent", "Most")}, c));
+out.swapped = at("break", (s, c) => {
+  const [a, b, ...rest] = s.narration.split(". ");
+  return m.breakMoments({...s, narration: [b, a, ...rest].join(". ")}, c);
 });
-const out = {consts: {PRESS: m.PRESS, PRESS_SCALE: m.PRESS_SCALE, CURSOR_EASE: m.CURSOR_EASE,
-  TALLY_COUNT: m.TALLY_COUNT, pressed: attempt(() => [m.pressed(1, [1]), m.pressed(1.061, [1]), m.pressed(0.939, [1])])}};
-for (const id of ["risks", "mitigations", "enhancements"]) out[id] = stage(id);
-out.tight = stage("enhancements", %(tight)s);
-out.cramped = stage("mitigations", %(cramped)s);
-out.canvas = at("canvas", (scene, cues, seconds) => m.canvasMoments(cues, seconds));
-out.problem = at("problem", (scene, cues) => m.problemMoments(scene, cues));
-out.end = at("end", (scene, cues) => m.closeMoments(scene, cues));
-out.problemSaid = at("problem", (scene, cues) => ({said: ["Fifty-six per cent", "five per cent", "forty per cent"]
-  .map((p) => m.spokenAt(scene.narration, p, cues[cues.length - 1].end))}));
-// The same scenes with their words changed: a figure the problem line no longer says, the figures out of order, and
-// a close that names the capabilities before it scales up.
-out.reworded = at("problem", (scene, cues) => m.problemMoments({...scene, narration: scene.narration.replace("forty per cent", "two in five")}, cues));
-out.shuffled = at("problem", (scene, cues) => {
-  const [first, ...rest] = scene.narration.split(". ");
-  return m.problemMoments({...scene, narration: `${rest.join(". ")} ${first}.`}, cues);
-});
-out.reordered = at("end", (scene, cues) => m.closeMoments({...scene, narration: scene.narration.replace("Then scale up: ", "") + " Then scale up."}, cues));
 console.log(JSON.stringify(out));
 """
 NUMBERED = re.compile(r'\bcues(\[\d+\]|\.at\()')
-RUN_ONLY_IN = {'Risks.tsx'}
-STATUS_IN = {'Risks.tsx', 'Mitigations.tsx', 'Enhancements.tsx'}
-STAGES = {'Risks.tsx': 'risks', 'Mitigations.tsx': 'mitigations', 'Enhancements.tsx': 'enhancements'}
 
 
-def theme_colours(theme):
-    """{STAGE key: hex}, resolving color.* through the color object."""
-    palette = dict(re.findall(r'(\w+): "(#[0-9a-f]{6})"', re.search(r'export const color = \{(.*?)\};', theme, re.S).group(1)))
-    accents = re.search(r'export const STAGE = \{(.*?)\};', theme, re.S)
-    pairs = re.findall(r'(\w+): (?:color\.(\w+)|"(#[0-9a-f]{6})")', accents.group(1)) if accents else []
-    return {k: palette.get(ref) if ref else hexa for k, ref, hexa in pairs}
+def near(got, want):
+    return abs(got - want) <= FIGURE_SLACK
 
 
-def stage_problems(sid, g):
-    """Each AC limit a risks, mitigations or enhancements scene's moments break."""
-    if 'error' in g or 'ticks' not in g:
-        return [f'{sid}: {g.get("error", "no moments")}']
+def beat_problems(got):
+    """Each AC limit the computed moments of the four beats break."""
     bad = []
-    ticks, cards, secs = g['ticks'], g['cards'], g['seconds'] - CROSSFADE
-    bad += [f'{sid}: tick {k} at {t:.2f} s comes before its card lands at {cards[i]:.2f} s'
-            for k, (t, i) in enumerate(zip(ticks, g['savedAt'])) if t < cards[i] + 0.2]
-    if ticks != sorted(ticks) or not ticks or g['saveAt'] < ticks[-1] + 0.3:
-        bad.append(f'{sid}: the ticks must rise and the save follow them, got {ticks} then {g["saveAt"]}')
-    if sid in ('enhancements', 'tight'):
-        if g.get('nextAt') is not None or secs - (g['saveAt'] + 0.5) < TOAST:
-            bad.append(f'{sid}: the toast shows {secs - g["saveAt"] - 0.5:.2f} s, want {TOAST} s and no next button')
-    elif g.get('nextAt') is None or g['nextAt'] < g['saveAt'] or secs - g['nextAt'] < GLOW:
-        bad.append(f'{sid}: the next button glows {secs - (g.get("nextAt") or secs):.2f} s, want {GLOW} s')
-    if sid != 'risks' and cards[0] - g['click'] > CARD_DELAY + 1e-9:
-        bad.append(f'{sid}: the first card lands {cards[0] - g["click"]:.2f} s after the click, want {CARD_DELAY} s')
-    named = g.get('named', [])
-    if sid in ('risks', 'mitigations') and not (len(named) == 2 and named == sorted(named)
-                                                 and named[0] >= cards[-1] + 0.3 and named[1] < secs):
-        bad.append(f'{sid}: want a chip lit as each of its two sources is named once the cards are up, got {named}')
-    return bad
-
-
-def problem_problems(pr, said):
-    """Each AC limit the opening's moments break: figures on their numbers, in order, then the rules, then the target."""
-    figures = pr.get('figures') if isinstance(pr.get('figures'), list) else []
-    if 'error' in pr or len(figures) != 3 or len(said) != 3 or not {'rules', 'target'} <= set(pr):
-        return [f'problem: want three figure times, the rules line and the target, got {pr}']
-    bad = []
-    if figures[0] < OPENING_LIGHT or figures != sorted(figures):
-        bad.append(f'problem: the light must open the scene for {OPENING_LIGHT} s and the figures land in order, got {figures}')
-    bad += [f'problem: figure {i + 1} lands at {f:.2f} s, {abs(f - w):.2f} s from its number at {w:.2f} s'
-            for i, (f, w) in enumerate(zip(figures, said)) if abs(f - w) > FIGURE_SLACK]
-    if pr['rules'] - figures[-1] < RULES_AFTER:
-        bad.append(f'problem: the rules line lands {pr["rules"] - figures[-1]:.2f} s after the third figure, want {RULES_AFTER} s')
-    if pr['target'] < pr['rules'] or pr['seconds'] - CROSSFADE - pr['target'] < TARGET_SHOWN:
-        bad.append(f'problem: the problem must be fully stated after the rules line and held {TARGET_SHOWN} s, got {pr}')
-    return bad
-
-
-def moment_problems(got):
-    """Each AC limit the computed moments break, per scene."""
-    bad = [p for sid in ('risks', 'mitigations', 'enhancements', 'tight') for p in stage_problems(sid, got.get(sid, {}))]
-    if 'mitigations' not in got.get('cramped', {}).get('error', ''):
-        bad.append(f'a {CRAMPED} s mitigations scene must stop with an error naming it, got {got.get("cramped")}')
-    cv = got.get('canvas', {})
-    if 'error' in cv or 'appear' not in cv:
-        bad.append(f'canvas: {cv.get("error", "no moments")}')
-    else:
-        secs = cv['seconds'] - CROSSFADE
-        if not (cv['appear'] < cv['arrive'] <= secs and secs - cv['appear'] >= HANDOFF_SHOWN and secs - cv['glow'] >= GLOW):
-            bad.append(f'canvas: "Simulate risks" must show {HANDOFF_SHOWN} s, glow {GLOW} s and meet the cursor, got {cv}')
-    bad += problem_problems(got.get('problem', {}), got.get('problemSaid', {}).get('said', []))
-    if 'no longer says "forty per cent"' not in got.get('reworded', {}).get('error', ''):
-        bad.append(f'a problem line without "forty per cent" must stop with an error naming it, got {got.get("reworded")}')
-    if 'in that order' not in got.get('shuffled', {}).get('error', ''):
-        bad.append(f'a problem line that says its figures out of order must stop with an error, got {got.get("shuffled")}')
-    if 'in that order' not in got.get('reordered', {}).get('error', ''):
-        bad.append(f'a close that says its words out of order must stop with an error, got {got.get("reordered")}')
-    end = got.get('end', {})
-    count = got['consts'].get('TALLY_COUNT') or 0
-    if 'error' in end or not isinstance(end.get('rows'), list) or len(end['rows']) != 3:
-        bad.append(f'end: want the outcome card and one time per row, got {end}')
-    else:
-        filled = max(end['rows']) + count
-        if count < 0.5 or end['card'] > 0.3 or end['scaleAt'] - filled < OUTCOME_SHOWN:
-            bad.append(f'end: the outcome card reads {end["scaleAt"] - filled:.2f} s once filled, want {OUTCOME_SHOWN} s')
-        if end['portfolioIn'] - end['scaleAt'] < 0.4 or end['portfolioIn'] >= end['keywords'][0]:
-            bad.append(f'end: the card must fold into the portfolio before it arrives, ahead of "models", got {end}')
-        # The close is the last scene, so nothing fades in over its footer.
-        if end['seconds'] - end['footer'] < READ:
-            bad.append(f'end: the footer reads {end["seconds"] - end["footer"]:.2f} s, want {READ} s')
-        if not end['card'] < min(end['rows']) and end['rows'] == sorted(end['rows']) and end['scaleAt'] < end['brandAt']:
-            bad.append(f'end: the beats are out of order: {end}')
+    for sid in ('world', 'break', 'fix', 'proof'):
+        if 'error' in got.get(sid, {'error': 'missing'}):
+            bad.append(f'{sid}: {got.get(sid, {}).get("error", "missing")}')
+    if bad:
+        return bad
+    w, b, f, p = (got[k] for k in ('world', 'break', 'fix', 'proof'))
+    if w['figure'] < LIGHT_ALONE or not near(w['figure'], max(w['said']['Fifty-six per cent'], LIGHT_ALONE)):
+        bad.append(f'world: 56% must land on its number after {LIGHT_ALONE} s of footage, got {w}')
+    want = [b['said']['forty per cent'], b['said']['five per cent']]
+    if len(b['figures']) != 2 or not all(near(x, y) for x, y in zip(b['figures'], want)):
+        bad.append(f'break: the figures must land on their numbers {want}, got {b["figures"]}')
+    elif not b['figures'][0] < b['cut'] < b['figures'][1]:
+        bad.append(f'break: the footage must cut between the figures, got {b["cut"]}')
+    if b['late'] - b['figures'][-1] < LATE_AFTER or b['seconds'] - CROSSFADE - b['late'] < HOLD:
+        bad.append(f'break: "The risks show up too late" must follow ~5% by {LATE_AFTER} s and hold {HOLD} s, got {b}')
+    cards, ticks, rows, row_ticks = f['cards'], f['ticks'], f['rows'], f['rowTicks']
+    if not near(f['productAt'], f['words']['simulate']) or f['click'] < f['productAt'] or cards[0] <= f['click']:
+        bad.append(f'fix: the product must arrive on "simulate", its click before the first card, got {f}')
+    if not (near(f['named'][0], f['words']['documented incidents']) and near(f['named'][1], f['words']['industry standards'])
+            and f['named'][0] >= cards[-1]):
+        bad.append(f'fix: the chips must light as their sources are named, once the cards are up, got {f["named"]}')
+    saved = f['savedAt']
+    if ticks != sorted(ticks) or any(t < cards[i] + 0.2 for t, i in zip(ticks, saved)):
+        bad.append(f'fix: each risk tick must follow its card, got {ticks} for cards {cards}')
+    if not near(f['mitClick'], f['words']['select']) or rows[0] <= f['mitClick'] or row_ticks[0] < rows[-1]:
+        bad.append(f'fix: the mitigations must open on "select" and be ticked once they are up, got {f}')
+    if f['seconds'] - CROSSFADE - row_ticks[-1] < TICKS_DONE:
+        bad.append(f'fix: the last tick lands {f["seconds"] - CROSSFADE - row_ticks[-1]:.2f} s before the crossfade, want {TICKS_DONE} s')
+    if 'fix' not in got.get('cramped', {}).get('error', ''):
+        bad.append(f'a {CRAMPED} s fix must stop with an error naming it, got {got.get("cramped")}')
+    if p['badge'] > 0.5 or not near(p['brandAt'], p['words']['AI Center X']) or p['seconds'] - p['footer'] < READ:
+        bad.append(f'proof: the badge opens it, the brand lands on "AI Center X" and the footer reads {READ} s, got {p}')
+    if 'no longer says "Fifty-six per cent"' not in got.get('reworded', {}).get('error', ''):
+        bad.append(f'a world line without its figure must stop with an error naming it, got {got.get("reworded")}')
+    if 'in that order' not in got.get('swapped', {}).get('error', ''):
+        bad.append(f'a break that says its figures out of order must stop with an error, got {got.get("swapped")}')
     return bad
 
 
@@ -219,63 +145,45 @@ def main():
     sources = {p.name: p.read_text(encoding='utf-8') for p in sorted(SCENES.glob('*.tsx'))}
     moments = MOMENTS.read_text(encoding='utf-8') if MOMENTS.is_file() else ''
     check('no scene and not moments.mjs indexes its cues by number',
-          [f'{name}: cues{m}' for name, src in {**sources, 'moments.mjs': moments}.items()
-           for m in NUMBERED.findall(src)])
-    index = (SCENES / 'index.ts').read_text(encoding='utf-8')
-    check('the opening plays over its light with the dots off, and the old hook is gone',
-          ([] if '<Background dots={0}>' in sources.get('Problem.tsx', '') else ['Problem.tsx does not render <Background dots={0}>'])
-          + (['Hook.tsx still exists'] if 'Hook.tsx' in sources else [])
-          + (['scenes/index.ts still imports Hook'] if re.search(r'\bHook\b', index) else []))
+          [f'{name}: cues{m}' for name, src in {**sources, 'moments.mjs': moments}.items() for m in NUMBERED.findall(src)])
+    check('the scenes are exactly the four beats', [] if set(sources) == BEATS else [sorted(sources)])
+    root = (SRC / 'Root.tsx').read_text(encoding='utf-8')
+    check('every beat uses its moments from moments.mjs and plays its footage',
+          [f'{name} does not use {token}' for name, tokens in USERS.items() for token in tokens
+           if token not in sources.get(name, '')]
+          + ([] if 'sceneCues(captions, timeline' in root else ['Root.tsx does not take its cues from sceneCues']))
 
     node = shutil.which('node')
     kit = KIT.read_text(encoding='utf-8')
-    root = (SRC / 'Root.tsx').read_text(encoding='utf-8')
-    check('every scene uses its moments from moments.mjs, and nothing zooms',
-          [f'{name} does not use {token}' for name, tokens in USERS.items() for token in tokens
-           if token not in sources[name]]
-          + [f'{name} still zooms' for name, src in sources.items() if '<Zoom' in src or 'zoomLevel' in src]
-          + (['kit.tsx still exports Zoom'] if 'export const Zoom' in kit else [])
-          + ([] if 'sceneCues(captions, timeline' in root else ['Root.tsx does not take its cues from sceneCues']))
     if not node:
         check('node is on PATH', ['node is not on PATH'])
-    elif not MOMENTS.is_file():
-        check('video/src/moments.mjs exists', ['missing'])
     else:
+        timeline = json.loads(TIMELINE.read_text(encoding='utf-8'))
+        fix = next(s for s in timeline['scenes'] if s['id'] == 'fix')['dataRefs']['risks']
         r = subprocess.run([node, '--input-type=module', '-e', PROGRAM % {
             'moments': json.dumps(MOMENTS.as_uri()), 'timing': json.dumps(TIMING.as_uri()),
-            'timeline': json.dumps(str(TIMELINE)), 'captions': json.dumps(str(CAPTIONS)), 'tight': TIGHT,
-            'cramped': CRAMPED}], capture_output=True, text=True, encoding='utf-8', timeout=60)
+            'timeline': json.dumps(str(TIMELINE)), 'captions': json.dumps(str(CAPTIONS)),
+            'spoken': json.dumps(SPOKEN), 'cramped': CRAMPED}], capture_output=True, text=True, encoding='utf-8', timeout=60)
         try:
             got = json.loads(r.stdout)
         except ValueError:
             got = None
             check('moments.mjs runs', [r.stderr[-400:]])
         if got:
-            check('each scene leaves time to see its cards, ticks, save, hand-off and close', moment_problems(got))
+            if isinstance(got.get('fix'), dict) and 'error' not in got['fix']:
+                got['fix']['savedAt'] = [fix['shown'].index(x) for x in fix['saved']]
+            check('each beat lands its figures, footage, cards and ticks on the words that call for them', beat_problems(got))
             c = got['consts']
-            check('the cursor eases with cubic-bezier(0.22, 1, 0.36, 1) and a button presses to 0.96 within 120 ms',
-                  ([] if c.get('PRESS') == PRESS and c.get('PRESS_SCALE') == PRESS_SCALE
-                   and c.get('CURSOR_EASE') == CURSOR_EASE and c.get('pressed') == [1, 0, 0] else [c])
-                  + [f'kit.tsx does not use {x}' for x in ('Easing.bezier(...CURSOR_EASE)', '(1 - PRESS_SCALE) * pressed',
-                                                            'pressed(t, clicks)') if x not in kit]
-                  + [f'{name} times a press of its own' for name, src in {**sources, 'kit.tsx': kit}.items()
-                     if '/ 0.15' in src])
-    check('only the risks scene shows the full agent run; the others show its status line',
-          [f'{name} renders AgentRun' for name, src in sources.items() if '<AgentRun' in src and name not in RUN_ONLY_IN]
-          + [f'{name} does not render AgentRun' for name in RUN_ONLY_IN if '<AgentRun' not in sources.get(name, '')]
-          + [f'{name} does not render AgentStatus' for name in STATUS_IN if '<AgentStatus' not in sources.get(name, '')])
+            check('a button presses to 0.96 and back within 120 ms, from the one definition in moments.mjs',
+                  ([] if c.get('PRESS') == PRESS and c.get('PRESS_SCALE') == PRESS_SCALE else [c])
+                  + [f'kit.tsx does not use {x}' for x in ('(1 - PRESS_SCALE) * pressed',) if x not in kit])
 
     theme = THEME.read_text(encoding='utf-8')
-    tones = theme_colours(theme)
     others = [p for ext in ('*.ts', '*.tsx', '*.mjs') for p in SRC.rglob(ext) if p != THEME]
-    check('cards land as blocks, each stage has its own accent, and secondary text is the brighter ink',
-          [f'{name} writes its cards letter by letter' for name in STAGES if '<Stream' in sources[name]]
-          + [f'{name} does not give its cards accent={{STAGE.{s}}}' for name, s in STAGES.items()
-             if f'accent={{STAGE.{s}}}' not in sources[name]]
-          + ([] if set(tones) == set(STAGES.values()) and None not in tones.values() and len(set(tones.values())) == 3
-             else [f'theme.ts STAGE must give risks, mitigations and enhancements three colours, got {tones}'])
-          + sorted(f'{p.relative_to(ROOT).as_posix()} uses color.inkMuted' for p in others
-                   if 'color.inkMuted' in p.read_text(encoding='utf-8')))
+    check('secondary text is the brighter ink',
+          sorted(f'{p.relative_to(ROOT).as_posix()} uses color.inkMuted' for p in others
+                 if 'color.inkMuted' in p.read_text(encoding='utf-8'))
+          + ([] if re.search(r'export const STAGE = \{[^}]*risks:[^}]*mitigations:', theme) else ['theme.ts lacks STAGE accents']))
 
     failed = [k for k, v in checks.items() if not v['ok']]
     print(json.dumps({'passed': len(checks) - len(failed), 'failed': failed, 'checks': checks}, indent=2))
