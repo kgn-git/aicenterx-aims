@@ -2,7 +2,8 @@
   "scenes": [
     {
       "id": "world",
-      "seconds": 4.8,
+      "seconds": 4.69,
+      "audioSeconds": 4.39,
       "narration": "Fifty-six per cent of CEOs see no financial gain from AI yet.",
       "onScreen": [
         "56%",
@@ -15,7 +16,8 @@
     },
     {
       "id": "break",
-      "seconds": 11.2,
+      "seconds": 11,
+      "audioSeconds": 10.7,
       "narration": "Over forty per cent of agentic AI projects may be scrapped by 2027. Only about five per cent of AI pilots deliver measurable value. The risks show up too late.",
       "onScreen": [
         "40%+",
@@ -34,7 +36,8 @@
     },
     {
       "id": "fix",
-      "seconds": 8.8,
+      "seconds": 10.53,
+      "audioSeconds": 10.23,
       "narration": "AI Center X lets managers and compliance officers simulate a project's risks, from documented incidents and industry standards, and select the mitigations that apply.",
       "onScreen": [
         "CV Screening Assistant",
@@ -57,7 +60,8 @@
     },
     {
       "id": "proof",
-      "seconds": 5.6,
+      "seconds": 5.81,
+      "audioSeconds": 4.81,
       "narration": "In under ten minutes. AI Center X: make AI deliver value.",
       "onScreen": [
         "< 10 min",

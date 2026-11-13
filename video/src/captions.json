@@ -2,175 +2,87 @@
   "cues": [
     {
       "fragment": "f1",
-      "scene": "problem",
+      "scene": "world",
       "start": 0,
-      "end": 2.328,
+      "end": 4.39,
       "lines": [
-        "Fifty-six per cent of CEOs report no"
+        "Fifty-six per cent of CEOs see",
+        "no financial gain from AI yet."
       ]
     },
     {
       "fragment": "f1",
-      "scene": "problem",
-      "start": 2.328,
-      "end": 5.303,
-      "lines": [
-        "significant financial",
-        "benefit from AI to date."
-      ]
-    },
-    {
-      "fragment": "f1",
-      "scene": "problem",
-      "start": 5.303,
-      "end": 10.541,
-      "lines": [
-        "Only about five per cent of integrated",
-        "gen AI pilots reach measurable P&L impact."
-      ]
-    },
-    {
-      "fragment": "f1",
-      "scene": "problem",
-      "start": 10.541,
-      "end": 15.132,
+      "scene": "break",
+      "start": 4.7,
+      "end": 9.266,
       "lines": [
         "Over forty per cent of agentic AI",
-        "projects are expected to be cancelled"
+        "projects may be scrapped by 2027."
       ]
     },
     {
       "fragment": "f1",
-      "scene": "problem",
-      "start": 15.132,
-      "end": 19.4,
+      "scene": "break",
+      "start": 9.266,
+      "end": 13.56,
       "lines": [
-        "by the end of 2027, while the rules",
-        "keep changing in every region."
+        "Only about five per cent of AI",
+        "pilots deliver measurable value."
       ]
     },
     {
       "fragment": "f1",
-      "scene": "canvas",
-      "start": 19.7,
-      "end": 20.913,
+      "scene": "break",
+      "start": 13.56,
+      "end": 15.4,
       "lines": [
-        "Meet AI Center X."
-      ]
-    },
-    {
-      "fragment": "f1",
-      "scene": "canvas",
-      "start": 20.913,
-      "end": 24.481,
-      "lines": [
-        "Map your initiative",
-        "on the AI Canvas: its business"
-      ]
-    },
-    {
-      "fragment": "f1",
-      "scene": "canvas",
-      "start": 24.481,
-      "end": 27.62,
-      "lines": [
-        "problem, its data",
-        "and the people it affects."
+        "The risks show up too late."
       ]
     },
     {
       "fragment": "f2",
-      "scene": "risks",
+      "scene": "fix",
       "start": 0,
-      "end": 4.06,
+      "end": 3.618,
       "lines": [
-        "Before writing a single line",
-        "of code, simulate your risks."
+        "AI Center X lets managers",
+        "and compliance officers simulate"
       ]
     },
     {
       "fragment": "f2",
-      "scene": "risks",
-      "start": 4.06,
-      "end": 6.16,
+      "scene": "fix",
+      "start": 3.618,
+      "end": 7.173,
       "lines": [
-        "An AI agent flags them, citing"
+        "a project's risks, from documented",
+        "incidents and industry"
       ]
     },
     {
       "fragment": "f2",
-      "scene": "risks",
-      "start": 6.16,
-      "end": 10.08,
+      "scene": "fix",
+      "start": 7.173,
+      "end": 10.23,
       "lines": [
-        "the MIT AI Risk Repository",
-        "and the AI Incident Database."
+        "standards, and select",
+        "the mitigations that apply."
       ]
     },
     {
       "fragment": "f3",
-      "scene": "mitigations",
+      "scene": "proof",
       "start": 0,
-      "end": 3.994,
+      "end": 1.804,
       "lines": [
-        "For the risks you keep,",
-        "the agent proposes mitigations,"
+        "In under ten minutes."
       ]
     },
     {
       "fragment": "f3",
-      "scene": "mitigations",
-      "start": 3.994,
-      "end": 7.77,
-      "lines": [
-        "each tied to MIT's draft",
-        "taxonomy and the EU AI Act."
-      ]
-    },
-    {
-      "fragment": "f4",
-      "scene": "enhancements",
-      "start": 0,
-      "end": 2.971,
-      "lines": [
-        "Then, turn policy into",
-        "engineering: enhancements"
-      ]
-    },
-    {
-      "fragment": "f4",
-      "scene": "enhancements",
-      "start": 2.971,
-      "end": 5.57,
-      "lines": [
-        "matched to this initiative's risk profile."
-      ]
-    },
-    {
-      "fragment": "f5",
-      "scene": "end",
-      "start": 0,
-      "end": 3.274,
-      "lines": [
-        "In under an hour,",
-        "your risk profile is ready."
-      ]
-    },
-    {
-      "fragment": "f5",
-      "scene": "end",
-      "start": 3.274,
-      "end": 6.694,
-      "lines": [
-        "Govern your AI risks,",
-        "accelerate your projects."
-      ]
-    },
-    {
-      "fragment": "f5",
-      "scene": "end",
-      "start": 6.694,
-      "end": 9.24,
+      "scene": "proof",
+      "start": 1.804,
+      "end": 4.81,
       "lines": [
         "AI Center X: make AI deliver value."
       ]
