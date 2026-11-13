@@ -1,32 +1,23 @@
 {
   "scenes": [
     {
-      "id": "hook",
-      "seconds": 5.5,
-      "audioSeconds": 5.2,
-      "narration": "Amazon's hiring AI allegedly ranked women lower. Scrapping it took three years.",
-      "onScreen": [
-        "Amazon's Experimental Hiring Tool Allegedly Displayed Gender Bias in Candidate Rankings",
-        "AI Incident Database, incident 37",
-        "2014 – Development starts",
-        "2015 – Bias against women found",
-        "2017 – Project abandoned"
-      ],
-      "dataRefs": {"sources": [{"aiid": 37}]}
-    },
-    {
       "id": "problem",
-      "seconds": 8.81,
-      "audioSeconds": 8.51,
-      "narration": "Today, you can't afford the time and effort of building AI that causes harm. The challenge is to govern AI responsibly and create real value.",
+      "seconds": 18.4,
+      "narration": "Fifty-six per cent of CEOs report no significant financial benefit from AI to date. Only about five per cent of integrated gen AI pilots reach measurable P&L impact. Over forty per cent of agentic AI projects are expected to be cancelled by the end of 2027, while the rules keep changing in every region.",
       "onScreen": [
-        "Time",
-        "Effort",
-        "Harm",
-        "Govern responsibly",
-        "Create real value"
+        "56%",
+        "~5%",
+        "40%+",
+        "of CEOs report no significant financial benefit from AI to date",
+        "of integrated gen AI pilots reach measurable P&L impact",
+        "of agentic AI projects expected to be cancelled by end of 2027",
+        "The rules keep changing in every region"
       ],
-      "dataRefs": {}
+      "dataRefs": {"sources": [
+        {"cite": "PwC, 29th Global CEO Survey, January 2026 (4,454 CEOs)"},
+        {"cite": "MIT NANDA, \"The GenAI Divide: State of AI in Business 2025\", July 2025"},
+        {"cite": "Gartner, press release, 25 June 2025"}
+      ]}
     },
     {
       "id": "canvas",
@@ -103,9 +94,8 @@
     },
     {
       "id": "end",
-      "seconds": 15.37,
-      "audioSeconds": 14.37,
-      "narration": "In under an hour, your risk profile is ready. Then scale up: models, data lineage, programmes, architecture and intelligence, on one acceleration platform. AI Center X: make AI deliver value.",
+      "seconds": 11.5,
+      "narration": "In under an hour, your risk profile is ready. Govern your AI risks, accelerate your projects. AI Center X: make AI deliver value.",
       "onScreen": [
         "AI Center X",
         "Coming soon",
@@ -115,20 +105,14 @@
         "Make AI Deliver Value",
         "Risk profile ready",
         "< 1 hour",
-        "The acceleration platform for AI initiatives",
-        "Coming next",
-        "Find the models that fit your initiative",
-        "Map your data lineage",
-        "Combine initiatives into programmes and delivery waves",
-        "Govern your enterprise AI architecture",
-        "Stay up to date with market and security intelligence",
-        "Wave"
+        "Govern your AI risks.",
+        "Accelerate your projects."
       ],
       "dataRefs": {}
     }
   ],
   "fragments": [
-    {"id": "f1", "scenes": ["hook", "problem", "canvas"]},
+    {"id": "f1", "scenes": ["problem", "canvas"]},
     {"id": "f2", "scenes": ["risks"]},
     {"id": "f3", "scenes": ["mitigations"]},
     {"id": "f4", "scenes": ["enhancements"]},

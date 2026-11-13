@@ -24,7 +24,7 @@ Remotion Studio opens at http://localhost:3000. It lists one composition per fra
 
 | Composition | Scenes | Length |
 |---|---|---|
-| `f1-create` | hook, problem, canvas | 29 s planned, 29.8 s with the clips |
+| `f1-create` | problem, canvas | 26.6 s planned |
 | `f2-risks` | risks | 12 s planned, 12.6 s with the clip |
 | `f3-mitigations` | mitigations | 12.5 s planned, 13.3 s with the clip |
 | `f4-enhancements` | enhancements | 12 s |
