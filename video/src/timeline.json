@@ -1,123 +1,83 @@
 {
   "scenes": [
     {
-      "id": "problem",
-      "seconds": 19.7,
-      "audioSeconds": 19.4,
-      "narration": "Fifty-six per cent of CEOs report no significant financial benefit from AI to date. Only about five per cent of integrated gen AI pilots reach measurable P&L impact. Over forty per cent of agentic AI projects are expected to be cancelled by the end of 2027, while the rules keep changing in every region.",
+      "id": "world",
+      "seconds": 4.8,
+      "narration": "Fifty-six per cent of CEOs see no financial gain from AI yet.",
       "onScreen": [
         "56%",
-        "~5%",
+        "of CEOs see no financial gain from AI yet"
+      ],
+      "dataRefs": {
+        "sources": [{"cite": "PwC, 29th Global CEO Survey, January 2026"}],
+        "footage": ["sponsor"]
+      }
+    },
+    {
+      "id": "break",
+      "seconds": 11.2,
+      "narration": "Over forty per cent of agentic AI projects may be scrapped by 2027. Only about five per cent of AI pilots deliver measurable value. The risks show up too late.",
+      "onScreen": [
         "40%+",
-        "of CEOs report no significant financial benefit from AI to date",
-        "of integrated gen AI pilots reach measurable P&L impact",
-        "of agentic AI projects expected to be cancelled by end of 2027",
-        "The rules keep changing in every region"
+        "of agentic AI projects may be scrapped by 2027",
+        "~5%",
+        "of AI pilots deliver measurable value",
+        "The risks show up too late"
       ],
-      "dataRefs": {"sources": [
-        {"cite": "PwC, 29th Global CEO Survey, January 2026 (4,454 CEOs)"},
-        {"cite": "MIT NANDA, \"The GenAI Divide: State of AI in Business 2025\", July 2025"},
-        {"cite": "Gartner, press release, 25 June 2025"}
-      ]}
+      "dataRefs": {
+        "sources": [
+          {"cite": "Gartner, press release, 25 June 2025"},
+          {"cite": "MIT NANDA, \"The GenAI Divide: State of AI in Business 2025\", July 2025"}
+        ],
+        "footage": ["board", "desk"]
+      }
     },
     {
-      "id": "canvas",
-      "seconds": 8.22,
-      "audioSeconds": 7.92,
-      "narration": "Meet AI Center X. Map your initiative on the AI Canvas: its business problem, its data and the people it affects.",
+      "id": "fix",
+      "seconds": 8.8,
+      "narration": "AI Center X lets managers and compliance officers simulate a project's risks, from documented incidents and industry standards, and select the mitigations that apply.",
       "onScreen": [
-        "Define an initiative",
         "CV Screening Assistant",
-        "AI Canvas excerpts: business problem, data, people affected",
-        "Initiative page",
-        "Simulate risks"
-      ],
-      "dataRefs": {}
-    },
-    {
-      "id": "risks",
-      "seconds": 10.38,
-      "audioSeconds": 10.08,
-      "narration": "Before writing a single line of code, simulate your risks. An AI agent flags them, citing the MIT AI Risk Repository and the AI Incident Database.",
-      "onScreen": [
         "Simulate risks",
-        "Suggested risks, each with its MIT AI Risk Repository class and AI Incident Database incidents",
-        "Relevant risks ticked",
-        "Save selected risks",
         "Generate mitigations",
-        "Selected risks saved"
+        "Suggested risks, each with its MIT AI Risk Repository class and AI Incident Database incident, the relevant ones ticked",
+        "Mitigations for the ticked risks, each with its MIT class and EU AI Act article, the relevant ones ticked"
       ],
       "dataRefs": {
         "risks": {
           "shown": ["s-hiring-1", "s-hiring-2", "s-hiring-3", "s-hiring-4", "s-hiring-7"],
           "saved": ["s-hiring-1", "s-hiring-3", "s-hiring-7"]
-        }
-      }
-    },
-    {
-      "id": "mitigations",
-      "seconds": 8.07,
-      "audioSeconds": 7.77,
-      "narration": "For the risks you keep, the agent proposes mitigations, each tied to MIT's draft taxonomy and the EU AI Act.",
-      "onScreen": [
-        "Generate mitigations",
-        "Suggested mitigations for the saved risks, cited from the MIT AI Risk Mitigation Taxonomy (draft) and EUR-Lex",
-        "Relevant mitigations ticked",
-        "Save selected mitigations",
-        "Suggest model enhancements",
-        "Selected mitigations saved"
-      ],
-      "dataRefs": {
+        },
         "mitigations": {
           "shown": ["m-r4-1", "m-r4-2", "m-s-hiring-3-1", "m-s-hiring-7-1", "m-s-hiring-7-2"],
           "saved": ["m-r4-1", "m-s-hiring-3-1", "m-s-hiring-7-1", "m-s-hiring-7-2"]
-        }
+        },
+        "footage": ["team"]
       }
     },
     {
-      "id": "enhancements",
-      "seconds": 5.87,
-      "audioSeconds": 5.57,
-      "narration": "Then, turn policy into engineering: enhancements matched to this initiative's risk profile.",
+      "id": "proof",
+      "seconds": 5.6,
+      "narration": "In under ten minutes. AI Center X: make AI deliver value.",
       "onScreen": [
-        "Suggest model enhancements",
-        "Model enhancements: fine-tuning, agent workflow and human feedback, each tied to a saved mitigation",
-        "Relevant enhancements ticked",
-        "Save selected enhancements",
-        "Selected enhancements saved"
-      ],
-      "dataRefs": {
-        "enhancements": {
-          "shown": ["enh-fairness-fine-tuning", "enh-bias-check-agent", "enh-missed-candidate-agent", "enh-rlhf-recruiter-feedback"],
-          "saved": ["enh-fairness-fine-tuning", "enh-bias-check-agent", "enh-missed-candidate-agent", "enh-rlhf-recruiter-feedback"]
-        }
-      }
-    },
-    {
-      "id": "end",
-      "seconds": 10.24,
-      "audioSeconds": 9.24,
-      "narration": "In under an hour, your risk profile is ready. Govern your AI risks, accelerate your projects. AI Center X: make AI deliver value.",
-      "onScreen": [
+        "< 10 min",
+        "Risk profile ready",
         "AI Center X",
+        "Make AI Deliver Value",
+        "Govern your AI risks. Accelerate your projects.",
         "Coming soon",
         "Sources and licences of every cited dataset",
         "The narration voice is AI-generated.",
-        "This is a product concept video.",
-        "Make AI Deliver Value",
-        "Risk profile ready",
-        "< 1 hour",
-        "Govern your AI risks.",
-        "Accelerate your projects."
+        "This is a product concept video."
       ],
-      "dataRefs": {}
+      "dataRefs": {
+        "footage": ["agree"]
+      }
     }
   ],
   "fragments": [
-    {"id": "f1", "scenes": ["problem", "canvas"]},
-    {"id": "f2", "scenes": ["risks"]},
-    {"id": "f3", "scenes": ["mitigations"]},
-    {"id": "f4", "scenes": ["enhancements"]},
-    {"id": "f5", "scenes": ["end"]}
+    {"id": "f1", "scenes": ["world", "break"]},
+    {"id": "f2", "scenes": ["fix"]},
+    {"id": "f3", "scenes": ["proof"]}
   ]
 }

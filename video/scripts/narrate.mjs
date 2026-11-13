@@ -1,7 +1,7 @@
 // Voices the narration with ElevenLabs text-to-speech, one WAV per scene in public/audio/, and records each clip's
 // length in src/timeline.json as audioSeconds:
 //   npm run video:narrate                    every scene, in one continuous take cut at the scene pauses
-//   npm run video:narrate -- f2-risks        one fragment, so a bad clip can be remade alone
+//   npm run video:narrate -- f2-fix           one fragment, so a bad clip can be remade alone
 //   npm run video:narrate -- problem         one scene, leaving the approved clips around it untouched
 //   npm run video:narrate -- --samples       the opening, mitigations and close in each candidate voice, to out/samples/
 // It fails closed: a missing setting or a refused request changes nothing, every file is staged before any is

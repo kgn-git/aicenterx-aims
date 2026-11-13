@@ -1,4 +1,4 @@
-// Renders one fragment to out/fragments/<id>.mp4:  npm run video:render:fragment -- f2-risks
+// Renders one fragment to out/fragments/<id>.mp4:  npm run video:render:fragment -- f2-fix
 // The id reaches a command line and an output path, so only an id listed in src/compositions.json is accepted, and
 // the CLI is started with an argument vector, never through a shell.
 import {spawnSync} from "node:child_process";
@@ -13,7 +13,7 @@ const install = "Install the video project first: npm --prefix video ci";
 
 if (process.argv.length !== 3 || !ids.includes(id)) {
   console.error(`Name one fragment to render: ${ids.join(", ")}.`);
-  console.error("For example: npm run video:render:fragment -- f2-risks");
+  console.error("For example: npm run video:render:fragment -- f2-fix");
   process.exit(1);
 }
 
