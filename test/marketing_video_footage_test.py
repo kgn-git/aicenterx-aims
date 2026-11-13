@@ -5,13 +5,15 @@ Usage:  python test/marketing_video_footage_test.py
 The people in the pitch are Pexels stock clips. The repo is public and the clips are not ours to redistribute, so
 they are downloaded into a git-ignored folder; what is committed is where each comes from and its sha256, so the
 same bytes come back on any machine. Checks:
-  - footage.json is {clips: {id: {pexels, url, sha256, from}}}: a Pexels video id, an https URL on
-    videos.pexels.com under that id, a 64-hex sha256 and a start second of 0 or more
+  - footage.json is {clips: {id: {pexels, url, sha256, from, seconds, rate}}}: a Pexels video id, an https URL on
+    videos.pexels.com under that id, a 64-hex sha256, a start second of 0 or more before the clip's end, the clip's
+    length in seconds, and a playback rate from half to double speed
   - the clips are exactly the ones the timeline's scenes play, so none is missing and none is fetched for nothing
   - video/public/footage/ is ignored by git, so no clip is ever committed
   - the guard: footage.mjs, run against a footage.json copy that points off Pexels or carries a malformed hash,
     exits non-zero with a message naming the clip, without a stack trace and without writing a file
-  - when the clips are present, each matches its recorded sha256 (skipped, and said so, when they are not)
+  - when the clips are present, each matches its recorded sha256 and lasts its recorded seconds to within 0.1 s, as
+    ffprobe from Remotion's compositor measures it (skipped, and said so, when they are not)
 Prints a JSON report; exit code 1 on any failure.
 """
 import copy
@@ -32,6 +34,13 @@ TIMELINE = VIDEO / 'src' / 'timeline.json'
 SCRIPT = VIDEO / 'scripts' / 'footage.mjs'
 FOLDER = VIDEO / 'public' / 'footage'
 HEX = re.compile(r'[0-9a-f]{64}')
+FFPROBE = VIDEO / 'node_modules' / '@remotion' / 'compositor-win32-x64-msvc' / 'ffprobe.exe'
+KEYS = {'pexels', 'url', 'sha256', 'from', 'seconds', 'rate'}
+LENGTH_SLACK = 0.1
+
+
+def number(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
 
 
 def clip_problems(clips):
@@ -40,16 +49,34 @@ def clip_problems(clips):
         return ['clips must be a non-empty {id: entry} object']
     bad = []
     for cid, c in clips.items():
-        if not (re.fullmatch(r'[a-z][a-z0-9-]*', cid) and isinstance(c, dict) and set(c) == {'pexels', 'url', 'sha256', 'from'}):
-            bad.append(f'{cid}: must be a lower-case id with exactly pexels, url, sha256 and from')
+        if not (re.fullmatch(r'[a-z][a-z0-9-]*', cid) and isinstance(c, dict) and set(c) == KEYS):
+            bad.append(f'{cid}: must be a lower-case id with exactly {", ".join(sorted(KEYS))}')
             continue
         if not (isinstance(c['pexels'], int) and c['pexels'] > 0 and isinstance(c['url'], str)
                 and re.fullmatch(rf'https://videos\.pexels\.com/video-files/{c["pexels"]}/[\w.-]+\.mp4', c['url'])):
             bad.append(f'{cid}: url must be an https mp4 on videos.pexels.com under video {c["pexels"]}')
         if not (isinstance(c['sha256'], str) and HEX.fullmatch(c['sha256'])):
             bad.append(f'{cid}: sha256 must be 64 lower-case hex characters')
-        if not (isinstance(c['from'], (int, float)) and not isinstance(c['from'], bool) and c['from'] >= 0):
-            bad.append(f'{cid}: from must be a start second of 0 or more')
+        if not (number(c['seconds']) and c['seconds'] > 0 and number(c['from']) and 0 <= c['from'] < c['seconds']):
+            bad.append(f'{cid}: seconds must be the clip length and from a start second of 0 or more before it')
+        if not (number(c['rate']) and 0.5 <= c['rate'] <= 2):
+            bad.append(f'{cid}: rate must be a playback rate from 0.5 to 2')
+    return bad
+
+
+def length_problems(present, clips):
+    """Each downloaded clip whose measured length is not its recorded seconds."""
+    bad = []
+    for cid, path in present.items():
+        r = subprocess.run([str(FFPROBE), '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(path)],
+                           capture_output=True, text=True, timeout=60)
+        try:
+            measured = float(r.stdout.strip())
+        except ValueError:
+            bad.append(f'{cid}: ffprobe could not measure it')
+            continue
+        if abs(measured - clips[cid]['seconds']) > LENGTH_SLACK:
+            bad.append(f'{cid}: lasts {measured:.2f} s, recorded {clips[cid]["seconds"]} s')
     return bad
 
 
@@ -85,7 +112,7 @@ def main():
         check('video/src/footage.json exists and parses', [repr(e)])
     if data is not None:
         clips = data.get('clips') if isinstance(data, dict) and set(data) == {'clips'} else None
-        check('footage.json names each clip by its Pexels id, URL, sha256 and start', clip_problems(clips)
+        check('footage.json names each clip by its Pexels id, URL, sha256, start, length and rate', clip_problems(clips)
               if clips is not None else ['top level must be exactly {clips: {...}}'])
         timeline = json.loads(TIMELINE.read_text(encoding='utf-8'))
         played = {c for s in timeline['scenes'] for c in s['dataRefs'].get('footage', [])}
@@ -104,6 +131,11 @@ def main():
                 check('each downloaded clip matches its recorded sha256',
                       [f'{c} differs' for c, p in present.items()
                        if hashlib.sha256(p.read_bytes()).hexdigest() != clips[c]['sha256']])
+                if FFPROBE.is_file():
+                    check('each downloaded clip lasts its recorded seconds', length_problems(present, clips))
+                else:
+                    checks['each downloaded clip lasts its recorded seconds'] = {
+                        'ok': True, 'detail': 'skipped: ffprobe is not installed; run npm install in video/'}
             else:
                 checks['each downloaded clip matches its recorded sha256'] = {
                     'ok': True, 'detail': 'skipped: no clip downloaded; run npm run video:footage'}

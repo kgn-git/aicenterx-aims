@@ -20,7 +20,10 @@ an error when a phrase is no longer said, so running it on the real captions pro
         for at least 2 s
       - a world line that no longer says its figure, and a break that says its figures out of order, each stop with
         an error naming the words
-  - each scene uses what moments.mjs gives it
+  - each scene uses what moments.mjs gives it, and takes its footage from shots() there
+  - no clip runs out while it is on screen: each shot, from when it appears to when it leaves or the scene ends, fits
+    the clip's recorded length from its start second, at its playback rate; <Footage> starts a clip when it appears
+    rather than at the scene's start, so a clip cut to mid-scene is not already spent
   - the user's motion choices: a button presses to 0.96 and back within 120 ms, from the one definition in
     moments.mjs that kit.tsx uses
   - the fix marks its risk cards and mitigation rows with their own accents (STAGE.risks, STAGE.mitigations), and
@@ -42,6 +45,8 @@ TIMELINE = SRC / 'timeline.json'
 THEME = SRC / 'theme.ts'
 KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
+FOOTAGE = SRC / 'footage.json'
+FOOTAGE_UI = SRC / 'ui' / 'Footage.tsx'
 TIMING = SRC / 'timing.mjs'
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
@@ -51,11 +56,13 @@ CRAMPED = 6.0
 PRESS, PRESS_SCALE = 0.12, 0.96
 BEATS = {'World.tsx', 'Break.tsx', 'Fix.tsx', 'Proof.tsx'}
 # {scene file: what it must call and use from moments.mjs}.
-USERS = {'World.tsx': ('worldMoments(', 'm.figure', '<Footage'),
-         'Break.tsx': ('breakMoments(', 'm.figures[i]', 'm.cut', 'm.late', '<Footage'),
-         'Fix.tsx': ('fixMoments(', 'm.productAt', 'm.cards', 'm.named', 'm.ticks', 'm.rows', 'm.rowTicks', '<Footage',
-                     'accent={STAGE.risks}', 'accent={STAGE.mitigations}'),
-         'Proof.tsx': ('proofMoments(', 'm.badge', 'm.brandAt', 'm.footer', '<Footage')}
+USERS = {'World.tsx': ('worldMoments(', 'm.figure', 'shots(', '<Footage'),
+         'Break.tsx': ('breakMoments(', 'm.figures[i]', 'm.cut', 'm.late', 'shots(', '<Footage'),
+         'Fix.tsx': ('fixMoments(', 'm.productAt', 'm.cards', 'm.named', 'm.ticks', 'm.rows', 'm.rowTicks', 'shots(',
+                     '<Footage', 'accent={STAGE.risks}', 'accent={STAGE.mitigations}'),
+         'Proof.tsx': ('proofMoments(', 'm.badge', 'm.brandAt', 'm.footer', 'shots(', '<Footage')}
+# What <Footage> must do so a clip plays from its start second at the moment it appears, at its rate.
+STARTS_ON_ENTRY = ('<Sequence', 'playbackRate')
 SPOKEN = {'world': ['Fifty-six per cent'], 'break': ['forty per cent', 'five per cent']}
 PROGRAM = """
 import {readFileSync} from "node:fs";
@@ -79,6 +86,7 @@ out.world = at("world", (s, c) => m.worldMoments(s, c));
 out.break = at("break", (s, c) => m.breakMoments(s, c));
 out.fix = at("fix", (s, c, n) => m.fixMoments(s, c, n));
 out.proof = at("proof", (s, c, n) => m.proofMoments(s, c, n));
+out.shots = Object.fromEntries(timeline.scenes.map((s) => [s.id, at(s.id, (x, c, n) => ({list: m.shots(x, c, n)}))]));
 out.cramped = at("fix", (s, c, n) => m.fixMoments(s, c, n), %(cramped)s);
 out.reworded = at("world", (s, c) => m.worldMoments({...s, narration: s.narration.replace("Fifty-six per cent", "Most")}, c));
 out.swapped = at("break", (s, c) => {
@@ -136,6 +144,26 @@ def beat_problems(got):
     return bad
 
 
+def shot_problems(shots, timeline, clips):
+    """Each shot that plays the wrong clip or outlasts its clip while on screen."""
+    bad = []
+    for scene in timeline['scenes']:
+        got = shots.get(scene['id'], {'error': 'missing'})
+        if 'error' in got:
+            bad.append(f'{scene["id"]}: {got["error"]}')
+            continue
+        if [s['clip'] for s in got['list']] != scene['dataRefs']['footage']:
+            bad.append(f'{scene["id"]}: plays {[s["clip"] for s in got["list"]]}, not its footage {scene["dataRefs"]["footage"]}')
+            continue
+        for s in got['list']:
+            clip = clips[s['clip']]
+            shown = s.get('to', got['seconds']) - s['from']
+            lasts = (clip['seconds'] - clip['from']) / clip['rate']
+            if shown > lasts:
+                bad.append(f'{scene["id"]}: {s["clip"]} is on screen {shown:.2f} s but lasts {lasts:.2f} s, so it freezes')
+    return bad
+
+
 def main():
     checks = {}
 
@@ -173,6 +201,11 @@ def main():
             if isinstance(got.get('fix'), dict) and 'error' not in got['fix']:
                 got['fix']['savedAt'] = [fix['shown'].index(x) for x in fix['saved']]
             check('each beat lands its figures, footage, cards and ticks on the words that call for them', beat_problems(got))
+            clips = json.loads(FOOTAGE.read_text(encoding='utf-8'))['clips']
+            ui = FOOTAGE_UI.read_text(encoding='utf-8')
+            check('no clip runs out while it is on screen, each starting as it appears',
+                  shot_problems(got.get('shots', {}), timeline, clips)
+                  + [f'Footage.tsx does not use {x}' for x in STARTS_ON_ENTRY if x not in ui])
             c = got['consts']
             check('a button presses to 0.96 and back within 120 ms, from the one definition in moments.mjs',
                   ([] if c.get('PRESS') == PRESS and c.get('PRESS_SCALE') == PRESS_SCALE else [c])
