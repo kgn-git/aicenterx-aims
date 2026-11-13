@@ -12,14 +12,17 @@ seconds or for its clip plus a short tail, whichever is longer. Checks:
   - every timeline scene has a clip and there is no other clip; each is a 24 kHz 16-bit mono PCM WAV whose header
     sizes match the file
   - each scene's audioSeconds equals its clip's length, and the scenes, each lasting as long as
-    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 58 to 61 s in all once each
-    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's 60 s target)
+    video/src/timing.mjs says (read through video/scripts/scene-seconds.mjs), run 58 to 62 s in all once each
+    0.3 s crossfade overlaps two scenes, as the released video plays them (the user's 60 s target, widened to 62 s
+    for the value storyline's opening figures)
+  - the voice samples compare scenes the timeline still has, so --samples never looks for a scene that is gone
   - the guard: header copies broken one way each (truncated data, stereo, 44.1 kHz, a short data size) are rejected
 Prints a JSON report; exit code 1 on any failure.
 """
 import hashlib
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -31,11 +34,12 @@ VIDEO = ROOT / 'video'
 AUDIO = VIDEO / 'public' / 'audio'
 TIMELINE = VIDEO / 'src' / 'timeline.json'
 NARRATE = VIDEO / 'scripts' / 'narrate.mjs'
-RATE, MIN_TOTAL, MAX_TOTAL = 24000, 58.0, 61.0
+RATE, MIN_TOTAL, MAX_TOTAL = 24000, 58.0, 62.0
 # TAIL in video/src/timing.mjs, which video/src/Root.tsx also uses as the crossfade between scenes.
 CROSSFADE = 0.3
 FAKE_KEY = 'el-test-0000-not-a-real-key'
 VOICE = ('const VOICE = "XrExE9yKIg1WjnnlVkGX";', 'const MODEL = "eleven_v3";', '/with-timestamps')
+SAMPLE_SCENES = re.compile(r'^const SAMPLE_SCENES = \[([^\]]*)\];$', re.M)
 
 
 def snapshot():
@@ -95,6 +99,12 @@ def main():
     check("narrate voices Matilda on eleven_v3 with ElevenLabs' timings, and no other supplier",
           [f'missing {x}' for x in VOICE if x not in script]
           + [f'still calls {x}' for x in ('deepgram', 'openai') if x in script.lower()])
+    named = SAMPLE_SCENES.search(script)
+    sampled = re.findall(r'"([^"]+)"', named.group(1)) if named else []
+    check('the voice samples compare scenes the timeline has',
+          (['narrate.mjs has no one-line SAMPLE_SCENES list'] if not sampled else [])
+          + [f'sample scene {x} is not in the timeline' for x in sampled
+             if x not in {s['id'] for s in timeline['scenes']}])
 
     scenes = {s['id']: s for s in timeline['scenes']}
     clips = {p.stem: p for p in AUDIO.glob('*.wav')} if AUDIO.is_dir() else {}
