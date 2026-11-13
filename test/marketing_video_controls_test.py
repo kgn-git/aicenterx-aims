@@ -26,10 +26,10 @@ def prototype_controls(html):
 
 
 def needed_keys(root):
-    """The control keys of the mitigations the timeline's mitigations scene shows."""
+    """The control keys of the mitigations the timeline's fix scene shows."""
     timeline = json.loads((root / 'video' / 'src' / 'timeline.json').read_text(encoding='utf-8'))
     data = json.loads((root / 'tools' / 'data' / 'mitigation_suggestions.json').read_text(encoding='utf-8'))
-    shown = next(s for s in timeline['scenes'] if s['id'] == 'mitigations')['dataRefs']['mitigations']['shown']
+    shown = next(s for s in timeline['scenes'] if s['id'] == 'fix')['dataRefs']['mitigations']['shown']
     by_id = {m['id']: m for ms in data['risks'].values() for m in ms}
     return {by_id[m]['controlKey'] for m in shown}
 

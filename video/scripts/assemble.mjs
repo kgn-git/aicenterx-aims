@@ -8,8 +8,8 @@ import {dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {FPS} from "../src/timing.mjs";
 
-// The user's target for the released video is 60 s; a fresh take may land a little over it.
-const MAX_SECONDS = 61;
+// The pitch runs about 30 s; the user accepted a take of about 31 s.
+const MAX_SECONDS = 32;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 

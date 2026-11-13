@@ -47,7 +47,7 @@ def main():
     check('video/scripts/sources.mjs prints each shown mitigation with its chip', got is not None, why)
     if got is not None:
         timeline = json.loads((VIDEO / 'src' / 'timeline.json').read_text(encoding='utf-8'))
-        shown = next(s for s in timeline['scenes'] if s['id'] == 'mitigations')['dataRefs']['mitigations']['shown']
+        shown = next(s for s in timeline['scenes'] if s['id'] == 'fix')['dataRefs']['mitigations']['shown']
         data = json.loads((ROOT / 'tools' / 'data' / 'mitigation_suggestions.json').read_text(encoding='utf-8'))
         by_id = {m['id']: m for ms in data['risks'].values() for m in ms}
         want = {i: label(by_id[i]) for i in shown}
