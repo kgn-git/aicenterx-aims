@@ -2,22 +2,23 @@
 
 Usage:  python test/marketing_video_timeline_test.py
 
-The video is a 30-second pitch in four beats: the world, the break, the fix and the proof. Every later step (voice,
+The video is a pitch of about 40 s in five beats: the world, the break, the pain, the fix and the proof. Every later step (voice,
 footage, scenes, music) builds on the timeline, so it must hold the script the user approved and point only at
 curated data. storyline.md is its human copy and must not drift from it. Checks:
-  - shape: four scenes world, break, fix, proof, in that order, in the fragments f1 (world, break), f2 (fix) and
-    f3 (proof); each scene carries only its own dataRefs: the stock footage it plays, the sources of its figures, and
-    for the fix the risks and mitigations it shows
+  - shape: five scenes world, break, pain, fix, proof, in that order, in the fragments f1 (world, break, pain),
+    f2 (fix) and f3 (proof); each scene carries only its own dataRefs: the stock footage it plays, the sources of its
+    figures, and for the fix the risks and mitigations it shows
   - timing: at most 3 words a second, since the voice sets the pace; every voiced scene ends 0.3 s after its clip and
     the proof 1.0 s after its own, so no scene holds dead air (the played length is pinned in
     test/marketing_video_audio_test.py)
-  - narration: 85 words at most; no "use case"; never says the model is trained; each scene's line is the one the
+  - narration: 115 words at most; no "use case"; never says the model is trained; each scene's line is the one the
     user approved word for word
   - the figures: 56% in the world, then 40%+ and ~5% in the break, each on screen with its label, spoken with the
     qualifiers that keep it as narrow as its source (PwC, Gartner, MIT NANDA, cited in the order spoken)
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure, each
     as an on-screen item in the proof only, beside the "< 10 min" outcome, the brand, the tagline and its promise
-  - the on-screen items each scene component reads by position, in their places
+  - the on-screen items each scene component reads by position, in their places: the pain's three points, one for
+    each line the voice says, and a footage clip for each
   - dataRefs: every footage list names distinct clips; every risk and mitigation id exists, saved is a subset of
     shown, and the chain holds: saved risks have mitigations, and the mitigations shown are those of the saved risks
   - the guard: a broken copy that saves a risk with no mitigations is rejected for that rule and no other
@@ -37,19 +38,21 @@ TIMELINE = ROOT / 'video' / 'src' / 'timeline.json'
 STORYLINE = ROOT / 'video' / 'script' / 'storyline.md'
 RISK_DATA = ROOT / 'tools' / 'data' / 'risk_suggestions.json'
 MITIGATION_DATA = ROOT / 'tools' / 'data' / 'mitigation_suggestions.json'
-FRAGMENTS = {'f1': ['world', 'break'], 'f2': ['fix'], 'f3': ['proof']}
+FRAGMENTS = {'f1': ['world', 'break', 'pain'], 'f2': ['fix'], 'f3': ['proof']}
 SCENES = [s for scenes in FRAGMENTS.values() for s in scenes]
-REFS = {'world': {'sources', 'footage'}, 'break': {'sources', 'footage'}, 'fix': {'risks', 'mitigations', 'footage'},
+REFS = {'world': {'sources', 'footage'}, 'break': {'sources', 'footage'}, 'pain': {'footage'}, 'fix': {'risks', 'mitigations', 'footage'},
         'proof': {'footage'}}
 KINDS = ('risks', 'mitigations')
 SCENE_KEYS, OPTIONAL_KEYS = {'id', 'seconds', 'narration', 'onScreen', 'dataRefs'}, {'audioSeconds'}
-MAX_WORDS, MAX_PACE, SHOWN_RISKS = 85, 3.0, 5
+MAX_WORDS, MAX_PACE, SHOWN_RISKS = 115, 3.0, 5
 TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
-# The script the user approved on #63, word for word.
+# The script the user approved on #63, word for word; the pain beat was approved on 13 November 2026.
 APPROVED = {
     'world': 'Fifty-six per cent of CEOs see no financial gain from AI yet.',
     'break': 'Over forty per cent of agentic AI projects may be scrapped by 2027. Only about five per cent of AI pilots '
-             'deliver measurable value. The risks show up too late.',
+             'deliver measurable value.',
+    'pain': "Delivering AI is hard, risky and complex. Organisations want to do it responsibly and safely. But most "
+            "SMEs can't spend thousands on consultants to assess the risks.",
     'fix': "AI Center X lets managers and compliance officers simulate a project's risks, from documented incidents "
            'and industry standards, and select the mitigations that apply.',
     'proof': 'In under ten minutes. AI Center X: make AI deliver value.',
@@ -67,7 +70,8 @@ FIGURES = (
 END_CARD = ('Coming soon', 'This is a product concept video.', 'The narration voice is AI-generated.')
 # {scene: {position in onScreen: text}} for the items video/src/scenes/ reads by position.
 ROLES = {'world': {0: '56%', 1: FIGURES[0][2]},
-         'break': {0: '40%+', 1: FIGURES[1][2], 2: '~5%', 3: FIGURES[2][2], 4: 'The risks show up too late'},
+         'break': {0: '40%+', 1: FIGURES[1][2], 2: '~5%', 3: FIGURES[2][2]},
+         'pain': {0: 'Hard, risky and complex', 1: 'Responsible and safe, by design', 2: 'No budget for risk consultants'},
          'fix': {0: 'CV Screening Assistant', 1: 'Simulate risks', 2: 'Generate mitigations'},
          'proof': {0: '< 10 min', 1: 'Risk profile ready', 2: 'AI Center X', 3: 'Make AI Deliver Value',
                    4: 'Govern your AI risks. Accelerate your projects.', 5: END_CARD[0],
@@ -113,8 +117,8 @@ def shape_problems(t):
             bad.append(f'{sid}: seconds and audioSeconds must be positive numbers, narration and onScreen non-empty text')
         elif not isinstance(refs, dict) or set(refs) != REFS[sid]:
             bad.append(f'{sid}: dataRefs must hold exactly {sorted(REFS[sid])}')
-        elif not id_list(refs['footage']):
-            bad.append(f'{sid}: dataRefs.footage must be a non-empty list of distinct clip ids')
+        elif not id_list(refs['footage']) or (sid == 'pain' and len(refs['footage']) != len(ROLES['pain'])):
+            bad.append(f'{sid}: dataRefs.footage must be a non-empty list of distinct clip ids, one for each pain point')
         elif 'sources' in refs and not (isinstance(refs['sources'], list) and refs['sources'] and all(
                 isinstance(x, dict) and set(x) == {'cite'} and isinstance(x['cite'], str) for x in refs['sources'])):
             bad.append(f'{sid}: dataRefs.sources must be a non-empty list of {{cite}}')
