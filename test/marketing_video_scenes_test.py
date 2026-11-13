@@ -1,4 +1,4 @@
-"""Test for how the marketing video's four beats follow the narration: video/src/scenes/*.tsx and the timings they
+"""Test for how the marketing video's five beats follow the narration: video/src/scenes/*.tsx and the timings they
 take from video/src/moments.mjs, against video/src/captions.json.
 
 Usage:  python test/marketing_video_scenes_test.py
@@ -6,12 +6,14 @@ Usage:  python test/marketing_video_scenes_test.py
 A scene times its figures, cards and ticks to the narration. moments.mjs names the words it waits for, and stops with
 an error when a phrase is no longer said, so running it on the real captions proves every phrase is there. Checks:
   - no scene and not moments.mjs indexes its cues by number (cues[2], cues.at(2))
-  - each scene is exactly one of world, break, fix and proof, and plays its stock footage through <Footage>
+  - each scene is exactly one of world, break, pain, fix and proof, and plays its stock footage through <Footage>
   - the moments of each beat, computed by moments.mjs through node from the real timeline and captions, measured to
     the start of the 0.3 s crossfade out of the scene:
       - world: the footage plays alone for at least 0.3 s, then 56% lands within 0.3 s of its number being said
       - break: 40%+ then ~5% land within 0.3 s of their numbers, the footage cuts from the whiteboard to the desk
-        between them, and "The risks show up too late" lands at least 0.5 s after ~5% and holds 1 s
+        between them, and ~5% reads for at least 2 s
+      - pain: each of the three points lands within 0.3 s of its line being said, each over its own shot, and the
+        last reads for at least 2 s
       - fix: the team footage gives way to the product as "simulate" is said; the risk cards land after the click,
         their AIID and MIT chips light as "documented incidents" and "industry standards" are said, once every card is
         up; each tick lands after its card; the mitigations open as "select" is said, and their ticks land after their
@@ -50,20 +52,22 @@ FOOTAGE_UI = SRC / 'ui' / 'Footage.tsx'
 TIMING = SRC / 'timing.mjs'
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
-FIGURE_SLACK, LIGHT_ALONE, LATE_AFTER, HOLD, READ, TICKS_DONE = 0.3, 0.3, 0.5, 1.0, 2.0, 0.5
+FIGURE_SLACK, LIGHT_ALONE, READ, TICKS_DONE = 0.3, 0.3, 2.0, 0.5
 # A fix scene too short for its montage.
 CRAMPED = 6.0
 PRESS, PRESS_SCALE = 0.12, 0.96
-BEATS = {'World.tsx', 'Break.tsx', 'Fix.tsx', 'Proof.tsx'}
+BEATS = {'World.tsx', 'Break.tsx', 'Pain.tsx', 'Fix.tsx', 'Proof.tsx'}
 # {scene file: what it must call and use from moments.mjs}.
 USERS = {'World.tsx': ('worldMoments(', 'm.figure', 'shots(', '<Footage'),
-         'Break.tsx': ('breakMoments(', 'm.figures[i]', 'm.cut', 'm.late', 'shots(', '<Footage'),
+         'Break.tsx': ('breakMoments(', 'm.figures[i]', 'm.cut', 'shots(', '<Footage'),
+         'Pain.tsx': ('painMoments(', 'm.points', 'shots(', '<Footage'),
          'Fix.tsx': ('fixMoments(', 'm.productAt', 'm.cards', 'm.named', 'm.ticks', 'm.rows', 'm.rowTicks', 'shots(',
                      '<Footage', 'accent={STAGE.risks}', 'accent={STAGE.mitigations}'),
          'Proof.tsx': ('proofMoments(', 'm.badge', 'm.brandAt', 'm.footer', 'shots(', '<Footage')}
 # What <Footage> must do so a clip plays from its start second at the moment it appears, at its rate.
 STARTS_ON_ENTRY = ('<Sequence', 'playbackRate')
-SPOKEN = {'world': ['Fifty-six per cent'], 'break': ['forty per cent', 'five per cent']}
+PAIN_LINES = ['Delivering AI', 'Organisations want', 'But most SMEs']
+SPOKEN = {'world': ['Fifty-six per cent'], 'break': ['forty per cent', 'five per cent'], 'pain': PAIN_LINES}
 PROGRAM = """
 import {readFileSync} from "node:fs";
 import * as m from %(moments)s;
@@ -84,6 +88,7 @@ const at = (id, f, seconds) => attempt(() => {
 const out = {consts: {PRESS: m.PRESS, PRESS_SCALE: m.PRESS_SCALE}};
 out.world = at("world", (s, c) => m.worldMoments(s, c));
 out.break = at("break", (s, c) => m.breakMoments(s, c));
+out.pain = at("pain", (s, c) => m.painMoments(s, c));
 out.fix = at("fix", (s, c, n) => m.fixMoments(s, c, n));
 out.proof = at("proof", (s, c, n) => m.proofMoments(s, c, n));
 out.shots = Object.fromEntries(timeline.scenes.map((s) => [s.id, at(s.id, (x, c, n) => ({list: m.shots(x, c, n)}))]));
@@ -105,12 +110,12 @@ def near(got, want):
 def beat_problems(got):
     """Each AC limit the computed moments of the four beats break."""
     bad = []
-    for sid in ('world', 'break', 'fix', 'proof'):
+    for sid in ('world', 'break', 'pain', 'fix', 'proof'):
         if 'error' in got.get(sid, {'error': 'missing'}):
             bad.append(f'{sid}: {got.get(sid, {}).get("error", "missing")}')
     if bad:
         return bad
-    w, b, f, p = (got[k] for k in ('world', 'break', 'fix', 'proof'))
+    w, b, a, f, p = (got[k] for k in ('world', 'break', 'pain', 'fix', 'proof'))
     if w['figure'] < LIGHT_ALONE or not near(w['figure'], max(w['said']['Fifty-six per cent'], LIGHT_ALONE)):
         bad.append(f'world: 56% must land on its number after {LIGHT_ALONE} s of footage, got {w}')
     want = [b['said']['forty per cent'], b['said']['five per cent']]
@@ -118,8 +123,13 @@ def beat_problems(got):
         bad.append(f'break: the figures must land on their numbers {want}, got {b["figures"]}')
     elif not b['figures'][0] < b['cut'] < b['figures'][1]:
         bad.append(f'break: the footage must cut between the figures, got {b["cut"]}')
-    if b['late'] - b['figures'][-1] < LATE_AFTER or b['seconds'] - CROSSFADE - b['late'] < HOLD:
-        bad.append(f'break: "The risks show up too late" must follow ~5% by {LATE_AFTER} s and hold {HOLD} s, got {b}')
+    if b['seconds'] - CROSSFADE - b['figures'][-1] < READ:
+        bad.append(f'break: ~5% must read for {READ} s before the crossfade, got {b}')
+    want = [a['said'][x] for x in PAIN_LINES]
+    if len(a['points']) != 3 or not all(near(x, y) for x, y in zip(a['points'], want)):
+        bad.append(f'pain: the points must land as their lines are said {want}, got {a["points"]}')
+    elif a['seconds'] - CROSSFADE - a['points'][-1] < READ:
+        bad.append(f'pain: the last point must read for {READ} s before the crossfade, got {a}')
     cards, ticks, rows, row_ticks = f['cards'], f['ticks'], f['rows'], f['rowTicks']
     if not near(f['productAt'], f['words']['simulate']) or f['click'] < f['productAt'] or cards[0] <= f['click']:
         bad.append(f'fix: the product must arrive on "simulate", its click before the first card, got {f}')
@@ -174,7 +184,7 @@ def main():
     moments = MOMENTS.read_text(encoding='utf-8') if MOMENTS.is_file() else ''
     check('no scene and not moments.mjs indexes its cues by number',
           [f'{name}: cues{m}' for name, src in {**sources, 'moments.mjs': moments}.items() for m in NUMBERED.findall(src)])
-    check('the scenes are exactly the four beats', [] if set(sources) == BEATS else [sorted(sources)])
+    check('the scenes are exactly the five beats', [] if set(sources) == BEATS else [sorted(sources)])
     root = (SRC / 'Root.tsx').read_text(encoding='utf-8')
     check('every beat uses its moments from moments.mjs and plays its footage',
           [f'{name} does not use {token}' for name, tokens in USERS.items() for token in tokens
