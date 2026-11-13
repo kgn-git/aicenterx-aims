@@ -69,11 +69,17 @@ export function worldMoments(scene, cues) {
   return {figure: Math.max(LIGHT_ALONE, said - LEAD)};
 }
 
-/** The break: 40%+ over the whiteboard, a cut to the desk, ~5% over it, then the late risks. */
+/** The break: 40%+ over the whiteboard, a cut to the desk, then ~5% over it. */
 export function breakMoments(scene, cues) {
-  const [forty, five, late] = inOrder(scene, cues, ["forty per cent", "five per cent", "The risks show up"]);
+  const [forty, five] = inOrder(scene, cues, ["forty per cent", "five per cent"]);
   const figures = [forty - LEAD, five - LEAD];
-  return {figures, cut: figures[1] - 0.6, late: late - LEAD};
+  return {figures, cut: figures[1] - 0.6};
+}
+
+/** The pain: three points, each landing as its line is said, over its own shot. */
+export function painMoments(scene, cues) {
+  const said = inOrder(scene, cues, ["Delivering AI", "Organisations want", "But most SMEs"]);
+  return {points: said.map((x) => Math.max(LIGHT_ALONE, x - LEAD))};
 }
 
 // The montage's pace: cards and rows land one after another, ticks follow at a glance's pace.
@@ -118,13 +124,18 @@ export function proofMoments(scene, cues) {
 /** Which clip each scene shows and when, in seconds from the scene's start: a shot runs from `from` until `to`, or to
  *  the scene's end when it has no `to`. <Footage> starts the clip at `from`, so its length is spent only on screen. */
 export function shots(scene, cues, seconds) {
-  const [first, second] = scene.dataRefs.footage;
+  const [first, second, third] = scene.dataRefs.footage;
   switch (scene.id) {
     case "world":
       return [{clip: first, from: 0}];
     case "break": {
       const {cut} = breakMoments(scene, cues);
       return [{clip: first, from: 0, to: cut + 0.3}, {clip: second, from: cut}];
+    }
+    case "pain": {
+      const {points} = painMoments(scene, cues);
+      return [{clip: first, from: 0, to: points[1] + 0.3}, {clip: second, from: points[1], to: points[2] + 0.3},
+        {clip: third, from: points[2]}];
     }
     case "fix":
       return [{clip: first, from: 0, to: fixMoments(scene, cues, seconds).productAt + 0.4}];
