@@ -20,7 +20,7 @@ only at curated data. storyline.md is its human copy and must not drift from it.
   - the story is "make AI deliver value": no scene names Amazon, the roadmap ("Coming next", the capabilities, the
     acceleration platform) or a span of years; the close opens on the approved "In under an hour, your risk profile
     is ready.", says "Govern your AI risks" then "accelerate your projects", and ends on the tagline
-  - the lines the user approved word for word: the enhancements line and the close's opening outcome
+  - the lines the user approved word for word: the problem, enhancements and end narration (#64, 2026-11-13)
   - the end card: "Coming soon", the footnote "This is a product concept video." and the AI-voice disclosure,
     each as an on-screen item in the end scene only
   - the six button labels on screen, and the on-screen items each scene component reads by position in their places:
@@ -90,7 +90,14 @@ FRAGMENT_SECONDS, OPENING_SECONDS, END_SECONDS = (5, 15), (10, 30), 19
 # The close holds longer, so the brand, the tagline and the footer can be read before the picture ends.
 TAIL, CLOSE_TAIL, SLACK = 0.3, 1.0, 0.05
 # The lines the user approved word for word.
-APPROVED = {'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile."}
+APPROVED = {
+    'problem': 'Fifty-six per cent of CEOs report no significant financial benefit from AI to date. Only about five per '
+               'cent of integrated gen AI pilots reach measurable P&L impact. Over forty per cent of agentic AI projects '
+               'are expected to be cancelled by the end of 2027, while the rules keep changing in every region.',
+    'enhancements': "Then, turn policy into engineering: enhancements matched to this initiative's risk profile.",
+    'end': 'In under an hour, your risk profile is ready. Govern your AI risks, accelerate your projects. '
+           'AI Center X: make AI deliver value.',
+}
 PAYOFF = 'In under an hour, your risk profile is ready.'
 TAGLINE = 'AI Center X: make AI deliver value.'
 
