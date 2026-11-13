@@ -3,7 +3,7 @@ import {useCurrentFrame, useVideoConfig} from "remotion";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import risks from "../../../tools/data/risk_suggestions.json";
 import timeline from "../timeline.json";
-import {proofMoments} from "../moments.mjs";
+import {proofMoments, shots} from "../moments.mjs";
 import {appFrameHeight, color, headingFont, mutedInk, video} from "../theme";
 import {Footage} from "../ui/Footage";
 import {Background, ramp} from "../ui/kit";
@@ -22,17 +22,16 @@ const studies = timeline.scenes
 
 /** Beat 4, the proof: "Risk profile ready" in under ten minutes over a client meeting, then the "Coming soon" card
  *  with the brand, the tagline and its promise, and every source and disclosure in the footer. */
-export const Proof: React.FC<SceneProps> = ({scene, cues}) => {
+export const Proof: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const m = proofMoments(scene, cues);
   const [badge, ready, brand, tagline, promise, soon, heading, disclosure, footnote] = scene.onScreen;
-  const refs = scene.dataRefs as {footage: string[]};
   const card = ramp(t, m.brandAt, 0.5);
   // The outcome leaves before the brand arrives, so the two never overlap.
   const outcome = ramp(t, m.badge, 0.4) * (1 - ramp(t, m.brandAt - 0.45, 0.3));
   return (
     <Background dots={0}>
-      <Footage id={refs.footage[0]} to={m.brandAt + 0.2} />
+      <Footage {...shots(scene, cues, seconds)[0]} />
       <div
         style={{
           position: "absolute", left: 140, top: 360, padding: "34px 44px", borderRadius: 12,

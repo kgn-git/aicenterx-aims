@@ -1,6 +1,6 @@
 import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
-import {breakMoments} from "../moments.mjs";
+import {breakMoments, shots} from "../moments.mjs";
 import {color, headingFont} from "../theme";
 import {Figure} from "../ui/Figure";
 import {Footage} from "../ui/Footage";
@@ -12,17 +12,18 @@ const TONES = [color.arch, color.val];
 
 /** Beat 2, the break: projects scrapped over the whiteboard, a cut to the desk for the few pilots that deliver, then
  *  the insight that the risks show up too late. */
-export const Break: React.FC<SceneProps> = ({scene, cues}) => {
+export const Break: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const t = useCurrentFrame() / useVideoConfig().fps;
   const m = breakMoments(scene, cues);
   const [forty, fortyLabel, five, fiveLabel, late] = scene.onScreen;
-  const refs = scene.dataRefs as {footage: string[]; sources: {cite: string}[]};
+  const refs = scene.dataRefs as {sources: {cite: string}[]};
+  const [board, desk] = shots(scene, cues, seconds);
   const figures = [[forty, fortyLabel], [five, fiveLabel]];
   const lateShown = ramp(t, m.late, 0.45);
   return (
     <Background dots={0}>
-      <Footage id={refs.footage[0]} to={m.cut + 0.3} />
-      <Footage id={refs.footage[1]} from={m.cut} shade={0.5 + 0.2 * lateShown} />
+      <Footage {...board} />
+      <Footage {...desk} shade={0.5 + 0.2 * lateShown} />
       {figures.map(([figure, label], i) => (
         <Figure
           key={figure} t={t} at={m.figures[i]} out={i === 0 ? m.cut - 0.1 : m.late - 0.2} figure={figure} label={label}

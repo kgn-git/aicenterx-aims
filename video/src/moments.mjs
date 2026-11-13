@@ -114,3 +114,23 @@ export function proofMoments(scene, cues) {
   const brandAt = brand - LEAD;
   return {badge: LIGHT_ALONE, brandAt, footer: brandAt + 0.3};
 }
+
+/** Which clip each scene shows and when, in seconds from the scene's start: a shot runs from `from` until `to`, or to
+ *  the scene's end when it has no `to`. <Footage> starts the clip at `from`, so its length is spent only on screen. */
+export function shots(scene, cues, seconds) {
+  const [first, second] = scene.dataRefs.footage;
+  switch (scene.id) {
+    case "world":
+      return [{clip: first, from: 0}];
+    case "break": {
+      const {cut} = breakMoments(scene, cues);
+      return [{clip: first, from: 0, to: cut + 0.3}, {clip: second, from: cut}];
+    }
+    case "fix":
+      return [{clip: first, from: 0, to: fixMoments(scene, cues, seconds).productAt + 0.4}];
+    case "proof":
+      return [{clip: first, from: 0, to: proofMoments(scene, cues).brandAt + 0.2}];
+    default:
+      throw new Error(`The ${scene.id} scene has no shots. Add them to shots() in moments.mjs.`);
+  }
+}

@@ -2,14 +2,14 @@ import React from "react";
 import {useCurrentFrame, useVideoConfig} from "remotion";
 import mitigations from "../../../tools/data/mitigation_suggestions.json";
 import risks from "../../../tools/data/risk_suggestions.json";
-import {fixMoments, pressed} from "../moments.mjs";
+import {fixMoments, pressed, shots} from "../moments.mjs";
 import {aiActArticles, articleLabel} from "../sources.mjs";
 import {color, headingFont, STAGE} from "../theme";
 import {Footage} from "../ui/Footage";
 import {AppFrame, bump, Button, Card, Checkbox, ramp, SIDE, SourceChip} from "../ui/kit";
 import type {SceneProps} from "./types";
 
-type Refs = {footage: string[]; risks: {shown: string[]; saved: string[]}; mitigations: {shown: string[]; saved: string[]}};
+type Refs = {risks: {shown: string[]; saved: string[]}; mitigations: {shown: string[]; saved: string[]}};
 
 const TOP = 150;
 const GAP = 16;
@@ -32,7 +32,7 @@ export const Fix: React.FC<SceneProps> = ({scene, cues, seconds}) => {
   const risksOut = ramp(t, m.mitClick, 0.3);
   return (
     <>
-      <Footage id={refs.footage[0]} to={m.productAt + 0.4} />
+      <Footage {...shots(scene, cues, seconds)[0]} />
       <div style={{position: "absolute", inset: 0, opacity: product, transform: `translateX(${(1 - product) * 80}px)`}}>
         <AppFrame trail={initiative}>
           <div style={{position: "absolute", left: SIDE, top: 40, fontFamily: headingFont, fontSize: 52, fontWeight: 600}}>

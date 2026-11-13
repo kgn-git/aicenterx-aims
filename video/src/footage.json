@@ -4,31 +4,41 @@
       "pexels": 8343836,
       "url": "https://videos.pexels.com/video-files/8343836/8343836-hd_1920_1080_25fps.mp4",
       "sha256": "b3e8f8a849a6e4eaa160dc6746810b837ec36f3dd6489177ba2c659c95af901f",
-      "from": 0
+      "from": 0,
+      "seconds": 18.76,
+      "rate": 1
     },
     "board": {
       "pexels": 9034424,
       "url": "https://videos.pexels.com/video-files/9034424/9034424-hd_1920_1080_24fps.mp4",
       "sha256": "7eec9d22ae5640ec2d9c4c09b42f8e730d4355e40b7f08da75d66c1b041970fc",
-      "from": 0
+      "from": 0,
+      "seconds": 8.5,
+      "rate": 1
     },
     "desk": {
       "pexels": 19129215,
       "url": "https://videos.pexels.com/video-files/19129215/19129215-hd_1920_1080_60fps.mp4",
       "sha256": "bde8eb36e288d72361730c543e29c23e32641f29b652f44597f8694abc265311",
-      "from": 0
+      "from": 0,
+      "seconds": 5.42,
+      "rate": 0.8
     },
     "team": {
       "pexels": 7732823,
       "url": "https://videos.pexels.com/video-files/7732823/7732823-hd_1920_1080_25fps.mp4",
       "sha256": "55f564b0611097c4ee356cecd43628fe47da12eb824af636f3498d21ba32d335",
-      "from": 0
+      "from": 0,
+      "seconds": 15.64,
+      "rate": 1
     },
     "agree": {
       "pexels": 5637933,
       "url": "https://videos.pexels.com/video-files/5637933/5637933-hd_1920_1080_24fps.mp4",
       "sha256": "40f3782607bdfeffb477800404e4dec9fe29ff8c8ebd06daf3d9c6b0f4a41564",
-      "from": 0
+      "from": 0,
+      "seconds": 15.02,
+      "rate": 1
     }
   }
 }
