@@ -9,7 +9,8 @@ names the words it waits for instead, and stops with an error when a phrase is n
 real captions proves every phrase is there. Checks:
   - no scene and not moments.mjs indexes its cues by number (cues[2], cues.at(2)); the first and last cue may still
     be reached by length
-  - the dotted background stays off in the hook and starts in the problem scene on "The challenge", as the user asked
+  - the opening plays over moving light columns with the dotted background off, so the product's grid arrives with
+    the canvas; no scene is the old hook, and nothing imports it
   - the moments of each scene, computed by moments.mjs through node from the real timeline and captions, measured to
     the start of the 0.3 s crossfade out of the scene:
       - no zoom anywhere, so the cursor stays in view
@@ -23,11 +24,12 @@ real captions proves every phrase is there. Checks:
         that have not landed
       - the risks and mitigations scenes light their chips as each of their two spoken sources is named, in order,
         once every card is on screen
-      - the problem scene opens on the empty rings of its three costs, so the frame is never blank; the cost icons
-        land in order as the voice says "time", "effort" and "harm" and are all shown, red, for at least 0.9 s;
-        only then does the Venn diagram arrive and meet, and its bright target is lit for at least 1.2 s; the dots
-        arrive by then
-      - a reworded problem line or a reordered close stops with an error that names the missing or misplaced words
+      - the problem scene opens on its light alone for at least 0.5 s; its figures land in the order 56%, ~5%,
+        40%+, each within 0.3 s of the voice saying its number; the rules line lands at least 0.5 s after the third
+        figure; the problem is fully stated (the target the music's first act ends on) once the rules line is up,
+        and stays lit for at least 1.2 s before the crossfade
+      - a problem line that no longer says a figure, one that says the figures out of order, and a reordered close
+        each stop with an error that names the missing or misplaced words
       - the close opens on the initiative's outcome card, whose risks, mitigations and enhancements rows count up
         one after another and can be read, filled, for at least 1.5 s; the card then folds into its own place in
         the portfolio before the portfolio arrives, ahead of "models"; the footer can be read for at least 2 s
@@ -59,8 +61,11 @@ THEME = SRC / 'theme.ts'
 KIT = SRC / 'ui' / 'kit.tsx'
 MOMENTS = SRC / 'moments.mjs'
 TIMING = SRC / 'timing.mjs'
-GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN, COSTS_SHOWN, TARGET_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2, 0.9, 1.2
+GLOW, CARD_DELAY, TOAST, READ, HANDOFF_SHOWN, TARGET_SHOWN = 0.8, 0.25, 1.5, 2.0, 1.2, 1.2
 OUTCOME_SHOWN = 1.5
+# The opening's light plays alone this long; a figure lands this close to its spoken number; the rules line follows
+# the third figure by at least this much.
+OPENING_LIGHT, FIGURE_SLACK, RULES_AFTER = 0.5, 0.3, 0.5
 # TAIL in video/src/timing.mjs: the crossfade that starts this long before a scene's cut.
 CROSSFADE = 0.3
 # A shorter enhancements scene than the real one, where the toast's time would be lost without its floor; and a
@@ -72,7 +77,7 @@ USERS = {'Risks.tsx': ('stageMoments(', 'bump(t, mitNamed', 'bump(t, aiidNamed',
          'Mitigations.tsx': ('stageMoments(', '[mitNamed, lawNamed][n]'),
          'Enhancements.tsx': ('stageMoments(',),
          'Canvas.tsx': ('canvasMoments(', 'ramp(t, glow'),
-         'Problem.tsx': ('problemMoments(', 'm.marks', 'ramp(t, m.circles', 'ramp(t, m.costsOut', 'ramp(t, m.rings'),
+         'Problem.tsx': ('problemMoments(', 'm.figures[i]', 'ramp(t, m.rules', '<LightColumns'),
          'End.tsx': ('closeMoments(', 'ramp(t, footer', 'from={portfolioIn}', '<Outcome'),
          'Acceleration.tsx': ('ramp(t, at.rows[i], TALLY_COUNT)', 'ramp(t, at.fold'),}
 # Each module is imported as a namespace, so a missing export fails its own check instead of the whole run.
@@ -101,9 +106,15 @@ out.cramped = stage("mitigations", %(cramped)s);
 out.canvas = at("canvas", (scene, cues, seconds) => m.canvasMoments(cues, seconds));
 out.problem = at("problem", (scene, cues) => m.problemMoments(scene, cues));
 out.end = at("end", (scene, cues) => m.closeMoments(scene, cues));
-// The same scenes with their words changed: a cost the problem line no longer says, and a close that names the
-// capabilities before it scales up.
-out.reworded = at("problem", (scene, cues) => m.problemMoments({...scene, narration: scene.narration.replace("effort", "work")}, cues));
+out.problemSaid = at("problem", (scene, cues) => ({said: ["Fifty-six per cent", "five per cent", "forty per cent"]
+  .map((p) => m.spokenAt(scene.narration, p, cues[cues.length - 1].end))}));
+// The same scenes with their words changed: a figure the problem line no longer says, the figures out of order, and
+// a close that names the capabilities before it scales up.
+out.reworded = at("problem", (scene, cues) => m.problemMoments({...scene, narration: scene.narration.replace("forty per cent", "two in five")}, cues));
+out.shuffled = at("problem", (scene, cues) => {
+  const [first, ...rest] = scene.narration.split(". ");
+  return m.problemMoments({...scene, narration: `${rest.join(". ")} ${first}.`}, cues);
+});
 out.reordered = at("end", (scene, cues) => m.closeMoments({...scene, narration: scene.narration.replace("Then scale up: ", "") + " Then scale up."}, cues));
 console.log(JSON.stringify(out));
 """
@@ -145,6 +156,23 @@ def stage_problems(sid, g):
     return bad
 
 
+def problem_problems(pr, said):
+    """Each AC limit the opening's moments break: figures on their numbers, in order, then the rules, then the target."""
+    figures = pr.get('figures') if isinstance(pr.get('figures'), list) else []
+    if 'error' in pr or len(figures) != 3 or len(said) != 3 or not {'rules', 'target'} <= set(pr):
+        return [f'problem: want three figure times, the rules line and the target, got {pr}']
+    bad = []
+    if figures[0] < OPENING_LIGHT or figures != sorted(figures):
+        bad.append(f'problem: the light must open the scene for {OPENING_LIGHT} s and the figures land in order, got {figures}')
+    bad += [f'problem: figure {i + 1} lands at {f:.2f} s, {abs(f - w):.2f} s from its number at {w:.2f} s'
+            for i, (f, w) in enumerate(zip(figures, said)) if abs(f - w) > FIGURE_SLACK]
+    if pr['rules'] - figures[-1] < RULES_AFTER:
+        bad.append(f'problem: the rules line lands {pr["rules"] - figures[-1]:.2f} s after the third figure, want {RULES_AFTER} s')
+    if pr['target'] < pr['rules'] or pr['seconds'] - CROSSFADE - pr['target'] < TARGET_SHOWN:
+        bad.append(f'problem: the problem must be fully stated after the rules line and held {TARGET_SHOWN} s, got {pr}')
+    return bad
+
+
 def moment_problems(got):
     """Each AC limit the computed moments break, per scene."""
     bad = [p for sid in ('risks', 'mitigations', 'enhancements', 'tight') for p in stage_problems(sid, got.get(sid, {}))]
@@ -157,21 +185,11 @@ def moment_problems(got):
         secs = cv['seconds'] - CROSSFADE
         if not (cv['appear'] < cv['arrive'] <= secs and secs - cv['appear'] >= HANDOFF_SHOWN and secs - cv['glow'] >= GLOW):
             bad.append(f'canvas: "Simulate risks" must show {HANDOFF_SHOWN} s, glow {GLOW} s and meet the cursor, got {cv}')
-    pr = got.get('problem', {})
-    marks = pr.get('marks') if isinstance(pr.get('marks'), list) else []
-    if 'error' in pr or len(marks) != 3 or 'costsOut' not in pr:
-        bad.append(f'problem: want three cost times and when they leave, got {pr}')
-    else:
-        if not (pr['rings'] <= 0.3 and marks == sorted(marks) and marks[0] > pr['rings']):
-            bad.append(f'problem: the rings must open the scene and the costs land in order, got {pr}')
-        if pr['costsOut'] - (marks[-1] + 0.35) < COSTS_SHOWN:
-            bad.append(f'problem: the three costs show together for {pr["costsOut"] - marks[-1] - 0.35:.2f} s, want {COSTS_SHOWN} s')
-        if not (pr['costsOut'] <= pr['circles'] <= pr['meet'] and pr['dots'] <= pr['circles']):
-            bad.append(f'problem: the Venn diagram must follow the costs, after the dots, got {pr}')
-        if pr['seconds'] - CROSSFADE - (pr['target'] + 0.5) < TARGET_SHOWN:
-            bad.append(f'problem: the target is lit {pr["seconds"] - CROSSFADE - pr["target"] - 0.5:.2f} s, want {TARGET_SHOWN} s')
-    if 'no longer says "effort"' not in got.get('reworded', {}).get('error', ''):
-        bad.append(f'a problem line without "effort" must stop with an error naming it, got {got.get("reworded")}')
+    bad += problem_problems(got.get('problem', {}), got.get('problemSaid', {}).get('said', []))
+    if 'no longer says "forty per cent"' not in got.get('reworded', {}).get('error', ''):
+        bad.append(f'a problem line without "forty per cent" must stop with an error naming it, got {got.get("reworded")}')
+    if 'in that order' not in got.get('shuffled', {}).get('error', ''):
+        bad.append(f'a problem line that says its figures out of order must stop with an error, got {got.get("shuffled")}')
     if 'in that order' not in got.get('reordered', {}).get('error', ''):
         bad.append(f'a close that says its words out of order must stop with an error, got {got.get("reordered")}')
     end = got.get('end', {})
@@ -203,10 +221,11 @@ def main():
     check('no scene and not moments.mjs indexes its cues by number',
           [f'{name}: cues{m}' for name, src in {**sources, 'moments.mjs': moments}.items()
            for m in NUMBERED.findall(src)])
-    check('the dotted background is off in the hook and starts on "The challenge" in the problem scene',
-          ([] if '<Background dots={0}>' in sources['Hook.tsx'] else ['Hook.tsx does not render <Background dots={0}>'])
-          + ([] if 'dots: at("The challenge")' in moments and 'ramp(t, m.dots' in sources['Problem.tsx']
-             else ['Problem.tsx does not start its dots on "The challenge"']))
+    index = (SCENES / 'index.ts').read_text(encoding='utf-8')
+    check('the opening plays over its light with the dots off, and the old hook is gone',
+          ([] if '<Background dots={0}>' in sources.get('Problem.tsx', '') else ['Problem.tsx does not render <Background dots={0}>'])
+          + (['Hook.tsx still exists'] if 'Hook.tsx' in sources else [])
+          + (['scenes/index.ts still imports Hook'] if re.search(r'\bHook\b', index) else []))
 
     node = shutil.which('node')
     kit = KIT.read_text(encoding='utf-8')
